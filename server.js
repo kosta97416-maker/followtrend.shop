@@ -38,12 +38,14 @@ function callStripe(path) {
 
 // ── SÉCURITÉ FOLLOW. ─────────────────────────────────────
 var security = {
-  ipRequests: {},        // Rate limiting par IP
-  blacklist: [],         // IPs bloquées
-  requestLog: [],        // Log des requêtes
-  blockedAttempts: 0,    // Compteur attaques bloquées
-  RATE_LIMIT: 100,       // Max requêtes par IP par heure
-  RATE_WINDOW: 3600000,  // 1 heure en ms
+  ipRequests: {},
+  blacklist: [],
+  requestLog: [],
+  blockedAttempts: 0,
+  RATE_LIMIT: 100,
+  RATE_WINDOW: 3600000,
+  // IPs internes à ne jamais blacklister
+  WHITELIST: ['::1', '127.0.0.1', '::ffff:127.0.0.1', 'localhost']
 };
 
 // Domaines autorisés (CORS)
@@ -84,25 +86,25 @@ function checkSecurity(req, res) {
     security.blockedAttempts++;
     res.writeHead(403);
     res.end(JSON.stringify({ error: 'Accès refusé', code: 'IP_BLOCKED' }));
-    console.log('[Security] 🚫 IP bloquée : ' + ip);
     return false;
   }
 
-  // ── 2. RATE LIMITING ──────────────────────────────────
-  if (!security.ipRequests[ip]) security.ipRequests[ip] = [];
-  security.ipRequests[ip].push(now);
-  var recentRequests = security.ipRequests[ip].filter(function(t) { return now - t < security.RATE_WINDOW; });
-  security.ipRequests[ip] = recentRequests;
+  // ── 2. RATE LIMITING (jamais sur IPs internes) ────────
+  if (!security.WHITELIST.includes(ip)) {
+    if (!security.ipRequests[ip]) security.ipRequests[ip] = [];
+    security.ipRequests[ip].push(now);
+    var recentRequests = security.ipRequests[ip].filter(function(t) { return now - t < security.RATE_WINDOW; });
+    security.ipRequests[ip] = recentRequests;
 
-  if (recentRequests.length > security.RATE_LIMIT) {
-    security.blockedAttempts++;
-    if (!security.blacklist.includes(ip)) {
-      security.blacklist.push(ip);
-      console.log('[Security] 🚫 IP blacklistée (rate limit) : ' + ip);
+    if (recentRequests.length > security.RATE_LIMIT) {
+      security.blockedAttempts++;
+      if (!security.blacklist.includes(ip)) {
+        security.blacklist.push(ip);
+      }
+      res.writeHead(429);
+      res.end(JSON.stringify({ error: 'Trop de requêtes', code: 'RATE_LIMITED', retry_after: '1h' }));
+      return false;
     }
-    res.writeHead(429);
-    res.end(JSON.stringify({ error: 'Trop de requêtes', code: 'RATE_LIMITED', retry_after: '1h' }));
-    return false;
   }
 
   // ── 3. BOT DETECTION ──────────────────────────────────
@@ -1521,6 +1523,6 @@ var server = http.createServer(function(req, res) {
 
 });
 
-server.listen(PORT, function() {
-  console.log('FOLLOW. Backend v6 actif sur port ' + PORT);
+server.listen(PORT, '0.0.0.0', function() {
+  console.log('FOLLOW. Backend v7 actif sur port ' + PORT);
 });
