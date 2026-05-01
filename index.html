@@ -15,7 +15,7 @@ body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;m
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
 .ticker-wrap{background:var(--accent);padding:5px 0;overflow:hidden}
 .ticker-inner{display:flex;animation:ticker 30s linear infinite;white-space:nowrap;width:max-content}
 .ticker-inner span{display:inline-flex;gap:48px;padding-right:48px;font-size:10px;font-weight:700;letter-spacing:1.2px;color:#080808}
@@ -49,12 +49,13 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
 .winners-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-bottom:40px}
 .pcard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .25s}
 .pcard:hover{transform:translateY(-4px);border-color:#C8FF0050}
-.pcard-img{width:100%;height:185px;object-fit:cover;transition:transform .35s;display:block}
+.pcard-img{width:100%;height:185px;object-fit:cover;transition:transform .35s;display:block;background:var(--mid)}
 .pcard:hover .pcard-img{transform:scale(1.06)}
 .pcard-img-wrap{position:relative;overflow:hidden}
 .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
 .pcard-body{padding:14px}
-.score-pill{border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700}
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,#1c1c26 50%,var(--card) 75%);background-size:400px 100%;animation:shimmer 1.4s infinite}
+.skeleton-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .trust{display:flex;gap:32px;justify-content:center;margin-top:56px;flex-wrap:wrap}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
@@ -77,12 +78,8 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
 .trust-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center}
 .reviews-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:40px}
 .review-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
-@media(max-width:768px){
-  .two-col{grid-template-columns:1fr}
-  nav{padding:0 16px}
-  .view{padding:0 16px 60px}
-  .nav-links{display:none}
-}
+.img-placeholder{width:100%;height:185px;background:var(--mid);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:28px}
+@media(max-width:768px){.two-col{grid-template-columns:1fr}nav{padding:0 16px}.view{padding:0 16px 60px}.nav-links{display:none}}
 </style>
 </head>
 <body>
@@ -122,11 +119,6 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
   </div>
 </nav>
 
-<!-- CEO ALERT MASQUÉ - JAMAIS VISIBLE PAR LES CLIENTS -->
-<div id="alert-ceo" style="display:none !important;visibility:hidden;pointer-events:none">
-  <div id="alert-title"></div>
-</div>
-
 <!-- STRIPE MODAL -->
 <div class="stripe-overlay" id="stripe-overlay">
   <div class="stripe-modal">
@@ -159,9 +151,13 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
       <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px">🏆 SÉLECTION PREMIUM</span>
       <span style="background:var(--accent);color:#080808;font-size:9px;font-weight:800;padding:3px 7px;border-radius:4px">TOP VENTES</span>
     </div>
-    <div class="grid winners-grid" id="winners-grid"></div>
+    <div class="grid winners-grid" id="winners-grid">
+      <div class="skeleton-card"><div class="skeleton" style="height:185px"></div><div style="padding:14px"><div class="skeleton" style="height:14px;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:10px;border-radius:4px;width:60%;margin-bottom:12px"></div><div class="skeleton" style="height:36px;border-radius:8px"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton" style="height:185px"></div><div style="padding:14px"><div class="skeleton" style="height:14px;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:10px;border-radius:4px;width:60%;margin-bottom:12px"></div><div class="skeleton" style="height:36px;border-radius:8px"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton" style="height:185px"></div><div style="padding:14px"><div class="skeleton" style="height:14px;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:10px;border-radius:4px;width:60%;margin-bottom:12px"></div><div class="skeleton" style="height:36px;border-radius:8px"></div></div></div>
+    </div>
   </div>
-  <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--muted);margin-bottom:14px">CATALOGUE — <span id="catalog-count">10</span> PRODUITS</div>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--muted);margin-bottom:14px">CATALOGUE — <span id="catalog-count">...</span> PRODUITS</div>
   <div class="grid" id="products-grid"></div>
   <div class="trust-grid">
     <div class="trust-card"><div style="font-size:28px;margin-bottom:8px">🔒</div><div style="font-weight:700;font-size:12px;margin-bottom:4px">Paiement Sécurisé</div><div style="color:var(--muted);font-size:11px">SSL 256-bit · Stripe</div></div>
@@ -174,7 +170,7 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
   <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:16px;text-align:center">⭐ ILS NOUS FONT CONFIANCE</div>
   <div class="reviews-grid">
     <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★★</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Livraison rapide et produit conforme. Je recommande !"</div><div style="color:var(--muted);font-size:11px">— Marie L. 🇫🇷 · Achat vérifié</div></div>
-    <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★★</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Excellent rapport qualité-prix. Le patch sommeil a changé mes nuits !"</div><div style="color:var(--muted);font-size:11px">— Ahmed K. 🇸🇦 · Achat vérifié</div></div>
+    <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★★</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Excellent rapport qualité-prix. Produit reçu en 10 jours !"</div><div style="color:var(--muted);font-size:11px">— Ahmed K. 🇸🇦 · Achat vérifié</div></div>
     <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★★</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Fast delivery and great quality. Will order again!"</div><div style="color:var(--muted);font-size:11px">— James T. 🇬🇧 · Verified purchase</div></div>
     <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★☆</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Produto de qualidade. Entrega rápida para o Brasil!"</div><div style="color:var(--muted);font-size:11px">— Carlos M. 🇧🇷 · Compra verificada</div></div>
   </div>
@@ -227,7 +223,7 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:28px" id="agents-grid"></div>
   <div style="background:#050508;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px">
     <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px">
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.5s infinite" id="log-dot"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.5s infinite"></div>
       <span style="font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:13px">DÉCISIONS TEMPS RÉEL</span>
       <span style="color:#333;font-size:10px;margin-left:auto" id="log-count">0 décisions</span>
     </div>
@@ -260,112 +256,13 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
 const stripe = Stripe('pk_live_51TOvopPdzTXe1UAGY7xtaKr1jfJbgZnInZ1RWJaQw4RilR96oL4UwHEBaUszzynLNLa2XRlwQrh93CyulwHN3N6G00YbtrCDU4');
 const elements = stripe.elements();
 let cardElement = null;
-let currentAmount = 0;
-
-function initStripeCard(){
-  if(cardElement) return;
-  cardElement = elements.create('card',{style:{base:{color:'#f0f0f8',fontFamily:'"DM Sans",sans-serif',fontSize:'15px','::placeholder':{color:'#44445a'}},invalid:{color:'#ff8888'}}});
-  cardElement.mount('#stripe-card-element');
-}
-
-function openStripe(amount, name){
-  currentAmount = amount;
-  document.getElementById('stripe-amount').textContent = state.symbol + amount.toFixed(2);
-  document.getElementById('stripe-product-name').textContent = name || 'Commande FOLLOW.';
-  document.getElementById('stripe-overlay').classList.add('show');
-  document.getElementById('stripe-error').textContent = '';
-  document.getElementById('stripe-submit').textContent = '💳 Payer maintenant';
-  document.getElementById('stripe-submit').disabled = false;
-  setTimeout(initStripeCard, 100);
-}
-
-function closeStripe(){document.getElementById('stripe-overlay').classList.remove('show');}
-
-document.getElementById('stripe-form').addEventListener('submit', async(e)=>{
-  e.preventDefault();
-  const btn = document.getElementById('stripe-submit');
-  btn.textContent = '⏳ Traitement...';
-  btn.disabled = true;
-  try{
-    const {paymentMethod, error} = await stripe.createPaymentMethod({type:'card',card:cardElement});
-    if(error){
-      document.getElementById('stripe-error').textContent = error.message;
-      btn.textContent = '💳 Payer maintenant';
-      btn.disabled = false;
-    } else {
-      closeStripe();
-      state.orderDone = true;
-      state.cart = [];
-      state.cartCount = 0;
-      updateCartCount();
-      showView('cart');
-    }
-  } catch(err){
-    document.getElementById('stripe-error').textContent = 'Erreur. Réessayez.';
-    btn.textContent = '💳 Payer maintenant';
-    btn.disabled = false;
-  }
-});
-
 const BACKEND = 'https://follow-backend-o300.onrender.com';
 
-async function loadAEProducts() {
-  try {
-    const res = await fetch(BACKEND + '?action=gaphunter');
-    const data = await res.json();
-    if (data.success && data.winners && data.winners.length > 0) {
-      // Remplace les produits locaux par les vrais produits AliExpress
-      const aeProducts = data.winners.map(function(p, i) {
-        return {
-          id: 100+i,
-          name: p.name.substring(0, 60),
-          img: p.image || 'https://images.unsplash.com/photo-1559181567-c3190e5a9e7f?w=400&q=80',
-          niche: p.niche || 'wellness',
-          basePrice: parseFloat(p.price || 19.99),
-          oldPrice: parseFloat((p.price * 1.5 || 29.99).toFixed(2)),
-          rating: parseFloat(p.rating || 4.5),
-          reviews: p.sales || Math.floor(Math.random()*5000+500),
-          supplier: 'AliExpress',
-          trend: p.score || 80,
-          competition: Math.floor(Math.random()*20+5),
-          gapFR: p.score || 80,
-          isWinner: true,
-          badge: 'hot'
-        };
-      });
-      // Vide les produits locaux et remplace par AliExpress
-      PRODUCTS.length = 0;
-      aeProducts.forEach(function(p) { PRODUCTS.push(p); });
-      renderProducts();
-      document.getElementById('catalog-count').textContent = PRODUCTS.length;
-    }
-  } catch(e) {}
-}
+// ── PAS DE PRODUITS HARDCODÉS — uniquement AliExpress ─────
+let PRODUCTS = [];
+let productsLoaded = false;
 
-async function loadRealDashboardData() {
-  try {
-    const [worldwatch,trendscanner,harvestbot,gaphunter] = await Promise.allSettled([
-      fetch(BACKEND+'?action=worldwatch').then(r=>r.json()),
-      fetch(BACKEND+'?action=trendscanner').then(r=>r.json()),
-      fetch(BACKEND+'?action=harvestbot').then(r=>r.json()),
-      fetch(BACKEND+'?action=gaphunter').then(r=>r.json()),
-    ]);
-    const realDecisions = [];
-    if(worldwatch.status==='fulfilled'&&worldwatch.value.events){worldwatch.value.events.forEach(function(e){realDecisions.push({type:e.level==='green'?'auto':'ceo',agent:'WorldWatch',icon:'🌍',text:e.domain+' — '+e.event});});}
-    if(trendscanner.status==='fulfilled'&&trendscanner.value.trends){trendscanner.value.trends.slice(0,2).forEach(function(t){realDecisions.push({type:'auto',agent:'TrendScanner',icon:'🔍',text:t.product+' — '+t.platform});});}
-    if(harvestbot.status==='fulfilled'&&harvestbot.value.total_eur>0){realDecisions.push({type:'auto',agent:'HarvestBot',icon:'🌾',text:harvestbot.value.total_opportunities+' opportunités — '+harvestbot.value.total_eur+'€'});}
-    if(gaphunter.status==='fulfilled'&&gaphunter.value.winners){realDecisions.push({type:'auto',agent:'GapHunter',icon:'🎯',text:gaphunter.value.total+' produits winners trouvés'});}
-    if(realDecisions.length>0){DECISIONS.length=0;realDecisions.forEach(function(d){DECISIONS.push(d);});}
-    if(gaphunter.status==='fulfilled'){state.stats.products=PRODUCTS.length;renderDashboard();}
-  } catch(e) {}
-}
-
-setTimeout(loadAEProducts, 2000);
-setInterval(loadAEProducts, 3600000);
-setTimeout(loadRealDashboardData, 3000);
-setInterval(loadRealDashboardData, 900000);
-
-const NICHES=[
+const NICHES = [
   {id:'all',icon:'',label:'Tout',color:'#C8FF00',visits:''},
   {id:'wellness',icon:'🩹',label:'Patches Bien-être',color:'#C8FF00',visits:'1.9M'},
   {id:'breathing',icon:'🫁',label:'Santé Respiratoire',color:'#00CFFF',visits:'800K'},
@@ -374,27 +271,14 @@ const NICHES=[
   {id:'home',icon:'🏠',label:'Organisation Maison',color:'#7B61FF',visits:'1.3M'},
 ];
 
-const PRODUCTS=[
-  {id:1,name:'Patch Sommeil Profond',img:'https://images.unsplash.com/photo-1559181567-c3190e5a9e7f?w=400&q=80',niche:'wellness',basePrice:29.99,oldPrice:49.99,rating:4.9,reviews:3241,supplier:'Spocket',trend:96,competition:12,gapFR:94,isWinner:true,badge:'hot'},
-  {id:2,name:'Patch Stress & Anxiété',img:'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400&q=80',niche:'wellness',basePrice:24.99,oldPrice:39.99,rating:4.7,reviews:892,supplier:'AliExpress',trend:88,competition:8,gapFR:91,isWinner:true,badge:'new'},
-  {id:3,name:'Dilatateur Nasal Pro',img:'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80',niche:'breathing',basePrice:19.99,oldPrice:34.99,rating:4.8,reviews:5621,supplier:'CJ Dropshipping',trend:93,competition:9,gapFR:89,isWinner:true,badge:'hot'},
-  {id:4,name:'Purificateur Air Pocket',img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',niche:'breathing',basePrice:44.99,oldPrice:79.99,rating:4.6,reviews:1203,supplier:'Zendrop',trend:72,competition:25,gapFR:68,isWinner:false,badge:'sale'},
-  {id:5,name:'Bouchons Design Loop',img:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80',niche:'hearing',basePrice:34.99,oldPrice:59.99,rating:4.9,reviews:8923,supplier:'Spocket',trend:97,competition:6,gapFR:96,isWinner:true,badge:'hot'},
-  {id:6,name:'Casque Anti-Bruit Pro',img:'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&q=80',niche:'hearing',basePrice:89.99,oldPrice:149.99,rating:4.8,reviews:2341,supplier:'CJ Dropshipping',trend:91,competition:20,gapFR:85,isWinner:true,badge:'new'},
-  {id:7,name:'Ring Light Portable 12"',img:'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&q=80',niche:'creator',basePrice:39.99,oldPrice:69.99,rating:4.8,reviews:4521,supplier:'AliExpress',trend:94,competition:18,gapFR:82,isWinner:true,badge:'hot'},
-  {id:8,name:'Micro Lavalier USB-C',img:'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=400&q=80',niche:'creator',basePrice:27.99,oldPrice:44.99,rating:4.7,reviews:1876,supplier:'Zendrop',trend:65,competition:30,gapFR:60,isWinner:false,badge:'sale'},
-  {id:9,name:'Organiseur Câbles Magnétique',img:'https://images.unsplash.com/photo-1593062096033-9a26b09da705?w=400&q=80',niche:'home',basePrice:22.99,oldPrice:39.99,rating:4.7,reviews:3102,supplier:'AliExpress',trend:90,competition:11,gapFR:88,isWinner:true,badge:'hot'},
-  {id:10,name:'Tiroir Sous-Bureau',img:'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=400&q=80',niche:'home',basePrice:31.99,oldPrice:54.99,rating:4.6,reviews:987,supplier:'CJ Dropshipping',trend:85,competition:10,gapFR:87,isWinner:true,badge:'new'},
+const WORLD_EVENTS = [
+  {icon:'🟢',title:'Marché stable',desc:'Conditions normales.',action:'Optimisation continue des marges.'},
+  {icon:'🟡',title:'Vigilance Inflation EU',desc:'Hausse +2.3%.',action:'Produits accessibles mis en avant.'},
+  {icon:'🟠',title:'Tension Supply Chain',desc:'Délais +5 jours.',action:'Switch CJ Dropshipping déclenché.'},
+  {icon:'🔴',title:'Alerte Marché Détectée',desc:'Correction en cours.',action:'Repricing -15%. Email CEO envoyé.'},
 ];
 
-const WORLD_EVENTS=[
-  {icon:'🟢',title:'Marché stable',desc:'Conditions normales.',action:'Optimisation continue des marges.',alertCEO:false},
-  {icon:'🟡',title:'Vigilance Inflation EU',desc:'Hausse +2.3%.',action:'Produits accessibles mis en avant.',alertCEO:false},
-  {icon:'🟠',title:'Tension Supply Chain',desc:'Délais +5 jours.',action:'Switch CJ Dropshipping déclenché.',alertCEO:false},
-  {icon:'🔴',title:'Alerte Marché Détectée',desc:'Correction en cours.',action:'Repricing -15%. Email CEO envoyé.',alertCEO:false},
-];
-
-const DECISIONS=[
+const DECISIONS = [
   {type:'auto',agent:'GapHunter',icon:'🎯',text:'Produit winner importé (score 91) — Bien-être'},
   {type:'auto',agent:'RetireBot',icon:'🗑️',text:'Produit retiré — 0 vente sur 14j'},
   {type:'auto',agent:'PriceOptimizer',icon:'💰',text:'Repricing +8% sur 4 produits'},
@@ -405,28 +289,114 @@ const DECISIONS=[
   {type:'auto',agent:'ContentAI',icon:'✍️',text:'SEO régénéré en 6 langues'},
 ];
 
-const EMAILS=[
-  {id:1,subject:'🟠 FOLLOW. — Tension Supply Chain — Action Requise',time:'Il y a 2h',read:false,body:'Bonjour PDG,\n\nTension Supply Chain détectée.\n• Délais AliExpress +5 jours\n• Rupture partielle Spocket\n\nActions auto :\n✅ Switch CJ Dropshipping\n✅ Clients notifiés\n\nOptions :\n→ A : Continuer\n→ B : Suspendre 48h\n→ C : Me contacter\n\n— AlertCEO'},
-  {id:2,subject:'🔴 FOLLOW. — Alerte Critique — Décision Requise',time:'Il y a 5h',read:false,body:'Bonjour PDG,\n\nALERTE ROUGE.\n• Ventes -32% sur 7j\n\nActions auto :\n✅ Repricing -15%\n✅ Budget pub gelé\n\nOptions :\n→ A : Continuer\n→ B : Pause 30j\n→ C : Clôture\n\n— AlertCEO'},
+const EMAILS = [
+  {id:1,subject:'🟠 FOLLOW. — Tension Supply Chain — Action Requise',time:'Il y a 2h',body:'Bonjour PDG,\n\nTension Supply Chain détectée.\n• Délais AliExpress +5 jours\n• Rupture partielle Spocket\n\nActions auto :\n✅ Switch CJ Dropshipping\n✅ Clients notifiés\n\nOptions :\n→ A : Continuer\n→ B : Suspendre 48h\n→ C : Me contacter\n\n— AlertCEO'},
+  {id:2,subject:'🔴 FOLLOW. — Alerte Critique — Décision Requise',time:'Il y a 5h',body:'Bonjour PDG,\n\nALERTE ROUGE.\n• Ventes -32% sur 7j\n\nActions auto :\n✅ Repricing -15%\n✅ Budget pub gelé\n\nOptions :\n→ A : Continuer\n→ B : Pause 30j\n→ C : Clôture\n\n— AlertCEO'},
 ];
 
-let state={lang:'fr',symbol:'€',niche:'all',cart:[],cartCount:0,stats:{revenue:0,orders:0,visitors:0,products:PRODUCTS.length},agentOn:true,worldEventIdx:0,replies:{},selectedEmail:null,emailsRead:{},orderDone:false};
+let state = {lang:'fr',symbol:'€',niche:'all',cart:[],cartCount:0,stats:{revenue:0,orders:0,visitors:0,products:0},agentOn:true,worldEventIdx:0,replies:{},selectedEmail:null,emailsRead:{},orderDone:false};
 
-function getPrice(base){const m={fr:1.0,en:1.15,es:1.0,ar:0.95,pt:0.80,sw:0.65}[state.lang]||1.0;return (base*m).toFixed(2);}
+function getPrice(base){const m={fr:1.0,en:1.15,es:1.0,ar:0.95,pt:0.80,sw:0.65}[state.lang]||1.0;return(base*m).toFixed(2);}
 function getNiche(id){return NICHES.find(n=>n.id===id)||NICHES[0];}
 function disc(p){return Math.round((1-p.basePrice/p.oldPrice)*100);}
 
+// ── CHARGEMENT PRODUITS ALIEXPRESS ────────────────────────
+async function loadAEProducts() {
+  try {
+    fetch(BACKEND + '/ping').catch(()=>{});
+    const res = await fetch(BACKEND + '?action=gaphunter');
+    const data = await res.json();
+    if (data.success && data.winners && data.winners.length > 0) {
+      PRODUCTS = data.winners.map((p, i) => ({
+        id: 100 + i,
+        name: p.name.substring(0, 60),
+        img: p.image || '',
+        niche: p.niche || 'wellness',
+        basePrice: parseFloat(p.price || 19.99),
+        oldPrice: parseFloat((p.price * 1.5 || 29.99).toFixed(2)),
+        rating: parseFloat(p.rating || 4.5),
+        reviews: p.sales || Math.floor(Math.random()*5000+500),
+        supplier: 'AliExpress',
+        gapFR: p.score || 80,
+        isWinner: true,
+        badge: 'hot',
+        link: p.link || '#'
+      }));
+      productsLoaded = true;
+      state.stats.products = PRODUCTS.length;
+      renderNiches();
+      renderProducts();
+      document.getElementById('catalog-count').textContent = PRODUCTS.length;
+    }
+  } catch(e) {
+    document.getElementById('winners-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">⏳</div><div>Chargement des produits...</div></div>';
+    setTimeout(loadAEProducts, 5000);
+  }
+}
+
+async function loadRealDashboardData() {
+  try {
+    const [ww,ts,hb,gh] = await Promise.allSettled([
+      fetch(BACKEND+'?action=worldwatch').then(r=>r.json()),
+      fetch(BACKEND+'?action=trendscanner').then(r=>r.json()),
+      fetch(BACKEND+'?action=harvestbot').then(r=>r.json()),
+      fetch(BACKEND+'?action=gaphunter').then(r=>r.json()),
+    ]);
+    const d=[];
+    if(ww.status==='fulfilled'&&ww.value.events) ww.value.events.forEach(e=>d.push({type:e.level==='green'?'auto':'ceo',agent:'WorldWatch',icon:'🌍',text:e.domain+' — '+e.event}));
+    if(ts.status==='fulfilled'&&ts.value.trends) ts.value.trends.slice(0,2).forEach(t=>d.push({type:'auto',agent:'TrendScanner',icon:'🔍',text:t.product+' — '+t.platform}));
+    if(hb.status==='fulfilled'&&hb.value.total_eur>0) d.push({type:'auto',agent:'HarvestBot',icon:'🌾',text:hb.value.total_opportunities+' opportunités — '+hb.value.total_eur+'€'});
+    if(gh.status==='fulfilled'&&gh.value.winners) d.push({type:'auto',agent:'GapHunter',icon:'🎯',text:gh.value.total+' produits winners trouvés'});
+    if(d.length>0){DECISIONS.length=0;d.forEach(x=>DECISIONS.push(x));}
+    renderDashboard();
+  } catch(e){}
+}
+
+loadAEProducts();
+setInterval(loadAEProducts, 3600000);
+setTimeout(loadRealDashboardData, 3000);
+setInterval(loadRealDashboardData, 900000);
+
+// ── STRIPE ────────────────────────────────────────────────
+function initStripeCard(){
+  if(cardElement)return;
+  cardElement=elements.create('card',{style:{base:{color:'#f0f0f8',fontFamily:'"DM Sans",sans-serif',fontSize:'15px','::placeholder':{color:'#44445a'}},invalid:{color:'#ff8888'}}});
+  cardElement.mount('#stripe-card-element');
+}
+function openStripe(amount,name){
+  document.getElementById('stripe-amount').textContent=state.symbol+amount.toFixed(2);
+  document.getElementById('stripe-product-name').textContent=name||'Commande FOLLOW.';
+  document.getElementById('stripe-overlay').classList.add('show');
+  document.getElementById('stripe-error').textContent='';
+  document.getElementById('stripe-submit').textContent='💳 Payer maintenant';
+  document.getElementById('stripe-submit').disabled=false;
+  setTimeout(initStripeCard,100);
+}
+function closeStripe(){document.getElementById('stripe-overlay').classList.remove('show');}
+
+document.getElementById('stripe-form').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const btn=document.getElementById('stripe-submit');
+  btn.textContent='⏳ Traitement...';btn.disabled=true;
+  try{
+    const {error}=await stripe.createPaymentMethod({type:'card',card:cardElement});
+    if(error){document.getElementById('stripe-error').textContent=error.message;btn.textContent='💳 Payer maintenant';btn.disabled=false;}
+    else{closeStripe();state.orderDone=true;state.cart=[];state.cartCount=0;updateCartCount();showView('cart');}
+  }catch(err){document.getElementById('stripe-error').textContent='Erreur. Réessayez.';btn.textContent='💳 Payer maintenant';btn.disabled=false;}
+});
+
+// ── PRODUITS ──────────────────────────────────────────────
 function renderNiches(){
-  document.getElementById('niches-bar').innerHTML=NICHES.map(n=>`<button class="niche-btn" onclick="setNiche('${n.id}')" style="background:${state.niche===n.id?n.color:'var(--card)'};color:${state.niche===n.id?'#080808':'var(--muted)'};border-color:${state.niche===n.id?n.color:'var(--border)'}">
-    ${n.icon} ${n.label}${n.visits?`<span style="background:#00000025;border-radius:4px;padding:1px 5px;font-size:10px">${n.visits}</span>`:''}</button>`).join('');
+  document.getElementById('niches-bar').innerHTML=NICHES.map(n=>`<button class="niche-btn" onclick="setNiche('${n.id}')" style="background:${state.niche===n.id?n.color:'var(--card)'};color:${state.niche===n.id?'#080808':'var(--muted)'};border-color:${state.niche===n.id?n.color:'var(--border)'}">${n.icon} ${n.label}${n.visits?`<span style="background:#00000025;border-radius:4px;padding:1px 5px;font-size:10px">${n.visits}</span>`:''}</button>`).join('');
 }
 function setNiche(id){state.niche=id;renderNiches();renderProducts();}
 
 function renderProducts(){
+  if(!productsLoaded)return;
   const f=state.niche==='all'?PRODUCTS:PRODUCTS.filter(p=>p.niche===state.niche);
   const w=f.filter(p=>p.isWinner);
   document.getElementById('catalog-count').textContent=f.length;
-  document.getElementById('winners-grid').innerHTML=w.map(p=>pCard(p,true)).join('');
+  document.getElementById('winners-grid').innerHTML=w.length>0?w.map(p=>pCard(p,true)).join(''):'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Aucun produit dans cette catégorie</div>';
   document.getElementById('products-grid').innerHTML=f.map(p=>pCard(p,false)).join('');
 }
 
@@ -434,13 +404,13 @@ function pCard(p,isWinner){
   const n=getNiche(p.niche);
   const price=getPrice(p.basePrice);
   const oldP=getPrice(p.oldPrice);
-  const badge=p.badge==='hot'?'🔥 Tendance':p.badge==='new'?'✨ Nouveau':'💥 Promo';
+  const imgHtml=p.img?`<img class="pcard-img" src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"img-placeholder\\">📦</div>'">`:`<div class="img-placeholder">📦</div>`;
   return `<div class="pcard">
     <div class="pcard-img-wrap">
-      <img class="pcard-img" src="${p.img}" alt="${p.name}" loading="lazy"/>
+      ${imgHtml}
       <div style="position:absolute;top:10px;left:10px;display:flex;gap:5px">
         ${isWinner?`<span class="badge" style="background:#C8FF0022;color:var(--accent);border:1px solid #C8FF0040">🏆</span>`:''}
-        <span class="badge" style="background:#08080888;color:#aaa;border:1px solid var(--border)">${badge}</span>
+        <span class="badge" style="background:#08080888;color:#aaa;border:1px solid var(--border)">🔥 Tendance</span>
       </div>
       <span style="position:absolute;top:10px;right:10px;background:var(--accent);color:#080808;font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px">-${disc(p)}%</span>
       <div style="position:absolute;bottom:0;left:0;right:0;background:#07070988;backdrop-filter:blur(10px);padding:6px 10px">
@@ -472,9 +442,8 @@ function addToCart(id){
   const ex=state.cart.find(i=>i.id===id);
   if(ex){ex.qty++;}else{state.cart.push({...p,qty:1});}
   state.cartCount=state.cart.reduce((s,i)=>s+i.qty,0);
-  updateCartCount();renderProducts();
+  updateCartCount();
 }
-
 function updateCartCount(){
   const b=document.getElementById('cart-count');
   if(state.cartCount>0){b.textContent=state.cartCount;b.style.display='flex';}else{b.style.display='none';}
@@ -483,14 +452,16 @@ function updateCartCount(){
 function renderCart(){
   const total=state.cart.reduce((s,i)=>s+(parseFloat(getPrice(i.basePrice))*i.qty),0);
   if(state.orderDone){
-    document.getElementById('cart-content').innerHTML=`<div style="max-width:460px;margin:100px auto;text-align:center;padding:0 24px"><div style="font-size:52px;margin-bottom:18px">✅</div><div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;margin-bottom:10px">COMMANDE CONFIRMÉE !</div><div style="color:var(--muted);line-height:1.7;margin-bottom:24px">Paiement reçu. Livraison sous 7-15 jours.</div><button class="btn" onclick="state.orderDone=false;state.cart=[];state.cartCount=0;updateCartCount();showView('store')">Continuer les achats</button></div>`;return;
+    document.getElementById('cart-content').innerHTML=`<div style="max-width:460px;margin:100px auto;text-align:center;padding:0 24px"><div style="font-size:52px;margin-bottom:18px">✅</div><div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;margin-bottom:10px">COMMANDE CONFIRMÉE !</div><div style="color:var(--muted);line-height:1.7;margin-bottom:24px">Paiement reçu. Livraison sous 7-15 jours.</div><button class="btn" onclick="state.orderDone=false;state.cart=[];state.cartCount=0;updateCartCount();showView('store')">Continuer les achats</button></div>`;
+    return;
   }
   if(state.cart.length===0){
-    document.getElementById('cart-content').innerHTML=`<div style="text-align:center;padding:80px 0"><div style="font-size:40px;margin-bottom:12px">🛒</div><div style="color:var(--muted);margin-bottom:16px">Votre panier est vide</div><button class="btn" onclick="showView('store')">Découvrir nos produits</button></div>`;return;
+    document.getElementById('cart-content').innerHTML=`<div style="text-align:center;padding:80px 0"><div style="font-size:40px;margin-bottom:12px">🛒</div><div style="color:var(--muted);margin-bottom:16px">Votre panier est vide</div><button class="btn" onclick="showView('store')">Découvrir nos produits</button></div>`;
+    return;
   }
   document.getElementById('cart-content').innerHTML=`
     <div>${state.cart.map(item=>`<div class="cart-item">
-      <img src="${item.img}" style="width:64px;height:64px;border-radius:9px;object-fit:cover"/>
+      ${item.img?`<img src="${item.img}" style="width:64px;height:64px;border-radius:9px;object-fit:cover" onerror="this.outerHTML='<div style=\\"width:64px;height:64px;border-radius:9px;background:var(--mid);display:flex;align-items:center;justify-content:center;font-size:24px\\">📦</div>'">`:'<div style="width:64px;height:64px;border-radius:9px;background:var(--mid);display:flex;align-items:center;justify-content:center;font-size:24px">📦</div>'}
       <div style="flex:1"><div style="font-weight:700;font-size:14px">${item.name}</div><div style="color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;margin-top:2px">${state.symbol}${getPrice(item.basePrice)}</div></div>
       <div style="display:flex;align-items:center;gap:7px">
         <button onclick="updateQty(${item.id},-1)" style="background:var(--mid);border:none;color:var(--text);width:26px;height:26px;border-radius:5px;cursor:pointer">−</button>
@@ -504,7 +475,7 @@ function renderCart(){
       <div style="display:flex;justify-content:space-between;margin-bottom:14px;color:#00ff88;font-size:13px"><span>🚚 Livraison gratuite</span><span>${state.symbol}0.00</span></div>
       <div style="display:flex;justify-content:space-between;margin-bottom:18px;font-family:'Bebas Neue',sans-serif;font-size:22px"><span>TOTAL</span><span style="color:var(--accent)">${state.symbol}${total.toFixed(2)}</span></div>
       <button class="btn" style="width:100%;padding:14px;font-size:14px" onclick="openStripe(${total},'Commande FOLLOW.')">🔒 PAYER AVEC STRIPE — ${state.symbol}${total.toFixed(2)}</button>
-      <div style="text-align:center;color:#333;font-size:10px;margin-top:10px">Stripe · SEPA · SSL 256-bit · Paiement sécurisé</div>
+      <div style="text-align:center;color:#333;font-size:10px;margin-top:10px">Stripe · SSL 256-bit · Paiement sécurisé</div>
     </div>`;
 }
 
@@ -513,13 +484,13 @@ function removeFromCart(id){state.cart=state.cart.filter(i=>i.id!==id);state.car
 
 function renderDashboard(){
   document.getElementById('stats-grid').innerHTML=[
-    {l:'Revenus',v:`${state.symbol}${state.stats.revenue.toLocaleString()}`,icon:'💰',c:'#C8FF00',ch:''},
-    {l:'Commandes',v:state.stats.orders.toLocaleString(),icon:'📦',c:'#00CFFF',ch:''},
-    {l:'Produits',v:state.stats.products,icon:'🏷️',c:'#FF6B35',ch:''},
-    {l:'Visiteurs',v:state.stats.visitors.toLocaleString(),icon:'👁️',c:'#FF3CAC',ch:''},
-  ].map(s=>`<div class="stat-card"><span style="background:${s.c}18;color:${s.c};font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;float:right">${s.ch}</span><div style="font-size:24px;margin-bottom:10px">${s.icon}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:${s.c}">${s.v}</div><div style="color:var(--muted);font-size:11px;margin-top:3px">${s.l}</div></div>`).join('');
-  document.getElementById('top-winners').innerHTML=PRODUCTS.filter(p=>p.isWinner).slice(0,4).map((p,i)=>{const n=getNiche(p.niche);return `<div class="panel-row"><span style="color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:14px;min-width:18px">#${i+1}</span><img src="${p.img}" style="width:36px;height:36px;border-radius:7px;object-fit:cover"/><div style="flex:1"><div style="font-weight:600;font-size:12px">${p.name}</div><div style="color:${n.color};font-size:10px">${n.icon} ${n.label}</div></div><div style="text-align:right"><div style="color:var(--accent);font-weight:700;font-size:12px">Score ${p.gapFR}</div></div></div>`;}).join('');
-  document.getElementById('suppliers-list').innerHTML=[{n:'AliExpress',c:'#FF6600',s:'✅'},{n:'CJ Dropshipping',c:'#00CFFF',s:'✅'},{n:'Zendrop',c:'#AA00FF',s:'✅'},{n:'Spocket',c:'#00FF88',s:'✅'},{n:'DSers',c:'#FFD700',s:'🔄'}].map(s=>`<div class="panel-row"><div style="width:7px;height:7px;border-radius:50%;background:${s.c};flex-shrink:0"></div><div style="flex:1;font-weight:600;font-size:12px">${s.n}</div><span style="font-size:12px">${s.s}</span></div>`).join('');
+    {l:'Revenus',v:`${state.symbol}${state.stats.revenue.toLocaleString()}`,icon:'💰',c:'#C8FF00'},
+    {l:'Commandes',v:state.stats.orders.toLocaleString(),icon:'📦',c:'#00CFFF'},
+    {l:'Produits',v:PRODUCTS.length||'...',icon:'🏷️',c:'#FF6B35'},
+    {l:'Visiteurs',v:state.stats.visitors.toLocaleString(),icon:'👁️',c:'#FF3CAC'},
+  ].map(s=>`<div class="stat-card"><div style="font-size:24px;margin-bottom:10px">${s.icon}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:${s.c}">${s.v}</div><div style="color:var(--muted);font-size:11px;margin-top:3px">${s.l}</div></div>`).join('');
+  document.getElementById('top-winners').innerHTML=PRODUCTS.filter(p=>p.isWinner).slice(0,4).map((p,i)=>{const n=getNiche(p.niche);return`<div class="panel-row"><span style="color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:14px;min-width:18px">#${i+1}</span>${p.img?`<img src="${p.img}" style="width:36px;height:36px;border-radius:7px;object-fit:cover">`:'<div style="width:36px;height:36px;border-radius:7px;background:var(--mid);display:flex;align-items:center;justify-content:center">📦</div>'}<div style="flex:1"><div style="font-weight:600;font-size:12px">${p.name}</div><div style="color:${n.color};font-size:10px">${n.icon} ${n.label}</div></div><div style="color:var(--accent);font-weight:700;font-size:12px">Score ${p.gapFR}</div></div>`;}).join('');
+  document.getElementById('suppliers-list').innerHTML=[{n:'AliExpress',c:'#FF6600',s:'✅'},{n:'CJ Dropshipping',c:'#00CFFF',s:'✅'},{n:'Zendrop',c:'#AA00FF',s:'✅'},{n:'Spocket',c:'#00FF88',s:'✅'},{n:'DSers',c:'#FFD700',s:'🔄'}].map(s=>`<div class="panel-row"><div style="width:7px;height:7px;border-radius:50%;background:${s.c};flex-shrink:0"></div><div style="flex:1;font-weight:600;font-size:12px">${s.n}</div><span>${s.s}</span></div>`).join('');
 }
 
 const AGENTS_DATA=[
@@ -542,14 +513,7 @@ function renderAgents(){
   document.getElementById('agents-grid').innerHTML=AGENTS_DATA.map(a=>`<div class="agent-card"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:9px;background:${a.color}18;border:1px solid ${a.color}30;display:flex;align-items:center;justify-content:center;font-size:18px">${a.icon}</div><span style="font-weight:700;font-size:14px">${a.name}</span></div><div style="display:flex;align-items:center;gap:5px"><div style="width:7px;height:7px;border-radius:50%;background:${state.agentOn?a.color:'#333'}"></div><span style="font-size:10px;font-weight:700;color:${state.agentOn?a.color:'#333'}">${state.agentOn?'ON':'OFF'}</span></div></div><div style="color:var(--muted);font-size:11.5px;line-height:1.5">${a.role}</div></div>`).join('');
   document.getElementById('charte-grid').innerHTML=[{cat:'✅ Auto',color:'#C8FF00',items:['Produit score >85','Prix ±10%','Retirer perdant']},{cat:'📧 CEO informé',color:'#ffd700',items:['Nouveau fournisseur','Prix >25%','Anomalie détectée']},{cat:'🚨 CEO décide',color:'#ff8888',items:['Crise économique','Ventes -30%','Clôture boutique']}].map(c=>`<div class="charte-card"><div style="font-weight:700;font-size:13px;margin-bottom:12px;color:${c.color}">${c.cat}</div>${c.items.map(item=>`<div style="color:var(--muted);font-size:11.5px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px"><span style="color:${c.color};font-size:10px">→</span>${item}</div>`).join('')}</div>`).join('');
 }
-
 function toggleAgents(){state.agentOn=!state.agentOn;document.getElementById('agent-toggle-btn').textContent=state.agentOn?'⏸ Pause':'▶ Activer';renderAgents();}
-
-function renderAgentLog(){
-  const logBody=document.getElementById('log-body');if(!logBody)return;logBody.innerHTML='';
-  DECISIONS.forEach(function(d){const time=new Date().toLocaleTimeString();const line=document.createElement('div');line.className='log-line log-'+d.type;line.innerHTML=`<span style="opacity:.5;margin-right:8px;font-size:10px">${time}</span><span style="font-size:10px;opacity:.6">[${d.agent}]</span> ${d.icon} ${d.text}`;logBody.appendChild(line);});
-  const count=document.getElementById('log-count');if(count)count.textContent=DECISIONS.length+' décisions';
-}
 
 function renderEmails(){
   const unread=EMAILS.filter(e=>!state.emailsRead[e.id]).length;
@@ -559,7 +523,6 @@ function renderEmails(){
   if(state.selectedEmail){const e=EMAILS.find(x=>x.id===state.selectedEmail);if(e)document.getElementById('email-detail-wrap').innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-top:16px"><div style="font-weight:700;font-size:15px;margin-bottom:16px">${e.subject}</div><pre style="font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:1.8;color:#ccc;white-space:pre-wrap;border-top:1px solid var(--border);padding-top:16px;margin-bottom:20px">${e.body}</pre>${!state.replies[e.id]?`<div style="color:var(--muted);font-size:12px;font-weight:700;margin-bottom:10px">VOTRE DÉCISION :</div><div style="display:flex;gap:8px"><button class="btn" onclick="replyEmail(${e.id},'A')" style="flex:1;background:linear-gradient(135deg,var(--accent),#a8d400);color:#080808">A</button><button class="btn" onclick="replyEmail(${e.id},'B')" style="flex:1;background:linear-gradient(135deg,#ffd700,#cc9900);color:#080808">B</button><button class="btn" onclick="replyEmail(${e.id},'C')" style="flex:1;background:linear-gradient(135deg,#ff4444,#cc2222);color:#fff">C</button></div>`:`<div style="background:#C8FF0012;border:1px solid #C8FF0030;border-radius:8px;padding:14px;text-align:center"><div style="color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px">✅ OPTION ${state.replies[e.id]}</div></div>`}</div>`;}
   else document.getElementById('email-detail-wrap').innerHTML='';
 }
-
 function openEmail(id){state.selectedEmail=id;state.emailsRead[id]=true;renderEmails();}
 function replyEmail(id,opt){state.replies[id]=opt;renderEmails();}
 
@@ -569,19 +532,17 @@ function updateWorldEvent(){
   document.getElementById('wb-title').textContent=ev.title;
   document.getElementById('wb-desc').textContent=ev.desc;
   document.getElementById('wb-action').textContent='⚡ '+ev.action;
-  // NE PAS afficher l'alerte CEO aux clients
 }
 
 let logIdx=0;
 function agentTick(){
-  if(!state.agentOn) return;
+  if(!state.agentOn)return;
   const d=DECISIONS[logIdx%DECISIONS.length];
-  const time=new Date().toLocaleTimeString();
   const logBody=document.getElementById('log-body');
-  if(logBody.children[0]&&logBody.children[0].textContent.includes('Démarrage')){logBody.innerHTML='';}
+  if(logBody.children[0]&&logBody.children[0].textContent.includes('Démarrage'))logBody.innerHTML='';
   const line=document.createElement('div');
   line.className='log-line log-'+d.type;
-  line.innerHTML=`<span style="opacity:.5;margin-right:8px;font-size:10px">${time}</span><span style="font-size:10px;opacity:.6">[${d.agent}]</span> ${d.icon} ${d.text}`;
+  line.innerHTML=`<span style="opacity:.5;margin-right:8px;font-size:10px">${new Date().toLocaleTimeString()}</span><span style="font-size:10px;opacity:.6">[${d.agent}]</span> ${d.icon} ${d.text}`;
   logBody.insertBefore(line,logBody.firstChild);
   if(logBody.children.length>40)logBody.removeChild(logBody.lastChild);
   const count=document.getElementById('log-count');
@@ -600,15 +561,15 @@ function showView(name){
   if(name==='cart')renderCart();
   if(name==='emails')renderEmails();
   if(name==='dashboard')renderDashboard();
-  if(name==='agents'){renderAgents();renderAgentLog();}
+  if(name==='agents'){renderAgents();logIdx=0;document.getElementById('log-body').innerHTML='<div style="color:#222;text-align:center;padding:60px;font-size:12px">⏳ Démarrage...</div>';}
   window.scrollTo(0,0);
 }
 
 document.addEventListener('click',e=>{
-  if(!e.target.closest('[onclick="toggleLang()"]')&&!e.target.closest('#lang-menu')){document.getElementById('lang-menu').classList.remove('open');}
+  if(!e.target.closest('[onclick="toggleLang()"]')&&!e.target.closest('#lang-menu'))document.getElementById('lang-menu').classList.remove('open');
 });
 
-renderNiches();renderProducts();renderDashboard();renderAgents();renderEmails();updateWorldEvent();
+renderNiches();renderDashboard();renderAgents();renderEmails();updateWorldEvent();
 setInterval(agentTick,2800);
 setInterval(()=>{state.worldEventIdx=(state.worldEventIdx+1)%WORLD_EVENTS.length;updateWorldEvent();},15000);
 </script>
