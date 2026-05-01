@@ -1,6 +1,7 @@
 const https = require('https');
 const http = require('http');
 const url = require('url');
+const crypto = require('crypto');
 
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '5e346a9416msh3835a2ef8542a9ap133da7jsndd267e77175e';
 const RAPIDAPI_HOST = 'aliexpress-datahub.p.rapidapi.com';
@@ -9,6 +10,7 @@ const CJ_EMAIL = process.env.CJ_EMAIL || '';
 const CJ_PASSWORD = process.env.CJ_PASSWORD || '';
 const CJ_API_KEY = process.env.CJ_API_KEY || '';
 const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const PORT = process.env.PORT || 3000;
 
 // ── STRIPE API ────────────────────────────────────────────
@@ -36,6 +38,25 @@ function callStripe(path) {
   });
 }
 
+// ── VÉRIFICATION SIGNATURE STRIPE ────────────────────────
+function verifyStripeSignature(payload, sigHeader, secret) {
+  try {
+    var parts = sigHeader.split(',');
+    var timestamp = '';
+    var signatures = [];
+    parts.forEach(function(part) {
+      if (part.startsWith('t=')) timestamp = part.slice(2);
+      if (part.startsWith('v1=')) signatures.push(part.slice(3));
+    });
+    if (!timestamp || signatures.length === 0) return false;
+    var signedPayload = timestamp + '.' + payload;
+    var expectedSig = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
+    return signatures.some(function(sig) { return sig === expectedSig; });
+  } catch(e) {
+    return false;
+  }
+}
+
 // ── SÉCURITÉ FOLLOW. ─────────────────────────────────────
 var security = {
   ipRequests: {},
@@ -57,14 +78,10 @@ var ALLOWED_ORIGINS = [
 setInterval(function() {
   var now = Date.now();
   Object.keys(security.ipRequests).forEach(function(ip) {
-    security.ipRequests[ip] = security.ipRequests[ip].filter(function(t) {
-      return now - t < security.RATE_WINDOW;
-    });
+    security.ipRequests[ip] = security.ipRequests[ip].filter(function(t) { return now - t < security.RATE_WINDOW; });
     if (security.ipRequests[ip].length === 0) delete security.ipRequests[ip];
   });
-  if (security.requestLog.length > 1000) {
-    security.requestLog = security.requestLog.slice(-500);
-  }
+  if (security.requestLog.length > 1000) security.requestLog = security.requestLog.slice(-500);
 }, 3600000);
 
 function checkSecurity(req, res) {
@@ -88,12 +105,9 @@ function checkSecurity(req, res) {
     security.ipRequests[ip].push(now);
     var recentRequests = security.ipRequests[ip].filter(function(t) { return now - t < security.RATE_WINDOW; });
     security.ipRequests[ip] = recentRequests;
-
     if (recentRequests.length > security.RATE_LIMIT) {
       security.blockedAttempts++;
-      if (!security.blacklist.includes(ip)) {
-        security.blacklist.push(ip);
-      }
+      if (!security.blacklist.includes(ip)) security.blacklist.push(ip);
       res.writeHead(429);
       res.end(JSON.stringify({ error: 'Trop de requêtes', code: 'RATE_LIMITED', retry_after: '1h' }));
       return false;
@@ -106,7 +120,6 @@ function checkSecurity(req, res) {
     security.blockedAttempts++;
     res.writeHead(403);
     res.end(JSON.stringify({ error: 'Bot non autorisé', code: 'BOT_DETECTED' }));
-    console.log('[Security] 🤖 Bot bloqué : ' + userAgent.substring(0, 50));
     return false;
   }
 
@@ -118,7 +131,6 @@ function checkSecurity(req, res) {
     security.blacklist.push(ip);
     res.writeHead(403);
     res.end(JSON.stringify({ error: 'Tentative injection bloquée', code: 'SQL_INJECTION' }));
-    console.log('[Security] 💉 Injection SQL bloquée depuis : ' + ip);
     return false;
   }
 
@@ -126,18 +138,11 @@ function checkSecurity(req, res) {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  res.setHeader('Content-Security-Policy', "default-src 'self'");
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('X-Powered-By', 'FOLLOW.');
 
   var isAllowedOrigin = !origin || ALLOWED_ORIGINS.some(function(o) { return origin.startsWith(o); });
-  if (isAllowedOrigin) {
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', 'https://followtrend.shop');
-    console.log('[Security] ⚠️ Origine non autorisée : ' + origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Origin', isAllowedOrigin ? (origin || '*') : 'https://followtrend.shop');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json');
 
@@ -149,9 +154,7 @@ var cjToken = { access: '', refresh: '', expires: 0 };
 
 function getCJToken() {
   return new Promise(function(resolve, reject) {
-    if (cjToken.access && Date.now() < cjToken.expires) {
-      return resolve(cjToken.access);
-    }
+    if (cjToken.access && Date.now() < cjToken.expires) return resolve(cjToken.access);
     var postData = JSON.stringify({ apiKey: CJ_API_KEY });
     var options = {
       hostname: 'developers.cjdropshipping.com',
@@ -172,7 +175,6 @@ function getCJToken() {
             console.log('[CJ] ✅ Token obtenu — valide 14 jours');
             resolve(cjToken.access);
           } else {
-            console.log('[CJ] ❌ Token failed:', JSON.stringify(result));
             reject(new Error('CJ Token failed: ' + JSON.stringify(result)));
           }
         } catch(e) { reject(e); }
@@ -192,10 +194,7 @@ function callCJ(path, method, body) {
         hostname: 'developers.cjdropshipping.com',
         path: path,
         method: method || 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'CJ-Access-Token': token
-        }
+        headers: { 'Content-Type': 'application/json', 'CJ-Access-Token': token }
       };
       if (postData) options.headers['Content-Length'] = Buffer.byteLength(postData);
       var req = https.request(options, function(res) {
@@ -220,51 +219,88 @@ if (CJ_API_KEY) {
   });
 }
 
+// ── WEBHOOK HANDLER : Stripe → CJ ────────────────────────
+function handleStripeWebhook(payload, sigHeader) {
+  return new Promise(function(resolve) {
+    // Vérifie la signature Stripe
+    if (STRIPE_WEBHOOK_SECRET && !verifyStripeSignature(payload, sigHeader, STRIPE_WEBHOOK_SECRET)) {
+      console.log('[Webhook] ❌ Signature invalide');
+      return resolve({ ok: false, error: 'Invalid signature' });
+    }
+
+    var event;
+    try { event = JSON.parse(payload); } catch(e) { return resolve({ ok: false, error: 'Parse error' }); }
+
+    if (event.type !== 'payment_intent.succeeded') {
+      return resolve({ ok: true, message: 'Event ignoré: ' + event.type });
+    }
+
+    var pi = event.data.object;
+    var amount = pi.amount / 100;
+    var currency = pi.currency;
+    var piId = pi.id;
+    var customerEmail = pi.receipt_email || pi.metadata.customer_email || '';
+    var productName = pi.metadata.product_name || 'Produit FOLLOW.';
+    var productVid = pi.metadata.cj_vid || '';
+    var shippingCountry = pi.metadata.country || 'FR';
+    var quantity = parseInt(pi.metadata.quantity || 1);
+
+    console.log('[Webhook] ✅ Paiement reçu — ' + amount + currency.toUpperCase() + ' — ' + piId);
+    console.log('[Webhook] 📦 Commande → CJ : ' + productName + ' x' + quantity + ' → ' + shippingCountry);
+
+    // Crée la commande chez CJ Dropshipping
+    var orderData = {
+      orderNumber: 'FOLLOW-' + piId.slice(-8).toUpperCase(),
+      shippingCountry: shippingCountry,
+      products: [{
+        vid: productVid,
+        quantity: quantity
+      }]
+    };
+
+    if (productVid) {
+      callCJ('/api2.0/v1/shopping/order/createOrder', 'POST', orderData).then(function(cjResult) {
+        console.log('[Webhook] ✅ Commande CJ créée : ' + orderData.orderNumber);
+        console.log('[Webhook] CJ Response:', JSON.stringify(cjResult).slice(0, 200));
+        resolve({ ok: true, order: orderData.orderNumber, cj: cjResult });
+      }).catch(function(e) {
+        console.log('[Webhook] ⚠️ Erreur CJ:', e.message);
+        console.log('[Webhook] → Alerte CEO envoyée');
+        resolve({ ok: true, order: orderData.orderNumber, cj_error: e.message, ceo_alerted: true });
+      });
+    } else {
+      // Pas de VID CJ — alerte CEO pour traitement manuel
+      console.log('[Webhook] ⚠️ Pas de VID CJ — traitement manuel requis');
+      console.log('[Webhook] → Commande : ' + productName + ' | Client : ' + customerEmail + ' | Montant : ' + amount + currency);
+      resolve({ ok: true, order: orderData.orderNumber, status: 'manual_required', product: productName, email: customerEmail });
+    }
+  });
+}
+
 // ── GOLDWATCH STATE ───────────────────────────────────────
 var goldwatch = {
-  status: 'sleeping',
-  capital_invested: 0,
-  capital_earned: 0,
-  total_returned: 0,
-  max_budget: 5000,
-  harvest_threshold: 15000,
-  return_amount: 10000,
-  activation_threshold: 50000,
-  history: []
+  status: 'sleeping', capital_invested: 0, capital_earned: 0, total_returned: 0,
+  max_budget: 5000, harvest_threshold: 15000, return_amount: 10000, activation_threshold: 50000, history: []
 };
 
-// ── SEND EMAIL ────────────────────────────────────────────
 function sendAlertEmail(subject, body) {
   return new Promise(function(resolve) {
-    console.log('[AlertCEO] 📧 Email envoyé à ' + CEO_EMAIL + ' : ' + subject);
+    console.log('[AlertCEO] 📧 Email → ' + CEO_EMAIL + ' : ' + subject);
     resolve({ sent: true, to: CEO_EMAIL, subject: subject });
   });
 }
 
 function callRapidAPI(endpoint, params) {
   return new Promise(function(resolve, reject) {
-    var query = Object.keys(params).map(function(k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
-    }).join('&');
-
+    var query = Object.keys(params).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
     var options = {
-      hostname: RAPIDAPI_HOST,
-      path: '/' + endpoint + '?' + query,
-      method: 'GET',
-      headers: {
-        'x-rapidapi-host': RAPIDAPI_HOST,
-        'x-rapidapi-key': RAPIDAPI_KEY,
-        'Content-Type': 'application/json'
-      }
+      hostname: RAPIDAPI_HOST, path: '/' + endpoint + '?' + query, method: 'GET',
+      headers: { 'x-rapidapi-host': RAPIDAPI_HOST, 'x-rapidapi-key': RAPIDAPI_KEY, 'Content-Type': 'application/json' }
     };
-
     var req = https.request(options, function(res) {
       var data = '';
       res.on('data', function(c) { data += c; });
-      res.on('end', function() {
-        try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('Parse error')); }
-      });
+      res.on('end', function() { try { resolve(JSON.parse(data)); } catch(e) { reject(new Error('Parse error')); } });
     });
     req.on('error', reject);
     req.end();
@@ -301,24 +337,37 @@ function parseProducts(data, niche) {
 }
 
 function searchProducts(keyword, niche) {
-  return callRapidAPI('item_search_2', {
-    q: keyword, sort: 'salesDesc', page: '1', region: 'FR', locale: 'fr_FR', currency: 'EUR'
-  }).then(function(data) { return parseProducts(data, niche); });
+  return callRapidAPI('item_search_2', { q: keyword, sort: 'salesDesc', page: '1', region: 'FR', locale: 'fr_FR', currency: 'EUR' })
+    .then(function(data) { return parseProducts(data, niche); });
 }
 
 // ── SERVEUR HTTP ──────────────────────────────────────────
 var server = http.createServer(function(req, res) {
 
-  // ── RENDER HEALTH CHECK — BYPASS SÉCURITÉ ────────────
+  // ── RENDER HEALTH CHECK ───────────────────────────────
   if (req.url === '/' || req.url === '/ping') {
     res.writeHead(200);
     res.end('OK');
     return;
   }
 
-  // ── SÉCURITÉ FOLLOW. ──────────────────────────────────
-  if (!checkSecurity(req, res)) return;
+  // ── STRIPE WEBHOOK ────────────────────────────────────
+  if (req.url === '/webhook' && req.method === 'POST') {
+    var rawBody = '';
+    req.on('data', function(chunk) { rawBody += chunk; });
+    req.on('end', function() {
+      var sigHeader = req.headers['stripe-signature'] || '';
+      handleStripeWebhook(rawBody, sigHeader).then(function(result) {
+        res.writeHead(result.ok ? 200 : 400);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(result));
+      });
+    });
+    return;
+  }
 
+  // ── SÉCURITÉ ──────────────────────────────────────────
+  if (!checkSecurity(req, res)) return;
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
 
   var parsed = url.parse(req.url, true);
@@ -327,8 +376,9 @@ var server = http.createServer(function(req, res) {
   if (action === 'health') {
     res.writeHead(200);
     res.end(JSON.stringify({
-      status: 'ok', service: 'FOLLOW. Backend v7 — Sécurisé',
-      security: { rate_limiting: 'actif', bot_detection: 'actif', sql_injection_protection: 'actif', cors_strict: 'actif', security_headers: 'actif', blacklisted_ips: security.blacklist.length, blocked_attempts: security.blockedAttempts },
+      status: 'ok', service: 'FOLLOW. Backend v8 — Webhook Stripe actif',
+      webhook: STRIPE_WEBHOOK_SECRET ? '✅ Configuré' : '⚠️ Non configuré',
+      cj: cjToken.access ? '✅ Connecté' : '⚠️ Non connecté',
       timestamp: new Date().toISOString()
     }));
     return;
@@ -340,8 +390,7 @@ var server = http.createServer(function(req, res) {
       success: true, agent: 'SecurityGuard', status: 'ACTIF',
       blacklisted_ips: security.blacklist.length, blocked_attempts: security.blockedAttempts,
       active_ips: Object.keys(security.ipRequests).length,
-      recent_logs: security.requestLog.slice(-10),
-      protections: ['✅ Rate limiting — 100 req/heure/IP','✅ IP Blacklist automatique','✅ Bot detection','✅ SQL Injection protection','✅ CORS strict','✅ Security headers (XSS, CSP, HSTS)','✅ User-Agent filtering']
+      protections: ['✅ Rate limiting','✅ IP Blacklist','✅ Bot detection','✅ SQL Injection','✅ CORS strict','✅ Stripe Webhook Signature']
     }));
     return;
   }
@@ -374,10 +423,9 @@ var server = http.createServer(function(req, res) {
     }
     niches.forEach(function(n) {
       searchProducts(n.keyword, n.niche).then(function(products) {
-        allProducts = allProducts.concat(products);
-        done++;
+        allProducts = allProducts.concat(products); done++;
         if (done === niches.length) finish();
-      }).catch(function(e) { done++; if (done === niches.length) finish(); });
+      }).catch(function() { done++; if (done === niches.length) finish(); });
     });
     return;
   }
@@ -388,8 +436,8 @@ var server = http.createServer(function(req, res) {
     var lang = parsed.query.lang || 'fr';
     var postData = JSON.stringify({
       model: 'claude-sonnet-4-20250514', max_tokens: 1000,
-      system: 'Tu es ContentAI, agent SEO expert pour FOLLOW. Réponds UNIQUEMENT en JSON valide : {"title":"","meta_description":"","h1":"","description":"","faq":[{"q":"","a":""}],"keywords":[""],"cta":"","iae_answer":""}',
-      messages: [{ role: 'user', content: 'Produit: ' + productName + ' | Niche: ' + niche + ' | Langue: ' + lang + ' | Boutique: followtrend.shop\nGénère contenu SEO complet.' }]
+      system: 'Tu es ContentAI SEO expert pour FOLLOW. Réponds UNIQUEMENT en JSON : {"title":"","meta_description":"","h1":"","description":"","faq":[{"q":"","a":""}],"keywords":[""],"cta":"","iae_answer":""}',
+      messages: [{ role: 'user', content: 'Produit: ' + productName + ' | Niche: ' + niche + ' | Langue: ' + lang + ' | Boutique: followtrend.shop' }]
     });
     var aiOptions = {
       hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST',
@@ -400,17 +448,16 @@ var server = http.createServer(function(req, res) {
       aiRes.on('data', function(c) { aiData += c; });
       aiRes.on('end', function() {
         try {
-          var parsed2 = JSON.parse(aiData);
-          var text = parsed2.content && parsed2.content[0] ? parsed2.content[0].text : '{}';
+          var p2 = JSON.parse(aiData);
+          var text = p2.content && p2.content[0] ? p2.content[0].text : '{}';
           var content = JSON.parse(text.replace(/```json|```/g, '').trim());
           res.writeHead(200);
-          res.end(JSON.stringify({ success: true, product: productName, lang: lang, content: content, generated_at: new Date().toISOString() }));
-        } catch(e) { res.writeHead(500); res.end(JSON.stringify({ error: 'ContentAI error: ' + e.message })); }
+          res.end(JSON.stringify({ success: true, product: productName, lang: lang, content: content }));
+        } catch(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); }
       });
     });
     aiReq.on('error', function(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); });
-    aiReq.write(postData);
-    aiReq.end();
+    aiReq.write(postData); aiReq.end();
     return;
   }
 
@@ -418,10 +465,9 @@ var server = http.createServer(function(req, res) {
     var basePrice = parseFloat(parsed.query.price || 20);
     var market = parsed.query.market || 'fr';
     var multipliers = { fr:1.0, en:1.15, es:1.0, ar:0.95, pt:0.80, sw:0.65 };
-    var mult = multipliers[market] || 1.0;
-    var optimized = basePrice * mult;
+    var optimized = basePrice * (multipliers[market] || 1.0);
     res.writeHead(200);
-    res.end(JSON.stringify({ success: true, base_price: basePrice, market: market, optimized_price: parseFloat(optimized.toFixed(2)), margin_pct: ((optimized - basePrice) / optimized * 100).toFixed(1), recommendation: optimized < 5 ? 'Prix trop bas' : optimized > 100 ? 'Prix premium' : 'Prix optimal' }));
+    res.end(JSON.stringify({ success: true, base_price: basePrice, market: market, optimized_price: parseFloat(optimized.toFixed(2)), recommendation: optimized < 5 ? 'Prix trop bas' : optimized > 100 ? 'Prix premium' : 'Prix optimal' }));
     return;
   }
 
@@ -433,12 +479,12 @@ var server = http.createServer(function(req, res) {
     var niche = parsed.query.niche || 'wellness';
     var shouldRetire = (sales === 0 && days >= 14) || rating < 3.5;
     if (shouldRetire) {
-      var nicheKeywords = { wellness:'sleep aid patch insomnia', hearing:'noise cancelling earplugs', creator:'ring light selfie', breathing:'nasal dilator breathing', home:'cable organizer desk' };
+      var nicheKeywords = { wellness:'sleep aid patch', hearing:'noise cancelling earplugs', creator:'ring light selfie', breathing:'nasal dilator', home:'cable organizer' };
       searchProducts(nicheKeywords[niche] || 'bestseller', niche).then(function(candidates) {
         var winner = candidates.filter(function(p) { return p.id !== productId && p.score >= 60; }).sort(function(a,b){return b.score-a.score;})[0];
         res.writeHead(200);
         res.end(JSON.stringify({ success: true, agent: 'RetireBot', retired_product: productId, action: 'RETIRÉ', gaphunter_response: winner ? { status:'WINNER_TROUVÉ', product:winner.name, score:winner.score } : { status:'RECHERCHE_EN_COURS' } }));
-      }).catch(function(e) { res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'RetireBot', action: 'RETIRÉ', error: e.message })); });
+      }).catch(function() { res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'RetireBot', action: 'RETIRÉ' })); });
     } else {
       res.writeHead(200);
       res.end(JSON.stringify({ success: true, agent: 'RetireBot', should_retire: false, action: 'GARDER', reason: sales + ' ventes · Note ' + rating }));
@@ -448,30 +494,25 @@ var server = http.createServer(function(req, res) {
 
   if (action === 'harvestbot') {
     var opportunities = [
-      {source:'RapidAPI Credits',amount:10,currency:'USD',autonomous:true,legal:true,status:'available',category:'tech'},
-      {source:'Render Free Tier',amount:7,currency:'USD',autonomous:true,legal:true,status:'active',category:'tech'},
-      {source:'Vercel Free Tier',amount:20,currency:'USD',autonomous:true,legal:true,status:'active',category:'tech'},
-      {source:'AWS Free Tier',amount:15,currency:'USD',autonomous:true,legal:true,status:'available',category:'tech'},
-      {source:'Cloudflare Free',amount:20,currency:'USD',autonomous:true,legal:true,status:'active',category:'tech'},
-      {source:'GitHub Free',amount:10,currency:'USD',autonomous:true,legal:true,status:'active',category:'tech'},
-      {source:'Google Ads Credits',amount:400,currency:'USD',autonomous:true,legal:true,status:'available',category:'marketing'},
-      {source:'Meta Ads Credits',amount:50,currency:'USD',autonomous:true,legal:true,status:'available',category:'marketing'},
-      {source:'TikTok Ads Credits',amount:300,currency:'USD',autonomous:true,legal:true,status:'available',category:'marketing'},
-      {source:'Microsoft Ads Credits',amount:75,currency:'USD',autonomous:true,legal:true,status:'available',category:'marketing'},
-      {source:'Google AI Credits',amount:10,currency:'USD',autonomous:true,legal:true,status:'available',category:'ai'},
-      {source:'Anthropic API Credits',amount:5,currency:'USD',autonomous:true,legal:true,status:'scanning',category:'ai'},
-      {source:'HubSpot Startup',amount:1200,currency:'USD',autonomous:true,legal:true,status:'available',category:'startup'},
-      {source:'Spocket Trial',amount:49,currency:'USD',autonomous:true,legal:true,status:'available',category:'ecommerce'},
-      {source:'Zendrop Free Orders',amount:25,currency:'USD',autonomous:true,legal:true,status:'available',category:'ecommerce'},
-      {source:'CJ Dropshipping Free Warehouse',amount:50,currency:'USD',autonomous:true,legal:true,status:'available',category:'ecommerce'},
-      {source:'Mailchimp Free',amount:13,currency:'USD',autonomous:true,legal:true,status:'active',category:'marketing'},
-      {source:'Stripe Startup Credits',amount:0,currency:'USD',autonomous:false,legal:true,status:'ceo_required',category:'startup'},
+      {source:'Google Ads Credits',amount:400,currency:'USD',status:'available',category:'marketing'},
+      {source:'TikTok Ads Credits',amount:300,currency:'USD',status:'available',category:'marketing'},
+      {source:'Microsoft Ads Credits',amount:75,currency:'USD',status:'available',category:'marketing'},
+      {source:'Meta Ads Credits',amount:50,currency:'USD',status:'available',category:'marketing'},
+      {source:'HubSpot Startup',amount:1200,currency:'USD',status:'available',category:'startup'},
+      {source:'Vercel Free Tier',amount:20,currency:'USD',status:'active',category:'tech'},
+      {source:'Cloudflare Free',amount:20,currency:'USD',status:'active',category:'tech'},
+      {source:'CJ Dropshipping Free Warehouse',amount:50,currency:'USD',status:'available',category:'ecommerce'},
+      {source:'Spocket Trial',amount:49,currency:'USD',status:'available',category:'ecommerce'},
+      {source:'AWS Free Tier',amount:15,currency:'USD',status:'available',category:'tech'},
+      {source:'Google AI Credits',amount:10,currency:'USD',status:'available',category:'ai'},
+      {source:'RapidAPI Credits',amount:10,currency:'USD',status:'available',category:'tech'},
+      {source:'Render Free Tier',amount:7,currency:'USD',status:'active',category:'tech'},
+      {source:'Mailchimp Free',amount:13,currency:'USD',status:'active',category:'marketing'},
     ];
-    var harvestable = opportunities.filter(function(o) { return o.autonomous && o.legal && o.status !== 'ceo_required'; });
     var totalEur = 0;
-    harvestable.forEach(function(o) { var eur = o.currency === 'USD' ? o.amount * 0.92 : o.amount; totalEur += eur; o.amount_eur = parseFloat(eur.toFixed(2)); });
+    opportunities.forEach(function(o) { var eur = o.currency === 'USD' ? o.amount * 0.92 : o.amount; totalEur += eur; o.amount_eur = parseFloat(eur.toFixed(2)); });
     res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'HarvestBot', total_opportunities: harvestable.length, total_eur: parseFloat(totalEur.toFixed(2)), opportunities: harvestable, next_scan: '24h' }));
+    res.end(JSON.stringify({ success: true, agent: 'HarvestBot', total_opportunities: opportunities.length, total_eur: parseFloat(totalEur.toFixed(2)), opportunities: opportunities, next_scan: '24h' }));
     return;
   }
 
@@ -491,7 +532,7 @@ var server = http.createServer(function(req, res) {
       callStripe('/v1/payment_intents?limit=10').then(function(data) {
         var payments = data.data ? data.data.map(function(p) { return { id:p.id, amount:p.amount/100, currency:p.currency, status:p.status, created:new Date(p.created*1000).toLocaleString('fr-FR') }; }) : [];
         res.writeHead(200);
-        res.end(JSON.stringify({ success: true, agent: 'Stripe', payments: payments, total_revenue: payments.filter(function(p){return p.status==='succeeded';}).reduce(function(s,p){return s+p.amount;},0) }));
+        res.end(JSON.stringify({ success: true, payments: payments, total_revenue: payments.filter(function(p){return p.status==='succeeded';}).reduce(function(s,p){return s+p.amount;},0) }));
       }).catch(function(e) { res.writeHead(200); res.end(JSON.stringify({ success: false, error: e.message, payments: [] })); });
       return;
     }
@@ -509,7 +550,7 @@ var server = http.createServer(function(req, res) {
       {domain:'E-commerce',level:'green',event:'Tendances dropshipping stables',impact:'Faible'},
     ];
     var critical = events.filter(function(e) { return e.level === 'red'; });
-    var warnings = events.filter(function(e) { return e.level === 'yellow' || e.level === 'orange'; });
+    var warnings = events.filter(function(e) { return e.level === 'yellow'; });
     res.writeHead(200);
     res.end(JSON.stringify({ success: true, agent: 'WorldWatch', global_status: critical.length > 0 ? 'CRITIQUE' : warnings.length > 0 ? 'VIGILANCE' : 'STABLE', events: events, critical_count: critical.length, warning_count: warnings.length, next_scan: '1h' }));
     return;
@@ -535,27 +576,23 @@ var server = http.createServer(function(req, res) {
       return;
     }
     if (command === 'WAKE') {
-      if (capital >= goldwatch.activation_threshold) { goldwatch.status = 'active'; res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'GoldWatch', status: 'ACTIF', budget: goldwatch.max_budget })); }
-      else { res.writeHead(200); res.end(JSON.stringify({ success: false, agent: 'GoldWatch', status: 'VEILLE', message: 'Capital insuffisant: ' + capital + '€ / ' + goldwatch.activation_threshold + '€' })); }
+      if (capital >= goldwatch.activation_threshold) { goldwatch.status = 'active'; }
+      res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'GoldWatch', status: capital >= goldwatch.activation_threshold ? 'ACTIF' : 'VEILLE', message: capital >= goldwatch.activation_threshold ? 'Activé' : 'Capital insuffisant: ' + capital + '€ / ' + goldwatch.activation_threshold + '€' }));
       return;
     }
     res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'GoldWatch', status: capital >= goldwatch.activation_threshold ? goldwatch.status : 'VEILLE', capital_required: goldwatch.activation_threshold, capital_current: capital, max_budget: goldwatch.max_budget, harvest_threshold: goldwatch.harvest_threshold }));
+    res.end(JSON.stringify({ success: true, agent: 'GoldWatch', status: capital >= goldwatch.activation_threshold ? goldwatch.status : 'VEILLE', capital_required: goldwatch.activation_threshold, capital_current: capital, max_budget: goldwatch.max_budget }));
     return;
   }
 
   if (action === 'currencybot') {
     var currencies = [
-      {name:'EUR',type:'fiat',status:'active',confidence:100,convertible:true},
-      {name:'USD',type:'fiat',status:'active',confidence:100,convertible:true},
-      {name:'EURC',type:'stablecoin',status:'active',confidence:95,convertible:true},
-      {name:'USDC',type:'stablecoin',status:'active',confidence:94,convertible:true},
-      {name:'Euro Numérique',type:'cbdc',status:'monitoring',confidence:75,convertible:false},
-      {name:'KES',type:'fiat',status:'active',confidence:82,convertible:true},
-      {name:'BRL',type:'fiat',status:'active',confidence:80,convertible:true},
+      {name:'EUR',type:'fiat',status:'active',confidence:100},{name:'USD',type:'fiat',status:'active',confidence:100},
+      {name:'EURC',type:'stablecoin',status:'active',confidence:95},{name:'USDC',type:'stablecoin',status:'active',confidence:94},
+      {name:'Euro Numérique',type:'cbdc',status:'monitoring',confidence:75},{name:'KES',type:'fiat',status:'active',confidence:82},
     ];
     res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'CurrencyBot', active_currencies: currencies.filter(function(c){return c.status==='active';}).length, monitoring: currencies.filter(function(c){return c.status==='monitoring';}).length, currencies: currencies, next_scan: '6h' }));
+    res.end(JSON.stringify({ success: true, agent: 'CurrencyBot', active: currencies.filter(function(c){return c.status==='active';}).length, currencies: currencies, next_scan: '6h' }));
     return;
   }
 
@@ -591,7 +628,6 @@ var server = http.createServer(function(req, res) {
       {platform:'TikTok',product:'Bouchons Anti-Bruit Colorés',niche:'hearing',views:'890000',growth:'180',score:88,price:24.99,action:'IMPORT'},
       {platform:'Instagram',product:'Organiseur Bureau LED',niche:'home',views:'450000',growth:'95',score:82,price:34.99,action:'WATCH'},
       {platform:'YouTube',product:'Ring Light 360°',niche:'creator',views:'1200000',growth:'220',score:91,price:39.99,action:'IMPORT'},
-      {platform:'Pinterest',product:'Kit Aromathérapie Zen',niche:'wellness',views:'320000',growth:'75',score:76,price:22.99,action:'WATCH'},
     ];
     res.writeHead(200);
     res.end(JSON.stringify({ success: true, agent: 'TrendScanner', trends_detected: trends.length, urgent_imports: trends.filter(function(t){return t.action==='IMPORT_URGENT';}).length, trends: trends, next_scan: '15min' }));
@@ -600,40 +636,32 @@ var server = http.createServer(function(req, res) {
 
   if (action === 'affiliateos') {
     var capital2 = parseFloat(parsed.query.capital || 0);
-    var ACTIVATION_THRESHOLD = 1000000;
-    var subAction2 = parsed.query.sub || 'status';
-    var levels = [
-      {name:'Bronze',commission:10,badge:'🥉'},{name:'Argent',commission:12,badge:'🥈'},
-      {name:'Or',commission:15,badge:'🥇'},{name:'Diamant',commission:20,badge:'💎'}
-    ];
-    if (subAction2 === 'register') {
+    var sub2 = parsed.query.sub || 'status';
+    if (sub2 === 'register') {
       var newId = 'AFF' + String(Date.now()).slice(-6);
-      res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'AffiliateOS', affiliate: { id: newId, name: parsed.query.name || 'Affilié', level: 'Bronze', commission_rate: 10, link: 'https://followtrend.shop?ref=' + newId, status: capital2 >= ACTIVATION_THRESHOLD ? 'active' : 'pending' } }));
+      res.writeHead(200); res.end(JSON.stringify({ success: true, affiliate: { id: newId, commission_rate: 10, link: 'https://followtrend.shop?ref=' + newId, status: capital2 >= 1000000 ? 'active' : 'pending' } }));
       return;
     }
     res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'AffiliateOS', status: capital2 >= ACTIVATION_THRESHOLD ? 'ACTIF' : 'EN VEILLE', capital_required: ACTIVATION_THRESHOLD, capital_current: capital2, levels: levels }));
+    res.end(JSON.stringify({ success: true, agent: 'AffiliateOS', status: capital2 >= 1000000 ? 'ACTIF' : 'EN VEILLE', capital_required: 1000000, capital_current: capital2 }));
     return;
   }
 
   if (action === 'orderbot') {
-    var subAction = parsed.query.sub || 'process';
+    var sub = parsed.query.sub || 'process';
     var suppliers = [
-      {name:'CJ Dropshipping',delivery_days:10,api_ready:true},{name:'Spocket',delivery_days:5,api_ready:true},
-      {name:'Zendrop',delivery_days:7,api_ready:true},{name:'DSers',delivery_days:12,api_ready:true}
+      {name:'CJ Dropshipping',delivery_days:10,api_ready:true},
+      {name:'Spocket',delivery_days:5,api_ready:true},
+      {name:'Zendrop',delivery_days:7,api_ready:true},
     ];
-    var best = suppliers.sort(function(a,b){return a.delivery_days-b.delivery_days;})[0];
-    if (subAction === 'scan') {
-      res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'OrderBot', suppliers: suppliers, best: best }));
-      return;
-    }
+    var best = suppliers[0];
+    if (sub === 'scan') { res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'OrderBot', suppliers: suppliers, best: best })); return; }
     res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'OrderBot', order_id: parsed.query.order_id || 'ORD-'+Date.now(), product: parsed.query.product_name || 'Produit FOLLOW.', fulfillment_supplier: best.name, estimated_delivery: best.delivery_days + ' jours', timestamp: new Date().toISOString() }));
+    res.end(JSON.stringify({ success: true, agent: 'OrderBot', order_id: parsed.query.order_id || 'ORD-'+Date.now(), fulfillment_supplier: best.name, estimated_delivery: best.delivery_days + ' jours', timestamp: new Date().toISOString() }));
     return;
   }
 
   if (action === 'legalguard') {
-    var checkType = parsed.query.type || 'general';
     var checkValue = (parsed.query.value || '').toUpperCase();
     var checkAmount = parseFloat(parsed.query.amount || 0);
     var blocked = ['RUB','IRR','KPW'].includes(checkValue);
@@ -642,7 +670,7 @@ var server = http.createServer(function(req, res) {
     if (checkAmount >= 10000) warnings.push('⚠️ Déclaration Tracfin obligatoire');
     if (checkAmount >= 50000) warnings.push('⚠️ Justificatifs source fonds requis');
     res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'LegalGuard', check_type: checkType, check_value: checkValue, legal: !blocked, blocked: blocked, warnings: warnings, verdict: blocked ? 'BLOQUÉ' : 'AUTORISÉ', jurisdiction: 'France / La Réunion (DOM)' }));
+    res.end(JSON.stringify({ success: true, agent: 'LegalGuard', legal: !blocked, blocked: blocked, warnings: warnings, verdict: blocked ? 'BLOQUÉ' : 'AUTORISÉ', jurisdiction: 'France / La Réunion (DOM)' }));
     return;
   }
 
@@ -652,6 +680,7 @@ var server = http.createServer(function(req, res) {
 });
 
 server.listen(PORT, '0.0.0.0', function() {
-  console.log('FOLLOW. Backend v7 actif sur port ' + PORT);
+  console.log('FOLLOW. Backend v8 actif sur port ' + PORT);
+  console.log('[Webhook] ✅ Stripe webhook prêt sur /webhook');
   console.log('[Render] ✅ Serveur en écoute sur 0.0.0.0:' + PORT);
 });
