@@ -214,7 +214,20 @@ function handleStripeWebhook(payload, sigHeader) {
     var country = pi.metadata ? (pi.metadata.country || 'FR') : 'FR';
     var quantity = pi.metadata ? parseInt(pi.metadata.quantity || 1) : 1;
 
-    console.log('[Webhook] ✅ Paiement ' + (pi.amount/100) + pi.currency.toUpperCase() + ' — ' + orderId);
+    var amount = pi.amount / 100;
+    var customerEmail = pi.receipt_email || (pi.metadata && pi.metadata.customer_email) || '';
+    console.log('[Webhook] Paiement ' + amount + pi.currency.toUpperCase() + ' — ' + orderId);
+
+    // Email confirmation client
+    if (customerEmail) {
+      sendConfirmationEmail(customerEmail, {
+        orderId: orderId,
+        amount: amount.toFixed(2) + pi.currency.toUpperCase()
+      });
+    }
+
+    // Alerte CEO
+    sendAlertEmail('Nouvelle vente FOLLOW. — ' + amount + pi.currency.toUpperCase(), 'Commande: ' + orderId + '\nClient: ' + (customerEmail||'inconnu') + '\nMontant: ' + amount + pi.currency.toUpperCase());
 
     if (productVid) {
       callCJ('/api2.0/v1/shopping/order/createOrder', 'POST', {
@@ -292,9 +305,54 @@ function checkSecurity(req, res) {
   return true;
 }
 
-function sendAlertEmail(subject) {
-  console.log('[AlertCEO] 📧 → ' + CEO_EMAIL + ' : ' + subject);
-  return Promise.resolve({ sent: true });
+// ── RESEND EMAIL ──────────────────────────────────────────
+function sendEmail(to, subject, html) {
+  return new Promise(function(resolve) {
+    var RESEND_KEY = process.env.RESEND_API_KEY || '';
+    if (!RESEND_KEY) {
+      console.log('[Email] No RESEND_API_KEY');
+      return resolve({ sent: false });
+    }
+    var postData = JSON.stringify({
+      from: 'FOLLOW. <onboarding@resend.dev>',
+      to: [to],
+      subject: subject,
+      html: html
+    });
+    var options = {
+      hostname: 'api.resend.com',
+      path: '/emails',
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + RESEND_KEY,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+    var req = https.request(options, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        try { var r = JSON.parse(data); console.log('[Email] Sent to ' + to); resolve({ sent: true, id: r.id }); }
+        catch(e) { resolve({ sent: false }); }
+      });
+    });
+    req.on('error', function() { resolve({ sent: false }); });
+    req.write(postData);
+    req.end();
+  });
+}
+
+function sendAlertEmail(subject, body) {
+  var html = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#070709;color:#f0f0f8;padding:32px;border-radius:12px"><div style="font-size:28px;font-weight:900;letter-spacing:4px;margin-bottom:24px">FOLLOW<span style="color:#C8FF00">.</span></div><div style="background:#0d0d18;border:1px solid #1c1c26;border-radius:8px;padding:20px"><h2 style="color:#C8FF00;margin-bottom:12px">' + subject + '</h2><pre style="color:#aaa;font-family:Arial,sans-serif;white-space:pre-wrap">' + (body||'') + '</pre></div></div>';
+  console.log('[AlertCEO] Email -> ' + CEO_EMAIL + ' : ' + subject);
+  return sendEmail(CEO_EMAIL, subject, html);
+}
+
+function sendConfirmationEmail(customerEmail, orderDetails) {
+  var html = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px"><div style="background:#070709;padding:20px;border-radius:8px;margin-bottom:24px;text-align:center"><div style="font-size:28px;font-weight:900;letter-spacing:4px;color:#fff">FOLLOW<span style="color:#C8FF00">.</span></div></div><h1 style="color:#070709;font-size:24px;margin-bottom:8px">Commande confirmee !</h1><p style="color:#666;margin-bottom:24px">Merci pour votre commande.</p><div style="background:#f8f8f8;border-radius:8px;padding:20px;margin-bottom:24px"><div style="margin-bottom:8px"><span style="color:#666">Reference : </span><strong>' + orderDetails.orderId + '</strong></div><div style="margin-bottom:8px"><span style="color:#666">Montant : </span><strong>' + orderDetails.amount + '</strong></div><div><span style="color:#666">Livraison : </span><strong>7-15 jours</strong></div></div><p style="color:#999;font-size:11px">FOLLOW. followtrend.shop - Retour gratuit 30 jours</p></div>';
+  console.log('[Email] Confirmation -> ' + customerEmail);
+  return sendEmail(customerEmail, 'Commande confirmee - FOLLOW.', html);
 }
 
 var goldwatch = { activation_threshold: 50000, max_budget: 5000, harvest_threshold: 15000 };
