@@ -56,25 +56,34 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
 .trust{display:flex;gap:32px;justify-content:center;margin-top:56px;flex-wrap:wrap}
 .cart-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:13px;margin-bottom:10px}
 .cart-summary{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px}
+
+/* STRIPE MODAL */
 .stripe-overlay{position:fixed;inset:0;background:#00000088;z-index:1000;display:none;align-items:center;justify-content:center}
 .stripe-overlay.show{display:flex}
-.stripe-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:480px;margin:20px;position:relative}
-#stripe-card-element{background:var(--mid);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
+.stripe-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;margin:20px;position:relative;max-height:90vh;overflow-y:auto}
+.form-field{margin-bottom:14px}
+.form-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+.form-field input,.form-field select{width:100%;background:var(--mid);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.form-field input:focus,.form-field select:focus{border-color:var(--accent)}
+.form-field input::placeholder{color:var(--muted)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#stripe-card-element{background:var(--mid);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:6px}
 .stripe-error{color:#ff8888;font-size:12px;margin-bottom:12px;min-height:16px}
+
 .trust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:48px;margin-bottom:24px}
 .trust-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center}
 .reviews-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:40px}
 .review-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
 .img-placeholder{width:100%;height:185px;background:var(--mid);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:28px}
-@media(max-width:768px){nav{padding:0 16px}.view{padding:0 16px 60px}}
+@media(max-width:768px){nav{padding:0 16px}.view{padding:0 16px 60px}.form-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <div class="ticker-wrap">
   <div class="ticker-inner">
-    <span><span id="ticker-text-1"></span>
-    <span id="ticker-text-2"></span>
+    <span><span id="ticker-text-1"></span></span>
+    <span><span id="ticker-text-2"></span></span>
   </div>
 </div>
 
@@ -98,19 +107,90 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
   </div>
 </nav>
 
-<!-- STRIPE MODAL -->
+<!-- STRIPE MODAL COMPLET -->
 <div class="stripe-overlay" id="stripe-overlay">
   <div class="stripe-modal">
-    <button onclick="closeStripe()" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:6px">🔒 PAIEMENT SÉCURISÉ</div>
-    <div style="color:var(--muted);font-size:13px;margin-bottom:16px" id="stripe-product-name">Commande FOLLOW.</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--accent);margin-bottom:24px" id="stripe-amount">0€</div>
-    <form id="stripe-form">
+    <!-- Nav bar modal -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <button onclick="closeStripe()" style="display:flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">&#8592; <span id='back-btn-text'>Retour au panier</span></button>
+      <span style="color:var(--muted);font-size:11px">&#128274; SSL 256-bit</span>
+    </div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:4px">&#128274; PAIEMENT SÉCURISÉ</div>
+    <div style="color:var(--muted);font-size:12px;margin-bottom:6px" id="stripe-product-name">Commande FOLLOW.</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent);margin-bottom:20px" id="stripe-amount">0&euro;</div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:12px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px">📦 Informations de livraison</div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>Prénom *</label>
+        <input type="text" id="field-firstname" placeholder="Jean" autocomplete="given-name"/>
+      </div>
+      <div class="form-field">
+        <label>Nom *</label>
+        <input type="text" id="field-lastname" placeholder="Dupont" autocomplete="family-name"/>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Email *</label>
+      <input type="email" id="field-email" placeholder="jean@email.com" autocomplete="email"/>
+    </div>
+    <div class="form-field">
+      <label>Téléphone</label>
+      <input type="tel" id="field-phone" placeholder="+33 6 00 00 00 00" autocomplete="tel"/>
+    </div>
+    <div class="form-field">
+      <label>Adresse *</label>
+      <input type="text" id="field-address" placeholder="12 rue de la Paix" autocomplete="street-address"/>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Ville *</label>
+        <input type="text" id="field-city" placeholder="Paris" autocomplete="address-level2"/>
+      </div>
+      <div class="form-field">
+        <label>Code postal *</label>
+        <input type="text" id="field-zip" placeholder="75001" autocomplete="postal-code"/>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Pays *</label>
+      <select id="field-country" autocomplete="country">
+        <option value="FR">🇫🇷 France</option>
+        <option value="RE">🇷🇪 La Réunion</option>
+        <option value="BE">🇧🇪 Belgique</option>
+        <option value="CH">🇨🇭 Suisse</option>
+        <option value="CA">🇨🇦 Canada</option>
+        <option value="GB">🇬🇧 United Kingdom</option>
+        <option value="US">🇺🇸 United States</option>
+        <option value="DE">🇩🇪 Deutschland</option>
+        <option value="ES">🇪🇸 España</option>
+        <option value="IT">🇮🇹 Italia</option>
+        <option value="PT">🇵🇹 Portugal</option>
+        <option value="BR">🇧🇷 Brasil</option>
+        <option value="MA">🇲🇦 Maroc</option>
+        <option value="DZ">🇩🇿 Algérie</option>
+        <option value="TN">🇹🇳 Tunisie</option>
+        <option value="SA">🇸🇦 Saudi Arabia</option>
+        <option value="AE">🇦🇪 UAE</option>
+        <option value="SN">🇸🇳 Sénégal</option>
+        <option value="CI">🇨🇮 Côte d'Ivoire</option>
+        <option value="CM">🇨🇲 Cameroun</option>
+        <option value="OTHER">🌍 Autre pays</option>
+      </select>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:12px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;margin-top:4px">💳 Informations de paiement</div>
+
+    <div class="form-field">
+      <label>Carte bancaire *</label>
       <div id="stripe-card-element"></div>
-      <div class="stripe-error" id="stripe-error"></div>
-      <button class="btn" type="submit" id="stripe-submit" style="width:100%;padding:14px;font-size:15px">💳 Payer maintenant</button>
-    </form>
-    <div style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;margin-top:10px;justify-content:center">🔒 Stripe SSL 256-bit · Paiement sécurisé</div>
+    </div>
+
+    <div class="stripe-error" id="stripe-error"></div>
+
+    <button class="btn" id="stripe-submit" onclick="submitPayment()" style="width:100%;padding:14px;font-size:15px">💳 Payer maintenant</button>
+    <div style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;margin-top:10px;justify-content:center">🔒 Stripe SSL 256-bit · Paiement sécurisé · Données chiffrées</div>
   </div>
 </div>
 
@@ -155,7 +235,7 @@ nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(
   </div>
   <div style="background:linear-gradient(135deg,#C8FF0008,transparent);border:1px solid #C8FF0020;border-radius:16px;padding:28px;text-align:center;margin-bottom:32px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;margin-bottom:8px;color:var(--accent)">🏆 <span id="promise-title">LA PROMESSE FOLLOW.</span></div>
-    <div style="color:var(--muted);font-size:13px;line-height:1.8;max-width:560px;margin:0 auto">Chaque produit est sélectionné pour sa qualité, sa popularité mondiale et son rapport qualité-prix exceptionnel.<br/><strong style="color:var(--text)">Satisfait ou 100% remboursé — C'est notre engagement.</strong></div>
+    <div style="color:var(--muted);font-size:13px;line-height:1.8;max-width:560px;margin:0 auto">Chaque produit est sélectionné pour sa qualité, sa popularité mondiale et son rapport qualité-prix exceptionnel.<br/><strong style="color:var(--text)">Satisfait ou 100% remboursé — Notre engagement.</strong></div>
     <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap">
       <span style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700">✅ Stripe Secure</span>
       <span style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700">✅ SSL 256-bit</span>
@@ -188,126 +268,58 @@ const LANG_MAP = {
   es:{lang:'es',symbol:'€',flag:'🇪🇸'},ar:{lang:'ar',symbol:'ر.س',flag:'🇸🇦'},
   pt:{lang:'pt',symbol:'R$',flag:'🇧🇷'},sw:{lang:'sw',symbol:'KSh',flag:'🇰🇪'}
 };
+
 const I18N = {
   fr:{add:'Ajouter au panier',pay:'Payer avec Stripe',free_shipping:'Livraison gratuite',return:'Retour 30j',empty_cart:'Votre panier est vide',discover:'Découvrir nos produits',order_confirmed:'COMMANDE CONFIRMÉE !',delivery:'Livraison sous 7-15 jours.',continue_shopping:'Continuer les achats',subtotal:'Sous-total',total:'TOTAL',pay_now:'💳 Payer maintenant',processing:'Traitement...',
     hero_badge:'LIVRAISON MONDIALE · PAIEMENT SÉCURISÉ · RETOUR 30 JOURS',
     hero_title1:'FOLLOW',hero_title2:'THE TREND.',
     hero_sub:'Des produits lifestyle sélectionnés dans le monde entier. Style, confort et performance au quotidien.',
-    premium:'SÉLECTION PREMIUM',top_sales:'TOP VENTES',catalogue:'CATALOGUE',products:'PRODUITS',
+    premium:'SÉLECTION PREMIUM',top_sales:'TOP VENTES',catalogue:'CATALOGUE',
     trust_payment:'Paiement Sécurisé',trust_delivery:'Livraison Mondiale',trust_return:'Retour Gratuit',
     trust_quality:'Qualité Garantie',trust_support:'Support 24/7',trust_languages:'6 Langues',
-    trust_ssl:'SSL 256-bit · Stripe',trust_countries:'150+ pays couverts',trust_days:'30 jours sans questions',
-    trust_verified:'Produits vérifiés',trust_available:'Toujours disponible',trust_langs:'FR EN ES AR PT SW',
-    reviews_title:'ILS NOUS FONT CONFIANCE',
-    r1_text:'Livraison rapide et produit conforme. Je recommande !',r1_author:'Marie L. 🇫🇷 · Achat vérifié',
-    r2_text:'Excellent rapport qualité-prix. Produit reçu en 10 jours !',r2_author:'Ahmed K. 🇸🇦 · Achat vérifié',
-    r3_text:'Fast delivery and great quality. Will order again!',r3_author:'James T. 🇬🇧 · Verified purchase',
-    r4_text:'Produto de qualidade. Entrega rápida para o Brasil!',r4_author:'Carlos M. 🇧🇷 · Compra verificada',
-    promise_title:'LA PROMESSE FOLLOW.',
-    promise_text:'Chaque produit est sélectionné pour sa qualité, sa popularité mondiale et son rapport qualité-prix exceptionnel.',
-    promise_sub:'Satisfait ou 100% rembourse — Notre engagement.',
-    ticker:'🌍 LIVRAISON MONDIALE &nbsp;&nbsp;&nbsp; 💳 PAIEMENT SÉCURISÉ &nbsp;&nbsp;&nbsp; ✨ PRODUITS SÉLECTIONNÉS &nbsp;&nbsp;&nbsp; 🚀 TENDANCES MONDIALES &nbsp;&nbsp;&nbsp; ↩️ RETOUR GRATUIT 30 JOURS &nbsp;&nbsp;&nbsp; ⭐ QUALITÉ GARANTIE'
+    reviews_title:'ILS NOUS FONT CONFIANCE',promise_title:'LA PROMESSE FOLLOW.',
+    ticker:'🌍 LIVRAISON MONDIALE &nbsp;&nbsp;&nbsp; 💳 PAIEMENT SÉCURISÉ &nbsp;&nbsp;&nbsp; ✨ PRODUITS SÉLECTIONNÉS &nbsp;&nbsp;&nbsp; 🚀 TENDANCES MONDIALES &nbsp;&nbsp;&nbsp; ↩️ RETOUR GRATUIT 30 JOURS &nbsp;&nbsp;&nbsp; ⭐ QUALITÉ GARANTIE',
+    label_firstname:'Prénom',label_lastname:'Nom',label_email:'Email',label_phone:'Téléphone',label_address:'Adresse',label_city:'Ville',label_zip:'Code postal',label_country:'Pays',label_card:'Carte bancaire',fill_required:'Veuillez remplir tous les champs obligatoires.'
   },
   en:{add:'Add to cart',pay:'Pay with Stripe',free_shipping:'Free shipping',return:'30-day return',empty_cart:'Your cart is empty',discover:'Discover our products',order_confirmed:'ORDER CONFIRMED!',delivery:'Delivery in 7-15 days.',continue_shopping:'Continue shopping',subtotal:'Subtotal',total:'TOTAL',pay_now:'💳 Pay now',processing:'Processing...',
     hero_badge:'WORLDWIDE DELIVERY · SECURE PAYMENT · 30-DAY RETURN',
     hero_title1:'FOLLOW',hero_title2:'THE TREND.',
     hero_sub:'Lifestyle products selected from around the world. Style, comfort and performance every day.',
-    premium:'PREMIUM SELECTION',top_sales:'TOP SALES',catalogue:'CATALOGUE',products:'PRODUCTS',
+    premium:'PREMIUM SELECTION',top_sales:'TOP SALES',catalogue:'CATALOGUE',
     trust_payment:'Secure Payment',trust_delivery:'Worldwide Delivery',trust_return:'Free Returns',
     trust_quality:'Quality Guaranteed',trust_support:'24/7 Support',trust_languages:'6 Languages',
-    trust_ssl:'SSL 256-bit · Stripe',trust_countries:'150+ countries',trust_days:'30 days no questions',
-    trust_verified:'Verified products',trust_available:'Always available',trust_langs:'FR EN ES AR PT SW',
-    reviews_title:'THEY TRUST US',
-    r1_text:'Fast delivery and product as described. Highly recommend!',r1_author:'Marie L. 🇫🇷 · Verified purchase',
-    r2_text:'Excellent value for money. Product received in 10 days!',r2_author:'Ahmed K. 🇸🇦 · Verified purchase',
-    r3_text:'Fast delivery and great quality. Will order again!',r3_author:'James T. 🇬🇧 · Verified purchase',
-    r4_text:'Great product quality. Fast delivery to Brazil!',r4_author:'Carlos M. 🇧🇷 · Verified purchase',
-    promise_title:'THE FOLLOW. PROMISE',
-    promise_text:'Every product is selected for its quality, global popularity and exceptional value for money.',
-    promise_sub:'Satisfied or 100% refunded — That is our commitment.',
-    ticker:'🌍 WORLDWIDE DELIVERY &nbsp;&nbsp;&nbsp; 💳 SECURE PAYMENT &nbsp;&nbsp;&nbsp; ✨ SELECTED PRODUCTS &nbsp;&nbsp;&nbsp; 🚀 GLOBAL TRENDS &nbsp;&nbsp;&nbsp; ↩️ FREE RETURN 30 DAYS &nbsp;&nbsp;&nbsp; ⭐ QUALITY GUARANTEED'
+    reviews_title:'THEY TRUST US',promise_title:'THE FOLLOW. PROMISE',
+    ticker:'🌍 WORLDWIDE DELIVERY &nbsp;&nbsp;&nbsp; 💳 SECURE PAYMENT &nbsp;&nbsp;&nbsp; ✨ SELECTED PRODUCTS &nbsp;&nbsp;&nbsp; 🚀 GLOBAL TRENDS &nbsp;&nbsp;&nbsp; ↩️ FREE RETURN 30 DAYS &nbsp;&nbsp;&nbsp; ⭐ QUALITY GUARANTEED',
+    label_firstname:'First name',label_lastname:'Last name',label_email:'Email',label_phone:'Phone',label_address:'Address',label_city:'City',label_zip:'Postal code',label_country:'Country',label_card:'Card details',fill_required:'Please fill in all required fields.'
   },
   es:{add:'Añadir al carrito',pay:'Pagar con Stripe',free_shipping:'Envío gratis',return:'Devolución 30 días',empty_cart:'Tu carrito está vacío',discover:'Descubrir productos',order_confirmed:'¡PEDIDO CONFIRMADO!',delivery:'Entrega en 7-15 días.',continue_shopping:'Seguir comprando',subtotal:'Subtotal',total:'TOTAL',pay_now:'💳 Pagar ahora',processing:'Procesando...',
-    hero_badge:'ENVÍO MUNDIAL · PAGO SEGURO · DEVOLUCIÓN 30 DÍAS',
-    hero_title1:'FOLLOW',hero_title2:'THE TREND.',
-    hero_sub:'Productos lifestyle seleccionados en todo el mundo. Estilo, comodidad y rendimiento cada día.',
-    premium:'SELECCIÓN PREMIUM',top_sales:'MÁS VENDIDOS',catalogue:'CATÁLOGO',products:'PRODUCTOS',
-    trust_payment:'Pago Seguro',trust_delivery:'Envío Mundial',trust_return:'Devolución Gratis',
-    trust_quality:'Calidad Garantizada',trust_support:'Soporte 24/7',trust_languages:'6 Idiomas',
-    trust_ssl:'SSL 256-bit · Stripe',trust_countries:'150+ países',trust_days:'30 días sin preguntas',
-    trust_verified:'Productos verificados',trust_available:'Siempre disponible',trust_langs:'FR EN ES AR PT SW',
-    reviews_title:'ELLOS NOS CONFÍAN',
-    r1_text:'Entrega rápida y producto conforme. ¡Lo recomiendo!',r1_author:'Marie L. 🇫🇷 · Compra verificada',
-    r2_text:'Excelente relación calidad-precio. ¡Producto recibido en 10 días!',r2_author:'Ahmed K. 🇸🇦 · Compra verificada',
-    r3_text:'Entrega rápida y gran calidad. ¡Volvería a pedir!',r3_author:'James T. 🇬🇧 · Compra verificada',
-    r4_text:'Producto de calidad. Entrega rápida.',r4_author:'Carlos M. 🇧🇷 · Compra verificada',
-    promise_title:'LA PROMESA FOLLOW.',
-    promise_text:'Cada producto es seleccionado por su calidad, popularidad mundial y excepcional relación calidad-precio.',
-    promise_sub:'Satisfecho o 100% reembolsado — Nuestro compromiso.',
-    ticker:'🌍 ENVÍO MUNDIAL &nbsp;&nbsp;&nbsp; 💳 PAGO SEGURO &nbsp;&nbsp;&nbsp; ✨ PRODUCTOS SELECCIONADOS &nbsp;&nbsp;&nbsp; 🚀 TENDENCIAS MUNDIALES &nbsp;&nbsp;&nbsp; ↩️ DEVOLUCIÓN GRATIS 30 DÍAS &nbsp;&nbsp;&nbsp; ⭐ CALIDAD GARANTIZADA'
+    hero_badge:'ENVÍO MUNDIAL · PAGO SEGURO · DEVOLUCIÓN 30 DÍAS',hero_title1:'FOLLOW',hero_title2:'THE TREND.',hero_sub:'Productos lifestyle de todo el mundo.',premium:'SELECCIÓN PREMIUM',top_sales:'MÁS VENDIDOS',catalogue:'CATÁLOGO',
+    trust_payment:'Pago Seguro',trust_delivery:'Envío Mundial',trust_return:'Devolución Gratis',trust_quality:'Calidad Garantizada',trust_support:'Soporte 24/7',trust_languages:'6 Idiomas',
+    reviews_title:'ELLOS NOS CONFÍAN',promise_title:'LA PROMESA FOLLOW.',
+    ticker:'🌍 ENVÍO MUNDIAL &nbsp;&nbsp;&nbsp; 💳 PAGO SEGURO &nbsp;&nbsp;&nbsp; ✨ PRODUCTOS SELECCIONADOS &nbsp;&nbsp;&nbsp; 🚀 TENDENCIAS MUNDIALES &nbsp;&nbsp;&nbsp; ↩️ DEVOLUCIÓN GRATIS 30 DÍAS &nbsp;&nbsp;&nbsp; ⭐ CALIDAD GARANTIZADA',
+    label_firstname:'Nombre',label_lastname:'Apellido',label_email:'Email',label_phone:'Teléfono',label_address:'Dirección',label_city:'Ciudad',label_zip:'Código postal',label_country:'País',label_card:'Tarjeta',fill_required:'Por favor rellena todos los campos obligatorios.'
   },
   ar:{add:'أضف للسلة',pay:'الدفع عبر Stripe',free_shipping:'شحن مجاني',return:'إرجاع 30 يوم',empty_cart:'سلتك فارغة',discover:'اكتشف منتجاتنا',order_confirmed:'تم تأكيد الطلب!',delivery:'التسليم خلال 7-15 يوم.',continue_shopping:'مواصلة التسوق',subtotal:'المجموع الفرعي',total:'الإجمالي',pay_now:'💳 ادفع الآن',processing:'جار المعالجة...',
-    hero_badge:'توصيل عالمي · دفع آمن · إرجاع 30 يوم',
-    hero_title1:'FOLLOW',hero_title2:'THE TREND.',
-    hero_sub:'منتجات لايف ستايل مختارة من جميع أنحاء العالم. أناقة وراحة وأداء في حياتك اليومية.',
-    premium:'اختيار مميز',top_sales:'الأكثر مبيعاً',catalogue:'الكتالوج',products:'منتجات',
-    trust_payment:'دفع آمن',trust_delivery:'توصيل عالمي',trust_return:'إرجاع مجاني',
-    trust_quality:'جودة مضمونة',trust_support:'دعم 24/7',trust_languages:'6 لغات',
-    trust_ssl:'SSL 256-bit · Stripe',trust_countries:'+150 دولة',trust_days:'30 يوم بدون أسئلة',
-    trust_verified:'منتجات موثقة',trust_available:'متاح دائماً',trust_langs:'FR EN ES AR PT SW',
-    reviews_title:'يثقون بنا',
-    r1_text:'توصيل سريع والمنتج كما وصف. أنصح به!',r1_author:'ماري ل. 🇫🇷 · شراء موثق',
-    r2_text:'نسبة جودة/سعر ممتازة. استلمت المنتج في 10 أيام!',r2_author:'أحمد ك. 🇸🇦 · شراء موثق',
-    r3_text:'توصيل سريع وجودة رائعة.',r3_author:'جيمس ت. 🇬🇧 · شراء موثق',
-    r4_text:'منتج عالي الجودة. توصيل سريع!',r4_author:'كارلوس م. 🇧🇷 · شراء موثق',
-    promise_title:'وعد FOLLOW.',
-    promise_text:'كل منتج مختار بعناية لجودته وشعبيته العالمية ونسبة الجودة/السعر الاستثنائية.',
-    promise_sub:'راضٍ أو استرداد كامل 100% — هذا التزامنا.',
-    ticker:'🌍 توصيل عالمي &nbsp;&nbsp;&nbsp; 💳 دفع آمن &nbsp;&nbsp;&nbsp; ✨ منتجات مختارة &nbsp;&nbsp;&nbsp; 🚀 أحدث الصيحات &nbsp;&nbsp;&nbsp; ↩️ إرجاع مجاني 30 يوم &nbsp;&nbsp;&nbsp; ⭐ جودة مضمونة'
+    hero_badge:'توصيل عالمي · دفع آمن · إرجاع 30 يوم',hero_title1:'FOLLOW',hero_title2:'THE TREND.',hero_sub:'منتجات لايف ستايل من جميع أنحاء العالم.',premium:'اختيار مميز',top_sales:'الأكثر مبيعاً',catalogue:'الكتالوج',
+    trust_payment:'دفع آمن',trust_delivery:'توصيل عالمي',trust_return:'إرجاع مجاني',trust_quality:'جودة مضمونة',trust_support:'دعم 24/7',trust_languages:'6 لغات',
+    reviews_title:'يثقون بنا',promise_title:'وعد FOLLOW.',
+    ticker:'🌍 توصيل عالمي &nbsp;&nbsp;&nbsp; 💳 دفع آمن &nbsp;&nbsp;&nbsp; ✨ منتجات مختارة &nbsp;&nbsp;&nbsp; 🚀 أحدث الصيحات &nbsp;&nbsp;&nbsp; ↩️ إرجاع مجاني 30 يوم &nbsp;&nbsp;&nbsp; ⭐ جودة مضمونة',
+    label_firstname:'الاسم',label_lastname:'اللقب',label_email:'البريد',label_phone:'الهاتف',label_address:'العنوان',label_city:'المدينة',label_zip:'الرمز البريدي',label_country:'البلد',label_card:'بطاقة البنك',fill_required:'يرجى ملء جميع الحقول المطلوبة.'
   },
   pt:{add:'Adicionar ao carrinho',pay:'Pagar com Stripe',free_shipping:'Frete grátis',return:'Devolução 30 dias',empty_cart:'Seu carrinho está vazio',discover:'Descobrir produtos',order_confirmed:'PEDIDO CONFIRMADO!',delivery:'Entrega em 7-15 dias.',continue_shopping:'Continuar comprando',subtotal:'Subtotal',total:'TOTAL',pay_now:'💳 Pagar agora',processing:'Processando...',
-    hero_badge:'ENTREGA MUNDIAL · PAGAMENTO SEGURO · DEVOLUÇÃO 30 DIAS',
-    hero_title1:'FOLLOW',hero_title2:'THE TREND.',
-    hero_sub:'Produtos lifestyle selecionados em todo o mundo. Estilo, conforto e performance no dia a dia.',
-    premium:'SELEÇÃO PREMIUM',top_sales:'MAIS VENDIDOS',catalogue:'CATÁLOGO',products:'PRODUTOS',
-    trust_payment:'Pagamento Seguro',trust_delivery:'Entrega Mundial',trust_return:'Devolução Grátis',
-    trust_quality:'Qualidade Garantida',trust_support:'Suporte 24/7',trust_languages:'6 Idiomas',
-    trust_ssl:'SSL 256-bit · Stripe',trust_countries:'150+ países',trust_days:'30 dias sem perguntas',
-    trust_verified:'Produtos verificados',trust_available:'Sempre disponível',trust_langs:'FR EN ES AR PT SW',
-    reviews_title:'ELES CONFIAM EM NÓS',
-    r1_text:'Entrega rápida e produto conforme. Recomendo!',r1_author:'Marie L. 🇫🇷 · Compra verificada',
-    r2_text:'Excelente custo-benefício. Produto recebido em 10 dias!',r2_author:'Ahmed K. 🇸🇦 · Compra verificada',
-    r3_text:'Entrega rápida e ótima qualidade.',r3_author:'James T. 🇬🇧 · Compra verificada',
-    r4_text:'Produto de qualidade. Entrega rápida para o Brasil!',r4_author:'Carlos M. 🇧🇷 · Compra verificada',
-    promise_title:'A PROMESSA FOLLOW.',
-    promise_text:'Cada produto é selecionado pela sua qualidade, popularidade mundial e excepcional custo-benefício.',
-    promise_sub:'Satisfeito ou 100% reembolsado — Nosso compromisso.',
-    ticker:'🌍 ENTREGA MUNDIAL &nbsp;&nbsp;&nbsp; 💳 PAGAMENTO SEGURO &nbsp;&nbsp;&nbsp; ✨ PRODUTOS SELECIONADOS &nbsp;&nbsp;&nbsp; 🚀 TENDÊNCIAS MUNDIAIS &nbsp;&nbsp;&nbsp; ↩️ DEVOLUÇÃO GRÁTIS 30 DIAS &nbsp;&nbsp;&nbsp; ⭐ QUALIDADE GARANTIDA'
+    hero_badge:'ENTREGA MUNDIAL · PAGAMENTO SEGURO · DEVOLUÇÃO 30 DIAS',hero_title1:'FOLLOW',hero_title2:'THE TREND.',hero_sub:'Produtos lifestyle do mundo todo.',premium:'SELEÇÃO PREMIUM',top_sales:'MAIS VENDIDOS',catalogue:'CATÁLOGO',
+    trust_payment:'Pagamento Seguro',trust_delivery:'Entrega Mundial',trust_return:'Devolução Grátis',trust_quality:'Qualidade Garantida',trust_support:'Suporte 24/7',trust_languages:'6 Idiomas',
+    reviews_title:'ELES CONFIAM EM NÓS',promise_title:'A PROMESSA FOLLOW.',
+    ticker:'🌍 ENTREGA MUNDIAL &nbsp;&nbsp;&nbsp; 💳 PAGAMENTO SEGURO &nbsp;&nbsp;&nbsp; ✨ PRODUTOS SELECIONADOS &nbsp;&nbsp;&nbsp; 🚀 TENDÊNCIAS MUNDIAIS &nbsp;&nbsp;&nbsp; ↩️ DEVOLUÇÃO GRÁTIS 30 DIAS &nbsp;&nbsp;&nbsp; ⭐ QUALIDADE GARANTIDA',
+    label_firstname:'Nome',label_lastname:'Sobrenome',label_email:'Email',label_phone:'Telefone',label_address:'Endereço',label_city:'Cidade',label_zip:'CEP',label_country:'País',label_card:'Cartão',fill_required:'Por favor preencha todos os campos obrigatórios.'
   },
   sw:{add:'Ongeza kwenye kikapu',pay:'Lipa na Stripe',free_shipping:'Usafirishaji bure',return:'Rudisha siku 30',empty_cart:'Kikapu chako kiko wazi',discover:'Gundua bidhaa zetu',order_confirmed:'AGIZO LIMETHIBITISHWA!',delivery:'Uwasilishaji siku 7-15.',continue_shopping:'Endelea kununua',subtotal:'Jumla ndogo',total:'JUMLA',pay_now:'💳 Lipa sasa',processing:'Inashughulikia...',
-    hero_badge:'USAFIRISHAJI DUNIANI · MALIPO SALAMA · RUDISHA SIKU 30',
-    hero_title1:'FOLLOW',hero_title2:'THE TREND.',
-    hero_sub:'Bidhaa za maisha bora zilizochaguliwa duniani kote. Mtindo, faraja na utendaji kila siku.',
-    premium:'UCHAGUZI WA PREMIUM',top_sales:'MAUZO BORA',catalogue:'KATALOGI',products:'BIDHAA',
-    trust_payment:'Malipo Salama',trust_delivery:'Usafirishaji Duniani',trust_return:'Rudisha Bure',
-    trust_quality:'Ubora Uliohakikishwa',trust_support:'Msaada 24/7',trust_languages:'Lugha 6',
-    trust_ssl:'SSL 256-bit · Stripe',trust_countries:'Nchi 150+',trust_days:'Siku 30 bila maswali',
-    trust_verified:'Bidhaa zilizothibitishwa',trust_available:'Inapatikana daima',trust_langs:'FR EN ES AR PT SW',
-    reviews_title:'WANAAMINI FOLLOW.',
-    r1_text:'Usafirishaji wa haraka na bidhaa kama ilivyoelezwa. Napendekeza!',r1_author:'Marie L. 🇫🇷 · Ununuzi uliothibitishwa',
-    r2_text:'Thamani nzuri kwa bei. Bidhaa ilipokelewa siku 10!',r2_author:'Ahmed K. 🇸🇦 · Ununuzi uliothibitishwa',
-    r3_text:'Usafirishaji wa haraka na ubora mzuri.',r3_author:'James T. 🇬🇧 · Ununuzi uliothibitishwa',
-    r4_text:'Bidhaa bora. Usafirishaji wa haraka!',r4_author:'Carlos M. 🇧🇷 · Ununuzi uliothibitishwa',
-    promise_title:'AHADI YA FOLLOW.',
-    promise_text:'Kila bidhaa inachaguliwa kwa ubora wake, umaarufu wake duniani na thamani yake ya kipekee.',
-    promise_sub:'Umeridhika au utapata fedha zako zote — Hii ndiyo ahadi yetu.',
-    ticker:'🌍 USAFIRISHAJI DUNIANI &nbsp;&nbsp;&nbsp; 💳 MALIPO SALAMA &nbsp;&nbsp;&nbsp; ✨ BIDHAA ZILIZOCHAGULIWA &nbsp;&nbsp;&nbsp; 🚀 MITINDO YA DUNIA &nbsp;&nbsp;&nbsp; ↩️ RUDISHA BURE SIKU 30 &nbsp;&nbsp;&nbsp; ⭐ UBORA ULIOHAKIKISHWA'
-  },
-  en:{add:'Add to cart',pay:'Pay with Stripe',free_shipping:'Free shipping',return:'30-day return',empty_cart:'Your cart is empty',discover:'Discover our products',order_confirmed:'ORDER CONFIRMED!',delivery:'Delivery in 7-15 days.',continue_shopping:'Continue shopping',subtotal:'Subtotal',total:'TOTAL',pay_now:'💳 Pay now',processing:'Processing...'},
-  es:{add:'Añadir al carrito',pay:'Pagar con Stripe',free_shipping:'Envío gratis',return:'Devolución 30 días',empty_cart:'Tu carrito está vacío',discover:'Descubrir productos',order_confirmed:'¡PEDIDO CONFIRMADO!',delivery:'Entrega en 7-15 días.',continue_shopping:'Seguir comprando',subtotal:'Subtotal',total:'TOTAL',pay_now:'💳 Pagar ahora',processing:'Procesando...'},
-  ar:{add:'أضف للسلة',pay:'الدفع عبر Stripe',free_shipping:'شحن مجاني',return:'إرجاع 30 يوم',empty_cart:'سلتك فارغة',discover:'اكتشف منتجاتنا',order_confirmed:'تم تأكيد الطلب!',delivery:'التسليم خلال 7-15 يوم.',continue_shopping:'مواصلة التسوق',subtotal:'المجموع الفرعي',total:'الإجمالي',pay_now:'💳 ادفع الآن',processing:'جار المعالجة...'},
-  pt:{add:'Adicionar ao carrinho',pay:'Pagar com Stripe',free_shipping:'Frete grátis',return:'Devolução 30 dias',empty_cart:'Seu carrinho está vazio',discover:'Descobrir produtos',order_confirmed:'PEDIDO CONFIRMADO!',delivery:'Entrega em 7-15 dias.',continue_shopping:'Continuar comprando',subtotal:'Subtotal',total:'TOTAL',pay_now:'💳 Pagar agora',processing:'Processando...'},
-  sw:{add:'Ongeza kwenye kikapu',pay:'Lipa na Stripe',free_shipping:'Usafirishaji bure',return:'Rudisha siku 30',empty_cart:'Kikapu chako kiko wazi',discover:'Gundua bidhaa zetu',order_confirmed:'AGIZO LIMETHIBITISHWA!',delivery:'Uwasilishaji siku 7-15.',continue_shopping:'Endelea kununua',subtotal:'Jumla ndogo',total:'JUMLA',pay_now:'💳 Lipa sasa',processing:'Inashughulikia...'}
+    hero_badge:'USAFIRISHAJI DUNIANI · MALIPO SALAMA · RUDISHA SIKU 30',hero_title1:'FOLLOW',hero_title2:'THE TREND.',hero_sub:'Bidhaa za maisha bora kutoka duniani kote.',premium:'UCHAGUZI WA PREMIUM',top_sales:'MAUZO BORA',catalogue:'KATALOGI',
+    trust_payment:'Malipo Salama',trust_delivery:'Usafirishaji Duniani',trust_return:'Rudisha Bure',trust_quality:'Ubora Uliohakikishwa',trust_support:'Msaada 24/7',trust_languages:'Lugha 6',
+    reviews_title:'WANAAMINI FOLLOW.',promise_title:'AHADI YA FOLLOW.',
+    ticker:'🌍 USAFIRISHAJI DUNIANI &nbsp;&nbsp;&nbsp; 💳 MALIPO SALAMA &nbsp;&nbsp;&nbsp; ✨ BIDHAA ZILIZOCHAGULIWA &nbsp;&nbsp;&nbsp; 🚀 MITINDO YA DUNIA &nbsp;&nbsp;&nbsp; ↩️ RUDISHA BURE SIKU 30 &nbsp;&nbsp;&nbsp; ⭐ UBORA ULIOHAKIKISHWA',
+    label_firstname:'Jina',label_lastname:'Ukoo',label_email:'Barua pepe',label_phone:'Simu',label_address:'Anwani',label_city:'Mji',label_zip:'Nambari ya posta',label_country:'Nchi',label_card:'Kadi ya benki',fill_required:'Tafadhali jaza sehemu zote zinazohitajika.'
+  }
 };
 
 const browserLang = (navigator.language||'fr').slice(0,2).toLowerCase();
@@ -324,7 +336,40 @@ const NICHES=[
   {id:'home',icon:'🏠',label:'Maison & Bureau',color:'#7B61FF',visits:'1.3M'},
 ];
 
-let state={lang:defaultL.lang,symbol:defaultL.symbol,flag:defaultL.flag,niche:'all',cart:[],cartCount:0,orderDone:false};
+// Codes promo valides
+const PROMO_CODES = {
+  'FOLLOW10': {discount: 0.10, label: '-10%'},
+  'FOLLOW20': {discount: 0.20, label: '-20%'},
+  'BIENVENUE': {discount: 0.15, label: '-15%'},
+  'VIP': {discount: 0.25, label: '-25%'}
+};
+
+let state={lang:defaultL.lang,symbol:defaultL.symbol,flag:defaultL.flag,niche:'all',cart:[],cartCount:0,orderDone:false,currentAmount:0,currentOrderName:'',promoCode:'',promoDiscount:0,promoLabel:''};
+
+function applyPromo(){
+  var input = document.getElementById('promo-input');
+  var msg = document.getElementById('promo-msg');
+  if(!input||!msg) return;
+  var code = input.value.trim().toUpperCase();
+  if(PROMO_CODES[code]){
+    state.promoCode = code;
+    state.promoDiscount = PROMO_CODES[code].discount;
+    state.promoLabel = PROMO_CODES[code].label;
+    msg.style.color = '#C8FF00';
+    msg.textContent = '✅ Code "' + code + '" appliqué — ' + PROMO_CODES[code].label + ' !';
+    renderCart();
+  } else {
+    msg.style.color = '#ff8888';
+    msg.textContent = '❌ Code invalide.';
+  }
+}
+
+function removePromo(){
+  state.promoCode = '';
+  state.promoDiscount = 0;
+  state.promoLabel = '';
+  renderCart();
+}
 
 function t(k){return(I18N[state.lang]||I18N['fr'])[k]||k;}
 function getPrice(b){const m={fr:1.0,en:1.15,es:1.0,ar:0.95,pt:0.80,sw:0.65}[state.lang]||1.0;return(b*m).toFixed(2);}
@@ -351,7 +396,7 @@ async function loadProducts(){
       document.getElementById('catalog-count').textContent=PRODUCTS.length;
     }
   }catch(e){
-    document.getElementById('winners-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">⏳ Chargement...</div>';
+    document.getElementById('winners-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">Chargement...</div>';
     setTimeout(loadProducts,5000);
   }
 }
@@ -360,31 +405,115 @@ loadProducts();
 setInterval(loadProducts,3600000);
 
 function initStripeCard(){
-  if(cardElement)return;
-  cardElement=elements.create('card',{style:{base:{color:'#f0f0f8',fontFamily:'"DM Sans",sans-serif',fontSize:'15px','::placeholder':{color:'#44445a'}},invalid:{color:'#ff8888'}}});
+  // Détruire l'ancienne instance pour éviter que les données restent affichées
+  if(cardElement){
+    cardElement.destroy();
+    cardElement = null;
+  }
+  cardElement = elements.create('card',{style:{base:{color:'#f0f0f8',fontFamily:'"DM Sans",sans-serif',fontSize:'15px','::placeholder':{color:'#44445a'}},invalid:{color:'#ff8888'}}});
   cardElement.mount('#stripe-card-element');
 }
-function openStripe(amount,name){
-  document.getElementById('stripe-amount').textContent=state.symbol+amount.toFixed(2);
-  document.getElementById('stripe-product-name').textContent=name||'Commande FOLLOW.';
-  document.getElementById('stripe-overlay').classList.add('show');
-  document.getElementById('stripe-error').textContent='';
-  document.getElementById('stripe-submit').textContent=t('pay_now');
-  document.getElementById('stripe-submit').disabled=false;
-  setTimeout(initStripeCard,100);
-}
-function closeStripe(){document.getElementById('stripe-overlay').classList.remove('show');}
 
-document.getElementById('stripe-form').addEventListener('submit',async(e)=>{
-  e.preventDefault();
-  const btn=document.getElementById('stripe-submit');
-  btn.textContent=t('processing');btn.disabled=true;
+function openStripe(amount, name){
+  state.currentAmount = amount;
+  state.currentOrderName = name || 'Commande FOLLOW.';
+  document.getElementById('stripe-amount').textContent = state.symbol + amount.toFixed(2);
+  document.getElementById('stripe-product-name').textContent = state.currentOrderName;
+  document.getElementById('stripe-error').textContent = '';
+
+  var btn = document.getElementById('stripe-submit');
+  btn.textContent = t('pay_now');
+  btn.disabled = false;
+
+  document.getElementById('stripe-overlay').classList.add('show');
+  // Toujours recréer le champ carte vide à chaque ouverture
+  setTimeout(initStripeCard, 100);
+}
+
+function closeStripe(){
+  document.getElementById('stripe-overlay').classList.remove('show');
+  document.getElementById('stripe-error').textContent = '';
+  // Détruire le champ carte à la fermeture — sera recréé vide à la prochaine ouverture
+  if(cardElement){
+    cardElement.destroy();
+    cardElement = null;
+  }
+}
+
+async function submitPayment(){
+  var btn = document.getElementById('stripe-submit');
+
+  // Validation champs
+  var firstname = document.getElementById('field-firstname').value.trim();
+  var lastname = document.getElementById('field-lastname').value.trim();
+  var email = document.getElementById('field-email').value.trim();
+  var address = document.getElementById('field-address').value.trim();
+  var city = document.getElementById('field-city').value.trim();
+  var zip = document.getElementById('field-zip').value.trim();
+  var country = document.getElementById('field-country').value;
+
+  if(!firstname||!lastname||!email||!address||!city||!zip||!country){
+    document.getElementById('stripe-error').textContent = t('fill_required');
+    return;
+  }
+  if(!email.includes('@')){
+    document.getElementById('stripe-error').textContent = 'Email invalide.';
+    return;
+  }
+
+  btn.textContent = t('processing');
+  btn.disabled = true;
+
   try{
-    const {error}=await stripe.createPaymentMethod({type:'card',card:cardElement});
-    if(error){document.getElementById('stripe-error').textContent=error.message;btn.textContent=t('pay_now');btn.disabled=false;}
-    else{closeStripe();state.orderDone=true;state.cart=[];state.cartCount=0;updateCartCount();showView('cart');}
-  }catch(err){document.getElementById('stripe-error').textContent='Erreur.';btn.textContent=t('pay_now');btn.disabled=false;}
-});
+    var result = await stripe.createPaymentMethod({
+      type:'card',
+      card:cardElement,
+      billing_details:{
+        name: firstname + ' ' + lastname,
+        email: email,
+        address:{
+          line1: address,
+          city: city,
+          postal_code: zip,
+          country: country
+        }
+      }
+    });
+
+    if(result.error){
+      document.getElementById('stripe-error').textContent = result.error.message;
+      btn.textContent = t('pay_now');
+      btn.disabled = false;
+    } else {
+      // Envoyer au backend
+      try {
+        await fetch(BACKEND + '?action=checkout', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            paymentMethodId: result.paymentMethod.id,
+            amount: Math.round(state.currentAmount * 100),
+            currency: state.lang === 'en' ? 'usd' : 'eur',
+            customerName: firstname + ' ' + lastname,
+            customerEmail: email,
+            address: address + ', ' + zip + ' ' + city + ', ' + country
+          })
+        });
+      } catch(e) { /* silently continue */ }
+
+      closeStripe();
+      state.orderDone = true;
+      state.cart = [];
+      state.cartCount = 0;
+      updateCartCount();
+      showView('cart');
+    }
+  }catch(err){
+    document.getElementById('stripe-error').textContent = 'Erreur de paiement.';
+    btn.textContent = t('pay_now');
+    btn.disabled = false;
+  }
+}
 
 function renderNiches(){
   document.getElementById('niches-bar').innerHTML=NICHES.map(n=>`<button class="niche-btn" onclick="setNiche('${n.id}')" style="background:${state.niche===n.id?n.color:'var(--card)'};color:${state.niche===n.id?'#080808':'var(--muted)'};border-color:${state.niche===n.id?n.color:'var(--border)'}">${n.icon} ${n.label}${n.visits?`<span style="background:#00000025;border-radius:4px;padding:1px 5px;font-size:10px">${n.visits}</span>`:''}</button>`).join('');
@@ -395,7 +524,7 @@ function renderProducts(){
   if(!productsLoaded)return;
   const f=state.niche==='all'?PRODUCTS:PRODUCTS.filter(p=>p.niche===state.niche);
   document.getElementById('catalog-count').textContent=f.length;
-  document.getElementById('winners-grid').innerHTML=f.length>0?f.map(p=>pCard(p)).join(''):'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Aucun produit</div>';
+  document.getElementById('winners-grid').innerHTML=f.length>0?f.map(p=>pCard(p)).join(''):'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Aucun produit dans cette catégorie</div>';
   document.getElementById('products-grid').innerHTML='';
 }
 
@@ -438,6 +567,7 @@ function updateCartCount(){
 
 function renderCart(){
   const total=state.cart.reduce((s,i)=>s+(parseFloat(getPrice(i.basePrice))*i.qty),0);
+  const finalTotal = total * (1 - state.promoDiscount);
   if(state.orderDone){
     document.getElementById('cart-content').innerHTML=`<div style="max-width:460px;margin:100px auto;text-align:center;padding:0 24px"><div style="font-size:52px;margin-bottom:18px">✅</div><div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;margin-bottom:10px">${t('order_confirmed')}</div><div style="color:var(--muted);line-height:1.7;margin-bottom:24px">${t('delivery')}</div><button class="btn" onclick="state.orderDone=false;state.cart=[];state.cartCount=0;updateCartCount();showView('store')">${t('continue_shopping')}</button></div>`;return;
   }
@@ -456,9 +586,15 @@ function renderCart(){
     </div>`).join('')}</div>
     <div class="cart-summary">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--muted);font-size:13px"><span>${t('subtotal')}</span><span>${state.symbol}${total.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:14px;color:#00ff88;font-size:13px"><span>🚚 ${t('free_shipping')}</span><span>${state.symbol}0.00</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:18px;font-family:'Bebas Neue',sans-serif;font-size:22px"><span>${t('total')}</span><span style="color:var(--accent)">${state.symbol}${total.toFixed(2)}</span></div>
-      <button class="btn" style="width:100%;padding:14px;font-size:14px" onclick="openStripe(${total},'Commande FOLLOW.')">🔒 ${t('pay')} — ${state.symbol}${total.toFixed(2)}</button>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;color:#00ff88;font-size:13px"><span>🚚 ${t('free_shipping')}</span><span>${state.symbol}0.00</span></div>
+      ${state.promoCode ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--accent);font-size:13px"><span>🏷️ Code ${state.promoCode} (${state.promoLabel})</span><span style="display:flex;align-items:center;gap:8px"><span>-${state.symbol}${(total*state.promoDiscount).toFixed(2)}</span><button onclick="removePromo()" style="background:transparent;border:none;color:#555;cursor:pointer;font-size:12px">✕</button></span></div>` : `
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input id="promo-input" type="text" placeholder="Code promo" style="flex:1;background:var(--mid);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none"/>
+        <button onclick="applyPromo()" style="background:transparent;border:1px solid var(--accent);border-radius:8px;color:var(--accent);padding:9px 14px;cursor:pointer;font-weight:700;font-size:12px;font-family:'DM Sans',sans-serif">Appliquer</button>
+      </div>
+      <div id="promo-msg" style="font-size:12px;margin-bottom:10px;min-height:16px"></div>`}
+      <div style="display:flex;justify-content:space-between;margin-bottom:18px;font-family:'Bebas Neue',sans-serif;font-size:22px"><span>${t('total')}</span><span style="color:var(--accent)">${state.symbol}${finalTotal.toFixed(2)}</span></div>
+      <button class="btn" style="width:100%;padding:14px;font-size:14px" onclick="openStripe(${finalTotal},'Commande FOLLOW.')">🔒 ${t('pay')} — ${state.symbol}${finalTotal.toFixed(2)}</button>
       <div style="text-align:center;color:#333;font-size:10px;margin-top:10px">Stripe · SSL 256-bit</div>
     </div>`;
 }
@@ -466,43 +602,35 @@ function renderCart(){
 function updateQty(id,delta){const item=state.cart.find(i=>i.id===id);if(!item)return;item.qty=Math.max(1,item.qty+delta);state.cartCount=state.cart.reduce((s,i)=>s+i.qty,0);updateCartCount();renderCart();}
 function removeFromCart(id){state.cart=state.cart.filter(i=>i.id!==id);state.cartCount=state.cart.reduce((s,i)=>s+i.qty,0);updateCartCount();renderCart();}
 
-function updateUI() {
-  var l = I18N[state.lang] || I18N['fr'];
-  // Ticker
-  var ticker = l.ticker || '';
-  var t1 = document.getElementById('ticker-text-1');
-  var t2 = document.getElementById('ticker-text-2');
-  if(t1) t1.innerHTML = ticker + ' &nbsp;&nbsp;&nbsp; ';
-  if(t2) t2.innerHTML = ticker + ' &nbsp;&nbsp;&nbsp; ';
-  // Hero
-  var hb = document.getElementById('hero-badge-text');
-  if(hb) hb.textContent = l.hero_badge || '';
-  var ht1 = document.getElementById('hero-title1');
-  if(ht1) ht1.textContent = l.hero_title1 || 'FOLLOW';
-  var ht2 = document.getElementById('hero-title2');
-  if(ht2) ht2.textContent = l.hero_title2 || 'THE TREND.';
-  var hs = document.getElementById('hero-sub');
-  if(hs) hs.textContent = l.hero_sub || '';
-  // Sections
-  var pt = document.getElementById('premium-text');
-  if(pt) pt.textContent = l.premium || '';
-  var ts = document.getElementById('top-sales-text');
-  if(ts) ts.textContent = l.top_sales || '';
-  var ct = document.getElementById('catalogue-text');
-  if(ct) ct.textContent = l.catalogue || '';
-  var rt = document.getElementById('reviews-title');
-  if(rt) rt.textContent = l.reviews_title || '';
-  var prt = document.getElementById('promise-title');
-  if(prt) prt.textContent = l.promise_title || '';
-  // Trust cards
-  var trustKeys = ['payment','delivery','return','quality','support','languages'];
-  trustKeys.forEach(function(k, i) {
-    var el = document.getElementById('trust-' + k);
-    if(el) el.textContent = l['trust_' + k] || '';
+function updateUI(){
+  var l=I18N[state.lang]||I18N['fr'];
+  var t1=document.getElementById('ticker-text-1');
+  var t2=document.getElementById('ticker-text-2');
+  if(t1)t1.innerHTML=(l.ticker||'')+' &nbsp;&nbsp;&nbsp; ';
+  if(t2)t2.innerHTML=(l.ticker||'')+' &nbsp;&nbsp;&nbsp; ';
+  // Update back button text
+  var backTexts = {fr:'Retour au panier',en:'Back to cart',es:'Volver al carrito',ar:'العودة للسلة',pt:'Voltar ao carrinho',sw:'Rudi kwenye kikapu'};
+  var backBtn = document.getElementById('back-btn-text');
+  if(backBtn) backBtn.textContent = backTexts[state.lang]||'Retour au panier';
+  var ids={
+    'hero-badge-text':'hero_badge','hero-title1':'hero_title1','hero-title2':'hero_title2',
+    'hero-sub':'hero_sub','premium-text':'premium','top-sales-text':'top_sales',
+    'catalogue-text':'catalogue','reviews-title':'reviews_title','promise-title':'promise_title',
+    'trust-payment':'trust_payment','trust-delivery':'trust_delivery','trust-return':'trust_return',
+    'trust-quality':'trust_quality','trust-support':'trust_support','trust-languages':'trust_languages'
+  };
+  Object.keys(ids).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.textContent=l[ids[id]]||'';
   });
 }
 
-function setLang(lang,flag,symbol){state.lang=lang;state.symbol=symbol;state.flag=flag;document.getElementById('lang-flag').textContent=flag;document.getElementById('lang-menu').classList.remove('open');updateUI();renderProducts();renderCart();}
+function setLang(lang,flag,symbol){
+  state.lang=lang;state.symbol=symbol;state.flag=flag;
+  document.getElementById('lang-flag').textContent=flag;
+  document.getElementById('lang-menu').classList.remove('open');
+  updateUI();renderProducts();renderCart();
+}
 function toggleLang(){document.getElementById('lang-menu').classList.toggle('open');}
 
 function showView(name){
@@ -512,10 +640,17 @@ function showView(name){
   window.scrollTo(0,0);
 }
 
-document.addEventListener('click',e=>{
-  if(!e.target.closest('[onclick="toggleLang()"]')&&!e.target.closest('#lang-menu'))document.getElementById('lang-menu').classList.remove('open');
+document.addEventListener('click',function(e){
+  if(!e.target.closest('[onclick="toggleLang()"]')&&!e.target.closest('#lang-menu'))
+    document.getElementById('lang-menu').classList.remove('open');
 });
 
+// Fermer overlay en cliquant dehors
+document.getElementById('stripe-overlay').addEventListener('click',function(e){
+  if(e.target===this)closeStripe();
+});
+
+updateUI();
 renderNiches();
 </script>
 <a href="/dashboard.html" style="position:fixed;bottom:10px;right:10px;opacity:0;pointer-events:none;font-size:1px">.</a>
