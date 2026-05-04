@@ -3,39 +3,360 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FOLLOW. — Bientôt disponible</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:">
+<title>FOLLOW. — Suis les tendances</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#070709;color:#f0f0f8;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:64px;letter-spacing:8px;margin-bottom:16px}
-.logo span{color:#C8FF00}
-.line{width:60px;height:2px;background:#C8FF00;margin:0 auto 24px}
-h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:#C8FF00;margin-bottom:12px}
-p{color:#44445a;font-size:15px;line-height:1.8;max-width:400px;margin:0 auto 32px}
-.notify{display:flex;gap:10px;max-width:380px;margin:0 auto}
-.notify input{flex:1;background:#0f0f12;border:1px solid #1c1c26;border-radius:8px;padding:12px 16px;color:#f0f0f8;font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
-.notify input:focus{border-color:#C8FF00}
-.notify button{background:#C8FF00;color:#080808;border:none;border-radius:8px;padding:12px 20px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
-.badges{display:flex;gap:10px;justify-content:center;margin-top:32px;flex-wrap:wrap}
-.badge{background:#0f0f12;border:1px solid #1c1c26;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#44445a}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--accent:#C8FF00;--dark:#070709;--mid:#0f0f12;--card:#13131a;--border:#1c1c26;--text:#f0f0f8;--muted:#44445a}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--accent)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ticker-wrap{background:var(--accent);padding:5px 0;overflow:hidden}
+.ticker-inner{display:flex;animation:ticker 30s linear infinite;white-space:nowrap;width:max-content}
+.ticker-inner span{display:inline-flex;gap:48px;padding-right:48px;font-size:10px;font-weight:700;letter-spacing:1.2px;color:#080808}
+nav{background:#07070990;backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;cursor:pointer}
+.logo span:first-child{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:5px;color:var(--text)}
+.logo span:last-child{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.lang-btn{background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:5px 10px;cursor:pointer;font-size:16px}
+.cart-btn{background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:12px;transition:all .18s;position:relative}
+.cart-count{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#080808;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:800}
+.lang-menu{position:absolute;top:calc(100% + 8px);right:0;background:#111;border:1px solid var(--border);border-radius:10px;overflow:hidden;z-index:200;min-width:160px;display:none}
+.lang-menu.open{display:block}
+.lang-option{display:flex;align-items:center;gap:9px;width:100%;padding:9px 13px;background:transparent;border:none;color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px}
+.lang-option:hover{background:#C8FF0015}
+.btn{background:var(--accent);color:#080808;border:none;border-radius:8px;padding:11px 22px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .18s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px #C8FF0055}
+.btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.view{display:none;max-width:1300px;margin:0 auto;padding:0 24px 80px;animation:fadeUp .5s ease}
+.view.active{display:block}
+.hero{padding:68px 0 48px}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,9vw,108px);line-height:.92;letter-spacing:3px;margin-bottom:18px}
+.hero h1 .line1{display:block;color:var(--text)}
+.hero h1 .line2{display:block;color:var(--accent)}
+.niches{display:flex;gap:8px;margin-bottom:32px;overflow-x:auto;padding-bottom:4px}
+.niche-btn{border-radius:100px;padding:8px 18px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:6px;border:1px solid var(--border)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:40px}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .25s;cursor:pointer}
+.pcard:hover{transform:translateY(-4px);border-color:#C8FF0050}
+.pcard-img{width:100%;height:200px;object-fit:cover;display:block;background:var(--mid)}
+.pcard-img-wrap{position:relative;overflow:hidden;cursor:zoom-in}
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,#1c1c26 50%,var(--card) 75%);background-size:400px 100%;animation:shimmer 1.4s infinite}
+.skeleton-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.cart-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:13px;margin-bottom:10px}
+.cart-summary{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px}
+.trust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:40px 0}
+.trust-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center}
+.reviews-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:40px}
+.review-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+/* ZOOM */
+.img-zoom-overlay{position:fixed;inset:0;background:#000000ee;z-index:2000;display:none;align-items:center;justify-content:center;cursor:zoom-out}
+.img-zoom-overlay.open{display:flex}
+.img-zoom-overlay img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:12px}
+.img-zoom-overlay .zoom-close{position:absolute;top:20px;right:24px;background:transparent;border:1px solid #fff3;border-radius:50%;width:40px;height:40px;color:#fff;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center}
+@media(max-width:768px){nav{padding:0 16px}.view{padding:0 16px 60px}}
 </style>
 </head>
 <body>
-<div>
-  <div class="logo">FOLLOW<span>.</span></div>
-  <div class="line"></div>
-  <h2>BIENTÔT DISPONIBLE</h2>
-  <p>Nous préparons quelque chose d'exceptionnel. Laisse ton email pour être le premier informé du lancement.</p>
-  <div class="notify">
-    <input type="email" placeholder="ton@email.com"/>
-    <button>Notifier</button>
+
+<div class="ticker-wrap"><div class="ticker-inner">
+  <span id="tk1">🌍 LIVRAISON MONDIALE &nbsp;&nbsp;&nbsp; 💳 PAIEMENT SÉCURISÉ &nbsp;&nbsp;&nbsp; ✨ PRODUITS SÉLECTIONNÉS &nbsp;&nbsp;&nbsp; 🚀 TENDANCES MONDIALES &nbsp;&nbsp;&nbsp; ↩️ RETOUR GRATUIT 30 JOURS &nbsp;&nbsp;&nbsp; ⭐ QUALITÉ GARANTIE &nbsp;&nbsp;&nbsp;</span>
+  <span id="tk2">🌍 LIVRAISON MONDIALE &nbsp;&nbsp;&nbsp; 💳 PAIEMENT SÉCURISÉ &nbsp;&nbsp;&nbsp; ✨ PRODUITS SÉLECTIONNÉS &nbsp;&nbsp;&nbsp; 🚀 TENDANCES MONDIALES &nbsp;&nbsp;&nbsp; ↩️ RETOUR GRATUIT 30 JOURS &nbsp;&nbsp;&nbsp; ⭐ QUALITÉ GARANTIE &nbsp;&nbsp;&nbsp;</span>
+</div></div>
+
+<nav>
+  <div class="logo" onclick="showView('store')"><span>FOLLOW</span><span>.</span></div>
+  <div class="nav-right">
+    <div style="position:relative">
+      <button class="lang-btn" onclick="toggleLang()" id="lang-flag">🇫🇷</button>
+      <div class="lang-menu" id="lang-menu">
+        <button class="lang-option" onclick="setLang('fr','🇫🇷','€')">🇫🇷 Français</button>
+        <button class="lang-option" onclick="setLang('en','🇺🇸','$')">🇺🇸 English</button>
+        <button class="lang-option" onclick="setLang('es','🇪🇸','€')">🇪🇸 Español</button>
+        <button class="lang-option" onclick="setLang('ar','🇸🇦','ر.س')">🇸🇦 العربية</button>
+        <button class="lang-option" onclick="setLang('pt','🇧🇷','R$')">🇧🇷 Português</button>
+        <button class="lang-option" onclick="setLang('sw','🇰🇪','KSh')">🇰🇪 Kiswahili</button>
+        <button class="lang-option" onclick="setLang('ln','🇨🇩','FC')">🇨🇩 Lingala</button>
+        <button class="lang-option" onclick="setLang('zh','🇨🇳','¥')">🇨🇳 中文</button>
+      </div>
+    </div>
+    <button class="cart-btn" onclick="showView('cart')">🛒 <span id="cart-label">Panier</span>
+      <span class="cart-count" id="cart-count" style="display:none">0</span>
+    </button>
   </div>
-  <div class="badges">
-    <span class="badge">🌍 150+ pays</span>
-    <span class="badge">💳 Paiement sécurisé</span>
-    <span class="badge">↩️ Retour 30 jours</span>
+</nav>
+
+<!-- ZOOM -->
+<div class="img-zoom-overlay" id="img-zoom-overlay" onclick="closeZoom()">
+  <button class="zoom-close" onclick="closeZoom()">✕</button>
+  <img id="img-zoom-img" src="" alt=""/>
+</div>
+
+<!-- STORE -->
+<div class="view active" id="view-store">
+  <div class="hero">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:#C8FF0012;border:1px solid #C8FF0030;border-radius:100px;padding:5px 14px;margin-bottom:18px">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.5s infinite;display:inline-block"></span>
+      <span style="color:var(--accent);font-size:11px;font-weight:700;letter-spacing:1px" id="hero-badge">LIVRAISON MONDIALE · PAIEMENT SÉCURISÉ · RETOUR 30 JOURS</span>
+    </div>
+    <h1><span class="line1">FOLLOW</span><span class="line2">THE TREND.</span></h1>
+    <p style="color:var(--muted);font-size:16px;max-width:480px;line-height:1.7" id="hero-sub">Des produits lifestyle sélectionnés dans le monde entier. Style, confort et performance au quotidien.</p>
+  </div>
+  <div class="niches" id="niches-bar"></div>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;margin-bottom:18px">🏆 <span id="premium-text">SÉLECTION PREMIUM</span></div>
+  <div class="grid" id="products-grid">
+    <div class="skeleton-card"><div class="skeleton" style="height:200px"></div><div style="padding:14px"><div class="skeleton" style="height:14px;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:8px;margin-top:12px"></div></div></div>
+    <div class="skeleton-card"><div class="skeleton" style="height:200px"></div><div style="padding:14px"><div class="skeleton" style="height:14px;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:8px;margin-top:12px"></div></div></div>
+    <div class="skeleton-card"><div class="skeleton" style="height:200px"></div><div style="padding:14px"><div class="skeleton" style="height:14px;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:8px;margin-top:12px"></div></div></div>
+  </div>
+  <div class="trust-grid">
+    <div class="trust-card"><div style="font-size:28px;margin-bottom:8px">🔒</div><div style="font-weight:700;font-size:12px">Paiement Sécurisé</div><div style="color:var(--muted);font-size:11px">SSL 256-bit · Stripe</div></div>
+    <div class="trust-card"><div style="font-size:28px;margin-bottom:8px">🚚</div><div style="font-weight:700;font-size:12px">Livraison Mondiale</div><div style="color:var(--muted);font-size:11px">150+ pays</div></div>
+    <div class="trust-card"><div style="font-size:28px;margin-bottom:8px">↩️</div><div style="font-weight:700;font-size:12px">Retour Gratuit</div><div style="color:var(--muted);font-size:11px">30 jours</div></div>
+    <div class="trust-card"><div style="font-size:28px;margin-bottom:8px">⭐</div><div style="font-weight:700;font-size:12px">Qualité Garantie</div><div style="color:var(--muted);font-size:11px">Produits vérifiés</div></div>
+    <div class="trust-card"><div style="font-size:28px;margin-bottom:8px">💬</div><div style="font-weight:700;font-size:12px">Support 24/7</div><div style="color:var(--muted);font-size:11px">Toujours disponible</div></div>
+    <div class="trust-card"><div style="font-size:28px;margin-bottom:8px">🌍</div><div style="font-weight:700;font-size:12px">8 Langues</div><div style="color:var(--muted);font-size:11px">FR EN ES AR PT SW LN 中文</div></div>
+  </div>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:16px;text-align:center">⭐ ILS NOUS FONT CONFIANCE</div>
+  <div class="reviews-grid">
+    <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★★</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Livraison rapide et produit conforme. Je recommande !"</div><div style="color:var(--muted);font-size:11px">— Marie L. 🇫🇷 · Achat vérifié</div></div>
+    <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★★</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Fast delivery and great quality. Will order again!"</div><div style="color:var(--muted);font-size:11px">— James T. 🇬🇧 · Verified purchase</div></div>
+    <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★★</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Excellent rapport qualité-prix. Reçu en 10 jours !"</div><div style="color:var(--muted);font-size:11px">— Ahmed K. 🇸🇦 · Achat vérifié</div></div>
+    <div class="review-card"><div style="color:#ffd700;font-size:13px;margin-bottom:8px">★★★★★</div><div style="font-size:13px;line-height:1.6;margin-bottom:10px">"Produto de qualidade. Entrega rápida!"</div><div style="color:var(--muted);font-size:11px">— Carlos M. 🇧🇷 · Compra verificada</div></div>
   </div>
 </div>
+
+<!-- CART -->
+<div class="view" id="view-cart">
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;margin-bottom:24px">🛒 <span id="cart-title">Panier</span></div>
+  <div id="cart-content"></div>
+</div>
+
+<a href="/dashboard.html" style="position:fixed;bottom:10px;right:10px;opacity:0;pointer-events:none;font-size:1px">.</a>
+
+<script>
+const BACKEND = 'https://follow-backend-o300.onrender.com';
+const LANG_MAP = {fr:{s:'€',f:'🇫🇷'},en:{s:'$',f:'🇺🇸'},es:{s:'€',f:'🇪🇸'},ar:{s:'ر.س',f:'🇸🇦'},pt:{s:'R$',f:'🇧🇷'},sw:{s:'KSh',f:'🇰🇪'},ln:{s:'FC',f:'🇨🇩'},zh:{s:'¥',f:'🇨🇳'}};
+const NICHES=[
+  {id:'all',icon:'🔥',label:'Tout',color:'#C8FF00'},
+  {id:'lifestyle',icon:'✨',label:'Lifestyle',color:'#C8FF00'},
+  {id:'sport',icon:'🏃',label:'Sport',color:'#00CFFF'},
+  {id:'focus',icon:'🎯',label:'Focus',color:'#FF6B35'},
+  {id:'creator',icon:'🎬',label:'Créateurs',color:'#FF3CAC'},
+  {id:'home',icon:'🏠',label:'Maison',color:'#7B61FF'}
+];
+const PROMO_CODES={'FOLLOW10':{d:0.10,l:'-10%'},'FOLLOW20':{d:0.20,l:'-20%'},'BIENVENUE':{d:0.15,l:'-15%'},'VIP':{d:0.25,l:'-25%'}};
+
+const browserLang=(navigator.language||'fr').slice(0,2).toLowerCase();
+const lm=LANG_MAP[browserLang]||LANG_MAP['fr'];
+let state={lang:browserLang in LANG_MAP?browserLang:'fr',symbol:lm.s,flag:lm.f,niche:'all',cart:[],cartCount:0,orderDone:false,promo:'',promoD:0,promoL:''};
+let PRODUCTS=[];
+let loaded=false;
+
+document.getElementById('lang-flag').textContent=state.flag;
+
+function gp(b){return(b*({fr:1,en:1.15,es:1,ar:0.95,pt:0.80,sw:0.65,ln:0.70,zh:0.90}[state.lang]||1)).toFixed(2);}
+function disc(p){return Math.round((1-p.price/p.oldPrice)*100);}
+function getNiche(id){return NICHES.find(n=>n.id===id)||NICHES[1];}
+
+async function loadProducts(){
+  try{
+    const res=await fetch(BACKEND+'?action=gaphunter&lang='+state.lang);
+    const data=await res.json();
+    if(data.success&&data.winners&&data.winners.length>0){
+      PRODUCTS=data.winners;
+      loaded=true;
+      renderProducts();
+    }
+  }catch(e){
+    setTimeout(loadProducts,5000);
+  }
+}
+
+// Gestion retour Stripe
+const urlParams=new URLSearchParams(window.location.search);
+if(urlParams.get('order')==='success'){state.orderDone=true;state.cart=[];updateCartCount();showView('cart');window.history.replaceState({},'','/');}
+if(urlParams.get('order')==='cancel'){showView('cart');window.history.replaceState({},'','/');}
+
+loadProducts();
+setInterval(loadProducts,3600000);
+
+function renderNiches(){
+  document.getElementById('niches-bar').innerHTML=NICHES.map(n=>`<button class="niche-btn" onclick="setNiche('${n.id}')" style="background:${state.niche===n.id?n.color:'var(--card)'};color:${state.niche===n.id?'#080808':'var(--muted)'};border-color:${state.niche===n.id?n.color:'var(--border)'}">${n.icon} ${n.label}</button>`).join('');
+}
+
+function setNiche(id){state.niche=id;renderNiches();renderProducts();}
+
+function renderProducts(){
+  if(!loaded){return;}
+  const f=state.niche==='all'?PRODUCTS:PRODUCTS.filter(p=>p.niche===state.niche);
+  if(f.length===0){
+    document.getElementById('products-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">Aucun produit dans cette catégorie</div>';
+    return;
+  }
+  document.getElementById('products-grid').innerHTML=f.map(p=>pCard(p)).join('');
+}
+
+function pCard(p){
+  const n=getNiche(p.niche);
+  const price=gp(p.price);
+  const oldP=gp(p.oldPrice);
+  const img=p.image||'';
+  const imgHtml=img?`<img class="pcard-img" src="${img}" alt="${(p.name||'').replace(/"/g,'')}" loading="lazy" onclick="openZoom('${img}','')" onerror="this.style.display='none'">`:'<div style="height:200px;background:var(--mid);display:flex;align-items:center;justify-content:center;font-size:40px">📦</div>';
+  return `<div class="pcard">
+    <div class="pcard-img-wrap">${imgHtml}
+      <span style="position:absolute;top:10px;right:10px;background:var(--accent);color:#080808;font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px">-${disc(p)}%</span>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:#07070988;backdrop-filter:blur(8px);padding:5px 10px"><span style="font-size:10px;font-weight:700;color:${n.color}">${n.icon} ${n.label}</span></div>
+    </div>
+    <div style="padding:14px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px;line-height:1.4;height:38px;overflow:hidden">${p.name||''}</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent)">${state.symbol}${price}</span>
+        <span style="color:#333;font-size:12px;text-decoration:line-through">${state.symbol}${oldP}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <span style="background:#00ff8812;border:1px solid #00ff8830;color:#00ff88;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px">🚚 Gratuit</span>
+        <span style="background:#C8FF0012;border:1px solid #C8FF0030;color:var(--accent);font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px">↩️ 30j</span>
+      </div>
+      <button class="btn" style="width:100%;padding:11px;font-size:13px" onclick="addToCart('${p.id}')">🛒 Ajouter au panier</button>
+    </div>
+  </div>`;
+}
+
+function addToCart(id){
+  const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
+  const ex=state.cart.find(i=>i.id===id);
+  if(ex){ex.qty++;}else{state.cart.push({...p,qty:1});}
+  state.cartCount=state.cart.reduce((s,i)=>s+i.qty,0);
+  updateCartCount();
+  // Flash feedback
+  const btn=event.target;
+  btn.textContent='✅ Ajouté !';
+  setTimeout(()=>btn.textContent='🛒 Ajouter au panier',1500);
+}
+
+function updateCartCount(){
+  const b=document.getElementById('cart-count');
+  if(state.cartCount>0){b.textContent=state.cartCount;b.style.display='flex';}
+  else{b.style.display='none';}
+}
+
+function applyPromo(){
+  const input=document.getElementById('promo-input');
+  const msg=document.getElementById('promo-msg');
+  if(!input||!msg)return;
+  const code=input.value.trim().toUpperCase();
+  if(PROMO_CODES[code]){
+    state.promo=code;state.promoD=PROMO_CODES[code].d;state.promoL=PROMO_CODES[code].l;
+    msg.style.color='#C8FF00';msg.textContent='✅ Code "'+code+'" appliqué — '+PROMO_CODES[code].l+'!';
+    renderCart();
+  }else{
+    msg.style.color='#ff8888';msg.textContent='❌ Code invalide.';
+  }
+}
+
+function removePromo(){state.promo='';state.promoD=0;state.promoL='';renderCart();}
+
+function renderCart(){
+  const subtotal=state.cart.reduce((s,i)=>s+(parseFloat(gp(i.price))*i.qty),0);
+  const finalTotal=subtotal*(1-state.promoD);
+  if(state.orderDone){
+    document.getElementById('cart-content').innerHTML=`<div style="max-width:460px;margin:100px auto;text-align:center"><div style="font-size:52px;margin-bottom:18px">✅</div><div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;margin-bottom:10px">COMMANDE CONFIRMÉE !</div><div style="color:var(--muted);margin-bottom:24px">Livraison sous 7-15 jours.</div><button class="btn" onclick="state.orderDone=false;state.cart=[];state.cartCount=0;updateCartCount();showView('store')">Continuer les achats</button></div>`;
+    return;
+  }
+  if(state.cart.length===0){
+    document.getElementById('cart-content').innerHTML=`<div style="text-align:center;padding:80px 0"><div style="font-size:40px;margin-bottom:12px">🛒</div><div style="color:var(--muted);margin-bottom:16px">Votre panier est vide</div><button class="btn" onclick="showView('store')">Découvrir nos produits</button></div>`;
+    return;
+  }
+  document.getElementById('cart-content').innerHTML=`
+    <div>${state.cart.map(item=>`<div class="cart-item">
+      ${item.image?`<img src="${item.image}" style="width:64px;height:64px;border-radius:9px;object-fit:cover" onerror="this.style.display='none'">`:'<div style="width:64px;height:64px;border-radius:9px;background:var(--mid);display:flex;align-items:center;justify-content:center">📦</div>'}
+      <div style="flex:1"><div style="font-weight:700;font-size:13px">${item.name||''}</div><div style="color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px">${state.symbol}${gp(item.price)}</div></div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <button onclick="updateQty('${item.id}',-1)" style="background:var(--mid);border:none;color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px">−</button>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;min-width:20px;text-align:center">${item.qty}</span>
+        <button onclick="updateQty('${item.id}',1)" style="background:var(--mid);border:none;color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px">+</button>
+      </div>
+      <button onclick="removeFromCart('${item.id}')" style="background:transparent;border:none;color:#444;cursor:pointer;font-size:18px">✕</button>
+    </div>`).join('')}</div>
+    <div class="cart-summary">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--muted);font-size:13px"><span>Sous-total</span><span>${state.symbol}${subtotal.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;color:#00ff88;font-size:13px"><span>🚚 Livraison gratuite</span><span>${state.symbol}0.00</span></div>
+      ${state.promo?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:var(--accent);font-size:13px"><span>🏷️ ${state.promo} (${state.promoL})</span><span style="display:flex;align-items:center;gap:8px">-${state.symbol}${(subtotal*state.promoD).toFixed(2)}<button onclick="removePromo()" style="background:transparent;border:none;color:#555;cursor:pointer">✕</button></span></div>`:`
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="promo-input" type="text" placeholder="Code promo" style="flex:1;background:var(--mid);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none"/>
+        <button onclick="applyPromo()" style="background:transparent;border:1px solid var(--accent);border-radius:8px;color:var(--accent);padding:9px 14px;cursor:pointer;font-weight:700;font-size:12px">Appliquer</button>
+      </div>
+      <div id="promo-msg" style="font-size:12px;margin-bottom:8px;min-height:16px"></div>`}
+      <div style="display:flex;justify-content:space-between;margin-bottom:18px;font-family:'Bebas Neue',sans-serif;font-size:22px"><span>TOTAL</span><span style="color:var(--accent)">${state.symbol}${finalTotal.toFixed(2)}</span></div>
+      <button id="checkout-btn" class="btn" style="width:100%;padding:14px;font-size:15px" onclick="startCheckout(${finalTotal})">🔒 Payer — ${state.symbol}${finalTotal.toFixed(2)}</button>
+      <div style="text-align:center;color:#333;font-size:10px;margin-top:10px">Stripe · SSL 256-bit · Paiement sécurisé</div>
+    </div>`;
+}
+
+async function startCheckout(total){
+  const btn=document.getElementById('checkout-btn');
+  if(btn){btn.textContent='⏳ Chargement...';btn.disabled=true;}
+  const items=state.cart.map(i=>({name:i.name,image:i.image||'',price:parseFloat(gp(i.price)),qty:i.qty}));
+  try{
+    const res=await fetch(BACKEND+'/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items})});
+    const data=await res.json();
+    if(data.success&&data.url){window.location.href=data.url;}
+    else{alert('Erreur: '+(data.error||'Réessayez'));if(btn){btn.textContent='🔒 Payer';btn.disabled=false;}}
+  }catch(e){alert('Erreur connexion. Réessayez.');if(btn){btn.textContent='🔒 Payer';btn.disabled=false;}}
+}
+
+function updateQty(id,delta){
+  const item=state.cart.find(i=>i.id===id);if(!item)return;
+  item.qty=Math.max(1,item.qty+delta);
+  state.cartCount=state.cart.reduce((s,i)=>s+i.qty,0);
+  updateCartCount();renderCart();
+}
+function removeFromCart(id){
+  state.cart=state.cart.filter(i=>i.id!==id);
+  state.cartCount=state.cart.reduce((s,i)=>s+i.qty,0);
+  updateCartCount();renderCart();
+}
+
+function openZoom(src){
+  document.getElementById('img-zoom-img').src=src;
+  document.getElementById('img-zoom-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeZoom(){
+  document.getElementById('img-zoom-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeZoom();});
+
+function setLang(lang,flag,symbol){
+  state.lang=lang;state.symbol=symbol;state.flag=flag;
+  document.getElementById('lang-flag').textContent=flag;
+  document.getElementById('lang-menu').classList.remove('open');
+  loaded=false;PRODUCTS=[];
+  document.getElementById('products-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">⏳ Traduction...</div>';
+  loadProducts();
+  renderCart();
+}
+function toggleLang(){document.getElementById('lang-menu').classList.toggle('open');}
+function showView(name){
+  ['store','cart'].forEach(v=>document.getElementById('view-'+v).classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(name==='cart')renderCart();
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('[onclick="toggleLang()"]')&&!e.target.closest('#lang-menu'))
+    document.getElementById('lang-menu').classList.remove('open');
+});
+
+renderNiches();
+</script>
 </body>
 </html>
