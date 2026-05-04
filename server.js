@@ -88,11 +88,21 @@ function searchAliExpress(keyword, niche) {
           var items = (result.result && result.result.resultList) || [];
           items.forEach(function(item) {
             var info = item.item || {};
-            var price = parseFloat((info.sku && info.sku.def && info.sku.def.promotionPrice) || info.prices && info.prices.salePrice && info.prices.salePrice.minPrice || 0);
+            var price = parseFloat(
+            (info.sku && info.sku.def && info.sku.def.promotionPrice) ||
+            (info.prices && info.prices.salePrice && info.prices.salePrice.minPrice) ||
+            (info.salePrice && info.salePrice.minPrice) ||
+            (info.price) || 0
+          );
             if (!info.title || price <= 0) return;
-            var sales = parseInt(info.tradeDesc || '0');
-            var img = (info.images && info.images[0]) || '';
-            if (img && !img.startsWith('http')) img = 'https:' + img;
+            var salesStr = (info.tradeDesc || info.trade || info.sold || '0').toString().replace(/[^0-9]/g,'');
+            var sales = parseInt(salesStr || '0');
+            var img = info.image || info.itemMainPic ||
+                    (info.images && info.images[0]) || info.imageUrl || '';
+          if (img && img.startsWith('//')) img = 'https:' + img;
+          if (img && !img.startsWith('http')) img = 'https://' + img;
+          // Proxifier via backend pour éviter CORS
+          if (img) img = 'https://follow-backend-o300.onrender.com/img?url=' + encodeURIComponent(img);
             var score = Math.min(99, Math.round(65 + Math.min(sales/100, 25) + Math.floor(Math.random()*10)));
             products.push({
               id: String(info.itemId || Math.random()),
@@ -100,7 +110,7 @@ function searchAliExpress(keyword, niche) {
               image: img,
               price: parseFloat(price.toFixed(2)),
               oldPrice: parseFloat((price * 1.8).toFixed(2)),
-              rating: parseFloat(info.averageStar || 4.6),
+              rating: parseFloat(info.averageStar || info.starRating || info.reviewStar || 4.6),
               sales: sales, niche: niche, score: score,
               gapFR: score, isWinner: true, supplier: 'AliExpress',
               badge: sales > 100 ? 'hot' : 'new', vid: ''
@@ -235,12 +245,7 @@ function refreshProducts() {
     function searchSequential(list, index, results) {
       if (index >= list.length) return Promise.resolve(results);
       var n = list[index];
-      // Essaie AliExpress en priorité, CJ en fallback
-      return searchAliExpress(n.keyword, n.niche)
-        .then(function(r) {
-          if (r.length === 0) return searchCJProducts(n.keyword, n.niche).catch(function(){ return []; });
-          return r;
-        })
+      return searchCJProducts(n.keyword, n.niche)
         .catch(function() { return []; })
         .then(function(r) {
           results.push(r);
@@ -499,6 +504,37 @@ function sendConfirmationEmail(customerEmail, orderDetails) {
 var server = http.createServer(function(req, res) {
 
   if (req.url === '/' || req.url === '/ping') { res.writeHead(200); res.end('OK'); return; }
+  // ── PROXY IMAGE — contourne CORS AliExpress ──────────
+  if (req.url.startsWith('/img?url=')) {
+    var imgUrl = decodeURIComponent(req.url.replace('/img?url=', ''));
+    if (!imgUrl.startsWith('http')) { res.writeHead(400); res.end(''); return; }
+    var imgParsed = url.parse(imgUrl);
+    var imgOptions = {
+      hostname: imgParsed.hostname,
+      path: imgParsed.path,
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Referer': 'https://www.aliexpress.com'
+      }
+    };
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    var proto = imgUrl.startsWith('https') ? https : http;
+    var imgReq = proto.request(imgOptions, function(imgRes) {
+      res.writeHead(imgRes.statusCode, {
+        'Content-Type': imgRes.headers['content-type'] || 'image/jpeg',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=86400'
+      });
+      imgRes.pipe(res);
+    });
+    imgReq.on('error', function() { res.writeHead(404); res.end(''); });
+    imgReq.end();
+    return;
+  }
+
+
 
   // ── EMAIL INBOUND IA ──────────────────────────────────
   if (req.url === '/email-inbound' && req.method === 'POST') {
