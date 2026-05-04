@@ -133,19 +133,55 @@ function searchAliExpress(keyword, niche) {
 }
 
 
-// ── SHOPIFY API PUBLIQUE ──────────────────────────────────
+// ── SHOPIFY API AVEC AUTH ─────────────────────────────────
 var shopifyCache = { data: null, timestamp: 0 };
+var shopifyToken = '';
+
+function getShopifyToken() {
+  if (shopifyToken) return Promise.resolve(shopifyToken);
+  var clientId = process.env.SHOPIFY_CLIENT_ID || '2fadf9edafb385cba6a17d0682ce271b';
+  var clientSecret = process.env.SHOPIFY_CLIENT_SECRET || '';
+  if (!clientSecret) return Promise.resolve('');
+  
+  return new Promise(function(resolve) {
+    var postData = 'client_id=' + clientId + '&client_secret=' + clientSecret + '&grant_type=client_credentials';
+    var options = {
+      hostname: 'follow-9096.myshopify.com',
+      path: '/admin/oauth/access_token',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(postData) }
+    };
+    var req = https.request(options, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        try {
+          var r = JSON.parse(data);
+          shopifyToken = r.access_token || '';
+          console.log('[Shopify] Token: ' + (shopifyToken ? 'OK' : 'ECHEC'));
+          resolve(shopifyToken);
+        } catch(e) { resolve(''); }
+      });
+    });
+    req.on('error', function() { resolve(''); });
+    req.write(postData);
+    req.end();
+  });
+}
 
 function getShopifyProducts() {
   if (shopifyCache.data && Date.now() - shopifyCache.timestamp < 3600000) {
     return Promise.resolve(shopifyCache.data);
   }
+  return getShopifyToken().then(function(token) {
   return new Promise(function(resolve) {
+    var headers = { 'User-Agent': 'FOLLOW-Backend/1.0' };
+    if (token) headers['X-Shopify-Access-Token'] = token;
     var options = {
       hostname: 'follow-9096.myshopify.com',
       path: '/products.json?limit=50',
       method: 'GET',
-      headers: { 'User-Agent': 'FOLLOW-Backend/1.0' }
+      headers: headers
     };
     var req = https.request(options, function(res) {
       var data = '';
@@ -207,6 +243,7 @@ function getShopifyProducts() {
       resolve([]);
     });
     req.end();
+  });
   });
 }
 
