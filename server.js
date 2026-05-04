@@ -63,6 +63,65 @@ function callCJ(path, method, body) {
 }
 
 
+
+// ── ALIEXPRESS VIA RAPIDAPI ───────────────────────────────
+var RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '';
+
+function searchAliExpress(keyword, niche) {
+  return new Promise(function(resolve) {
+    var options = {
+      hostname: 'aliexpress-datahub.p.rapidapi.com',
+      path: '/item_search_2?q=' + encodeURIComponent(keyword) + '&page=1&sort=LAST_VOLUME_DESC',
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'aliexpress-datahub.p.rapidapi.com'
+      }
+    };
+    var req = https.request(options, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        try {
+          var result = JSON.parse(data);
+          var products = [];
+          var items = (result.result && result.result.resultList) || [];
+          items.forEach(function(item) {
+            var info = item.item || {};
+            var price = parseFloat((info.sku && info.sku.def && info.sku.def.promotionPrice) || info.prices && info.prices.salePrice && info.prices.salePrice.minPrice || 0);
+            if (!info.title || price <= 0) return;
+            var sales = parseInt(info.tradeDesc || '0');
+            var img = (info.images && info.images[0]) || '';
+            if (img && !img.startsWith('http')) img = 'https:' + img;
+            var score = Math.min(99, Math.round(65 + Math.min(sales/100, 25) + Math.floor(Math.random()*10)));
+            products.push({
+              id: String(info.itemId || Math.random()),
+              name: (info.title || '').substring(0, 80),
+              image: img,
+              price: parseFloat(price.toFixed(2)),
+              oldPrice: parseFloat((price * 1.8).toFixed(2)),
+              rating: parseFloat(info.averageStar || 4.6),
+              sales: sales, niche: niche, score: score,
+              gapFR: score, isWinner: true, supplier: 'AliExpress',
+              badge: sales > 100 ? 'hot' : 'new', vid: ''
+            });
+          });
+          console.log('[AliExpress] ' + niche + ' "' + keyword + '" -> ' + products.length + ' produits');
+          resolve(products);
+        } catch(e) {
+          console.log('[AliExpress] Erreur parse:', e.message);
+          resolve([]);
+        }
+      });
+    });
+    req.on('error', function(e) {
+      console.log('[AliExpress] Erreur:', e.message);
+      resolve([]);
+    });
+    req.end();
+  });
+}
+
 // ── TRADUCTION NOMS PRODUITS ──────────────────────────────
 var translationCache = {};
 
@@ -176,7 +235,12 @@ function refreshProducts() {
     function searchSequential(list, index, results) {
       if (index >= list.length) return Promise.resolve(results);
       var n = list[index];
-      return searchCJProducts(n.keyword, n.niche)
+      // Essaie AliExpress en priorité, CJ en fallback
+      return searchAliExpress(n.keyword, n.niche)
+        .then(function(r) {
+          if (r.length === 0) return searchCJProducts(n.keyword, n.niche).catch(function(){ return []; });
+          return r;
+        })
         .catch(function() { return []; })
         .then(function(r) {
           results.push(r);
