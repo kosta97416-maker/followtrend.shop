@@ -62,6 +62,63 @@ function callCJ(path, method, body) {
   });
 }
 
+
+// ── TRADUCTION NOMS PRODUITS ──────────────────────────────
+var translationCache = {};
+
+function translateProducts(products, lang) {
+  if (lang === 'en') return Promise.resolve(products); // CJ est déjà en anglais
+  var cacheKey = lang + '_' + products.map(function(p){ return p.id; }).join('_');
+  if (translationCache[cacheKey]) return Promise.resolve(translationCache[cacheKey]);
+
+  var ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
+  if (!ANTHROPIC_KEY) return Promise.resolve(products);
+
+  var langNames = {fr:'français',es:'espagnol',ar:'arabe',pt:'portugais',sw:'swahili'};
+  var langName = langNames[lang] || 'français';
+  var names = products.map(function(p){ return p.name; }).join('\n');
+
+  var prompt = 'Traduis ces noms de produits e-commerce en ' + langName + '. ' +
+    'Retourne UNIQUEMENT les noms traduits, un par ligne, dans le meme ordre. ' +
+    'Garde les chiffres et unites. Sois concis.\n\n' + names;
+
+  var postData = JSON.stringify({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1000,
+    messages: [{ role: 'user', content: prompt }]
+  });
+
+  return new Promise(function(resolve) {
+    var options = {
+      hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(postData) }
+    };
+    var req = https.request(options, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        try {
+          var parsed = JSON.parse(data);
+          var translated = parsed.content && parsed.content[0] ? parsed.content[0].text.trim() : '';
+          var lines = translated.split('\n').map(function(l){ return l.trim(); }).filter(function(l){ return l; });
+          var translatedProducts = products.map(function(p, i) {
+            return Object.assign({}, p, { name: lines[i] || p.name });
+          });
+          translationCache[cacheKey] = translatedProducts;
+          console.log('[Translate] ' + lang + ' — ' + products.length + ' produits traduits');
+          resolve(translatedProducts);
+        } catch(e) {
+          console.log('[Translate] Erreur:', e.message);
+          resolve(products);
+        }
+      });
+    });
+    req.on('error', function() { resolve(products); });
+    req.write(postData);
+    req.end();
+  });
+}
+
 // ── RECHERCHE PRODUITS CJ ─────────────────────────────────
 function searchCJProducts(keyword, niche) {
   return callCJ('/api2.0/v1/product/list?productNameEn=' + encodeURIComponent(keyword) + '&pageNum=1&pageSize=20&orderBy=ORDERS', 'GET')
@@ -451,7 +508,18 @@ var server = http.createServer(function(req, res) {
   }
 
   if (action === 'gaphunter') {
-    getCachedProducts().then(function(data) { res.writeHead(200); res.end(JSON.stringify(data)); }).catch(function(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); });
+    var lang = parsed.query.lang || 'fr';
+    getCachedProducts().then(function(data) {
+      if (!data.winners || !data.winners.length || lang === 'en') {
+        res.writeHead(200); res.end(JSON.stringify(data)); return;
+      }
+      translateProducts(data.winners, lang).then(function(translatedWinners) {
+        var result = Object.assign({}, data, { winners: translatedWinners });
+        res.writeHead(200); res.end(JSON.stringify(result));
+      }).catch(function() {
+        res.writeHead(200); res.end(JSON.stringify(data));
+      });
+    }).catch(function(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); });
     return;
   }
 
