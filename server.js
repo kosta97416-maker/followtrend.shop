@@ -132,6 +132,84 @@ function searchAliExpress(keyword, niche) {
   });
 }
 
+
+// ── SHOPIFY API PUBLIQUE ──────────────────────────────────
+var shopifyCache = { data: null, timestamp: 0 };
+
+function getShopifyProducts() {
+  if (shopifyCache.data && Date.now() - shopifyCache.timestamp < 3600000) {
+    return Promise.resolve(shopifyCache.data);
+  }
+  return new Promise(function(resolve) {
+    var options = {
+      hostname: 'follow-9096.myshopify.com',
+      path: '/products.json?limit=50',
+      method: 'GET',
+      headers: { 'User-Agent': 'FOLLOW-Backend/1.0' }
+    };
+    var req = https.request(options, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        try {
+          var result = JSON.parse(data);
+          var products = [];
+          var nicheMap = {
+            'jewelry': 'lifestyle', 'necklace': 'lifestyle', 'ring': 'lifestyle', 'watch': 'lifestyle',
+            'sport': 'sport', 'fitness': 'sport', 'knee': 'sport', 'jump': 'sport',
+            'webcam': 'focus', 'keyboard': 'focus', 'laptop': 'focus', 'monitor': 'focus',
+            'camera': 'creator', 'phone': 'creator', 'selfie': 'creator', 'microphone': 'creator',
+            'home': 'home', 'kitchen': 'home', 'lamp': 'home', 'storage': 'home', 'mop': 'home'
+          };
+          
+          (result.products || []).forEach(function(p, i) {
+            var price = parseFloat(p.variants && p.variants[0] ? p.variants[0].price : 0);
+            if (!price) return;
+            var img = p.images && p.images[0] ? p.images[0].src : '';
+            
+            // Déterminer la niche selon le titre
+            var titleLower = (p.title || '').toLowerCase();
+            var niche = 'lifestyle';
+            Object.keys(nicheMap).forEach(function(key) {
+              if (titleLower.includes(key)) niche = nicheMap[key];
+            });
+            
+            products.push({
+              id: String(p.id),
+              name: (p.title || '').substring(0, 80),
+              image: img,
+              price: parseFloat(price.toFixed(2)),
+              oldPrice: parseFloat((price * 1.8).toFixed(2)),
+              rating: 4.7,
+              sales: Math.floor(Math.random() * 2000) + 100,
+              niche: niche,
+              score: 75 + Math.floor(Math.random() * 20),
+              gapFR: 80,
+              isWinner: true,
+              supplier: 'AliExpress',
+              badge: 'hot',
+              vid: ''
+            });
+          });
+          
+          console.log('[Shopify] ' + products.length + ' produits charges');
+          shopifyCache.data = products;
+          shopifyCache.timestamp = Date.now();
+          resolve(products);
+        } catch(e) {
+          console.log('[Shopify] Erreur:', e.message);
+          resolve([]);
+        }
+      });
+    });
+    req.on('error', function(e) {
+      console.log('[Shopify] Erreur connexion:', e.message);
+      resolve([]);
+    });
+    req.end();
+  });
+}
+
 // ── TRADUCTION NOMS PRODUITS ──────────────────────────────
 var translationCache = {};
 
