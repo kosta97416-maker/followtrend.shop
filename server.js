@@ -121,7 +121,7 @@ function translateProducts(products, lang) {
 
 // ── RECHERCHE PRODUITS CJ ─────────────────────────────────
 function searchCJProducts(keyword, niche) {
-  return callCJ('/api2.0/v1/product/list?productNameEn=' + encodeURIComponent(keyword) + '&pageNum=1&pageSize=20&orderBy=ORDERS', 'GET')
+  return callCJ('/api2.0/v1/product/list?productNameEn=' + encodeURIComponent(keyword) + '&pageNum=1&pageSize=30&orderBy=ORDERS', 'GET')
     .then(function(result) {
       var products = [];
       if (result.data && result.data.list) {
@@ -129,7 +129,11 @@ function searchCJProducts(keyword, niche) {
           var price = parseFloat(item.sellPrice || item.productPrice || 0);
           if (!item.productNameEn || price <= 0) return;
           var sales = parseInt(item.productSale || 0);
-          var score = Math.min(99, Math.round(65 + Math.min(sales / 50, 25) + Math.floor(Math.random()*10)));
+          // Score intelligent : ventes + note + cohérence catégorie
+          var baseScore = Math.min(99, Math.round(60 + Math.min(sales / 50, 30) + Math.floor(Math.random()*10)));
+          var rating = parseFloat(item.productStar || 4.5);
+          var ratingBonus = rating >= 4.8 ? 5 : rating >= 4.5 ? 3 : 0;
+          var score = Math.min(99, baseScore + ratingBonus);
           var img = item.productImage || '';
           if (img && !img.startsWith('http')) img = 'https:' + img;
           products.push({
@@ -160,28 +164,21 @@ function getCachedProducts() {
 }
 
 function refreshProducts() {
-  var niches = [
-    // lifestyle
-    { keyword: 'posture corrector', niche: 'lifestyle' },
-    { keyword: 'massage gun mini', niche: 'lifestyle' },
-    { keyword: 'smart water bottle', niche: 'lifestyle' },
-    // sport
-    { keyword: 'resistance band set', niche: 'sport' },
-    { keyword: 'fitness tracker band', niche: 'sport' },
-    { keyword: 'jump rope speed', niche: 'sport' },
-    // focus
-    { keyword: 'blue light glasses', niche: 'focus' },
-    { keyword: 'white noise machine', niche: 'focus' },
-    { keyword: 'desk lamp led', niche: 'focus' },
-    // creator
-    { keyword: 'ring light led selfie', niche: 'creator' },
-    { keyword: 'phone tripod mini', niche: 'creator' },
-    { keyword: 'microphone usb', niche: 'creator' },
-    // home
-    { keyword: 'cable organizer magnetic', niche: 'home' },
-    { keyword: 'led strip lights', niche: 'home' },
-    { keyword: 'storage organizer drawer', niche: 'home' }
-  ];
+  // Mots-clés multilingues par catégorie — CJ cherche en anglais mais on adapte selon popularité mondiale
+  var KEYWORDS_BY_LANG = {
+    lifestyle: ['watch','sunglasses','backpack','wallet','necklace','bracelet','perfume','handbag'],
+    sport:     ['yoga mat','sport gloves','dumbbells','fitness band','jump rope','cycling gloves','sport bottle','knee pad'],
+    focus:     ['led desk lamp','wireless keyboard','phone stand','notebook','webcam','mouse pad','usb hub','monitor light'],
+    creator:   ['ring light','tripod','microphone','camera lens','green screen','phone gimbal','softbox','video light'],
+    home:      ['led strip','storage box','kitchen gadget','wall clock','plant pot','air purifier','humidifier','door mat']
+  };
+
+  var niches = [];
+  Object.keys(KEYWORDS_BY_LANG).forEach(function(niche) {
+    KEYWORDS_BY_LANG[niche].forEach(function(keyword) {
+      niches.push({ keyword: keyword, niche: niche });
+    });
+  });
   return getCJToken().then(function() {
     var promises = niches.map(function(n) {
       return searchCJProducts(n.keyword, n.niche).catch(function() { return []; });
@@ -193,8 +190,22 @@ function refreshProducts() {
       var unique = allProducts.filter(function(p) {
         if (seen[p.id]) return false; seen[p.id] = true; return true;
       });
-      unique.sort(function(a, b) { return b.score - a.score; });
-      var winners = unique.slice(0, 45);
+      // Tri intelligent : équilibre par catégorie puis score
+      var byNiche = {};
+      unique.forEach(function(p) {
+        if (!byNiche[p.niche]) byNiche[p.niche] = [];
+        byNiche[p.niche].push(p);
+      });
+      // Trier chaque catégorie par score
+      Object.keys(byNiche).forEach(function(niche) {
+        byNiche[niche].sort(function(a,b){ return b.score - a.score; });
+      });
+      // Prendre les 12 meilleurs par catégorie
+      var winners = [];
+      Object.keys(byNiche).forEach(function(niche) {
+        winners = winners.concat(byNiche[niche].slice(0, 12));
+      });
+      console.log('[Cache] Repartition:', Object.keys(byNiche).map(function(n){ return n+':'+byNiche[n].length; }).join(' '));
       productsCache.data = { success: true, winners: winners, total: unique.length, cached: true, supplier: 'CJ Dropshipping', cached_at: new Date().toISOString() };
       productsCache.timestamp = Date.now();
       console.log('[Cache] ' + winners.length + ' produits CJ en cache');
