@@ -161,11 +161,26 @@ function getCachedProducts() {
 
 function refreshProducts() {
   var niches = [
-    { keyword: 'sleep patch wellness', niche: 'wellness' },
-    { keyword: 'earplugs noise protection', niche: 'hearing' },
+    // lifestyle
+    { keyword: 'posture corrector', niche: 'lifestyle' },
+    { keyword: 'massage gun mini', niche: 'lifestyle' },
+    { keyword: 'smart water bottle', niche: 'lifestyle' },
+    // sport
+    { keyword: 'resistance band set', niche: 'sport' },
+    { keyword: 'fitness tracker band', niche: 'sport' },
+    { keyword: 'jump rope speed', niche: 'sport' },
+    // focus
+    { keyword: 'blue light glasses', niche: 'focus' },
+    { keyword: 'white noise machine', niche: 'focus' },
+    { keyword: 'desk lamp led', niche: 'focus' },
+    // creator
     { keyword: 'ring light led selfie', niche: 'creator' },
-    { keyword: 'nasal strip breathing', niche: 'breathing' },
-    { keyword: 'cable organizer magnetic', niche: 'home' }
+    { keyword: 'phone tripod mini', niche: 'creator' },
+    { keyword: 'microphone usb', niche: 'creator' },
+    // home
+    { keyword: 'cable organizer magnetic', niche: 'home' },
+    { keyword: 'led strip lights', niche: 'home' },
+    { keyword: 'storage organizer drawer', niche: 'home' }
   ];
   return getCJToken().then(function() {
     var promises = niches.map(function(n) {
@@ -179,7 +194,7 @@ function refreshProducts() {
         if (seen[p.id]) return false; seen[p.id] = true; return true;
       });
       unique.sort(function(a, b) { return b.score - a.score; });
-      var winners = unique.slice(0, 15);
+      var winners = unique.slice(0, 45);
       productsCache.data = { success: true, winners: winners, total: unique.length, cached: true, supplier: 'CJ Dropshipping', cached_at: new Date().toISOString() };
       productsCache.timestamp = Date.now();
       console.log('[Cache] ' + winners.length + ' produits CJ en cache');
@@ -503,7 +518,7 @@ var server = http.createServer(function(req, res) {
 
   if (action === 'health') {
     res.writeHead(200);
-    res.end(JSON.stringify({ status: 'ok', service: 'FOLLOW. Backend v10 — Stripe Checkout', webhook: STRIPE_WEBHOOK_SECRET ? 'Configure' : 'Non configure', cj: cjToken.access ? 'Connecte' : 'Non connecte', cache: productsCache.data ? (productsCache.data.winners ? productsCache.data.winners.length : 0) + ' produits en cache' : 'Chargement...', timestamp: new Date().toISOString() }));
+    res.end(JSON.stringify({ status: 'ok', service: 'FOLLOW. Backend v10 — 5 categories', webhook: STRIPE_WEBHOOK_SECRET ? 'Configure' : 'Non configure', cj: cjToken.access ? 'Connecte' : 'Non connecte', cache: productsCache.data ? (productsCache.data.winners ? productsCache.data.winners.length : 0) + ' produits en cache' : 'Chargement...', timestamp: new Date().toISOString() }));
     return;
   }
 
