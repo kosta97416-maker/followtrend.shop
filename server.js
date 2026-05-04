@@ -30,9 +30,9 @@ function getCJToken() {
           if (result.data && result.data.accessToken) {
             cjToken.access = result.data.accessToken;
             cjToken.expires = Date.now() + (14 * 24 * 60 * 60 * 1000);
-            console.log('[CJ] ✅ Token obtenu');
+            console.log('[CJ] Token obtenu');
             resolve(cjToken.access);
-          } else { reject(new Error('CJ Token failed: ' + JSON.stringify(result))); }
+          } else { reject(new Error('CJ Token failed')); }
         } catch(e) { reject(e); }
       });
     });
@@ -81,21 +81,13 @@ function searchCJProducts(keyword, niche) {
             image: img,
             price: parseFloat(price.toFixed(2)),
             oldPrice: parseFloat((price * 1.8).toFixed(2)),
-            rating: 4.6,
-            sales: sales,
-            niche: niche,
-            score: score,
-            gapFR: score,
-            isWinner: true,
-            supplier: 'CJ Dropshipping',
-            badge: sales > 50 ? 'hot' : 'new',
-            vid: item.vid || '',
-            link: 'https://app.cjdropshipping.com/product-detail.html?id=' + (item.pid || ''),
-            followLink: 'https://followtrend.shop?product=' + (item.pid || '')
+            rating: 4.6, sales: sales, niche: niche, score: score,
+            gapFR: score, isWinner: true, supplier: 'CJ Dropshipping',
+            badge: sales > 50 ? 'hot' : 'new', vid: item.vid || ''
           });
         });
       }
-      console.log('[CJ Search] ' + niche + ' "' + keyword + '" → ' + products.length + ' produits');
+      console.log('[CJ Search] ' + niche + ' "' + keyword + '" -> ' + products.length + ' produits');
       return products;
     });
 }
@@ -118,52 +110,36 @@ function refreshProducts() {
     { keyword: 'nasal strip breathing', niche: 'breathing' },
     { keyword: 'cable organizer magnetic', niche: 'home' }
   ];
-
   return getCJToken().then(function() {
     var promises = niches.map(function(n) {
-      return searchCJProducts(n.keyword, n.niche).catch(function(e) {
-        console.log('[CJ Error]', n.niche, e.message);
-        return [];
-      });
+      return searchCJProducts(n.keyword, n.niche).catch(function() { return []; });
     });
-
     return Promise.all(promises).then(function(results) {
       var allProducts = [];
       results.forEach(function(r) { allProducts = allProducts.concat(r); });
-
       var seen = {};
       var unique = allProducts.filter(function(p) {
-        if (seen[p.id]) return false;
-        seen[p.id] = true;
-        return true;
+        if (seen[p.id]) return false; seen[p.id] = true; return true;
       });
       unique.sort(function(a, b) { return b.score - a.score; });
-
       var winners = unique.slice(0, 15);
-      productsCache.data = {
-        success: true, winners: winners, total: unique.length,
-        cached: true, supplier: 'CJ Dropshipping',
-        cached_at: new Date().toISOString()
-      };
+      productsCache.data = { success: true, winners: winners, total: unique.length, cached: true, supplier: 'CJ Dropshipping', cached_at: new Date().toISOString() };
       productsCache.timestamp = Date.now();
-      console.log('[Cache] ✅ ' + winners.length + ' produits CJ en cache');
+      console.log('[Cache] ' + winners.length + ' produits CJ en cache');
       return productsCache.data;
     });
   }).catch(function(e) {
-    console.log('[Cache] ❌ Erreur refresh:', e.message);
-    if (!productsCache.data) {
-      productsCache.data = { success: true, winners: [], total: 0, cached: true };
-    }
+    console.log('[Cache] Erreur refresh:', e.message);
+    if (!productsCache.data) productsCache.data = { success: true, winners: [], total: 0, cached: true };
     return productsCache.data;
   });
 }
 
-// Pré-charge au démarrage
 setTimeout(refreshProducts, 3000);
 setInterval(refreshProducts, 3600000);
 
 if (CJ_API_KEY) {
-  getCJToken().then(function() { console.log('[CJ] Token initialisé'); }).catch(function(e) { console.log('[CJ] Erreur token:', e.message); });
+  getCJToken().then(function() { console.log('[CJ] Token initialise'); }).catch(function(e) { console.log('[CJ] Erreur token:', e.message); });
 }
 
 // ── STRIPE ────────────────────────────────────────────────
@@ -183,6 +159,69 @@ function callStripe(path) {
   });
 }
 
+// ── STRIPE CHECKOUT SESSION ───────────────────────────────
+function createCheckoutSession(items, customerEmail, successUrl, cancelUrl) {
+  return new Promise(function(resolve, reject) {
+    // Construire les line_items
+    var lineItems = items.map(function(item) {
+      return 'line_items[][price_data][currency]=eur' +
+        '&line_items[][price_data][product_data][name]=' + encodeURIComponent(item.name) +
+        '&line_items[][price_data][product_data][images][]=' + encodeURIComponent(item.image || '') +
+        '&line_items[][price_data][unit_amount]=' + Math.round(item.price * 100) +
+        '&line_items[][quantity]=' + (item.qty || 1);
+    });
+
+    var params = lineItems.join('&') +
+      '&mode=payment' +
+      '&success_url=' + encodeURIComponent(successUrl) +
+      '&cancel_url=' + encodeURIComponent(cancelUrl) +
+      '&shipping_address_collection[allowed_countries][]=FR' +
+      '&shipping_address_collection[allowed_countries][]=BE' +
+      '&shipping_address_collection[allowed_countries][]=CH' +
+      '&shipping_address_collection[allowed_countries][]=CA' +
+      '&shipping_address_collection[allowed_countries][]=GB' +
+      '&shipping_address_collection[allowed_countries][]=US' +
+      '&shipping_address_collection[allowed_countries][]=DE' +
+      '&shipping_address_collection[allowed_countries][]=ES' +
+      '&shipping_address_collection[allowed_countries][]=IT' +
+      '&shipping_address_collection[allowed_countries][]=PT' +
+      '&shipping_address_collection[allowed_countries][]=MA' +
+      '&shipping_address_collection[allowed_countries][]=DZ' +
+      '&shipping_address_collection[allowed_countries][]=TN' +
+      '&shipping_address_collection[allowed_countries][]=SA' +
+      '&shipping_address_collection[allowed_countries][]=AE' +
+      '&shipping_address_collection[allowed_countries][]=SN' +
+      '&shipping_address_collection[allowed_countries][]=RE' +
+      '&phone_number_collection[enabled]=true' +
+      (customerEmail ? '&customer_email=' + encodeURIComponent(customerEmail) : '') +
+      '&locale=auto' +
+      '&billing_address_collection=auto';
+
+    var postData = params;
+    var options = {
+      hostname: 'api.stripe.com',
+      path: '/v1/checkout/sessions',
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + STRIPE_SECRET,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+    var req = https.request(options, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        try { resolve(JSON.parse(data)); }
+        catch(e) { reject(e); }
+      });
+    });
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+}
+
 function verifyStripeSignature(payload, sigHeader, secret) {
   try {
     var parts = sigHeader.split(',');
@@ -198,7 +237,7 @@ function verifyStripeSignature(payload, sigHeader, secret) {
   } catch(e) { return false; }
 }
 
-// ── WEBHOOK STRIPE → CJ ───────────────────────────────────
+// ── WEBHOOK STRIPE ────────────────────────────────────────
 function handleStripeWebhook(payload, sigHeader) {
   return new Promise(function(resolve) {
     if (STRIPE_WEBHOOK_SECRET && !verifyStripeSignature(payload, sigHeader, STRIPE_WEBHOOK_SECRET)) {
@@ -206,75 +245,57 @@ function handleStripeWebhook(payload, sigHeader) {
     }
     var event;
     try { event = JSON.parse(payload); } catch(e) { return resolve({ ok: false, error: 'Parse error' }); }
-    if (event.type !== 'payment_intent.succeeded') return resolve({ ok: true, message: 'Event ignoré' });
 
-    var pi = event.data.object;
-    var orderId = 'FOLLOW-' + pi.id.slice(-8).toUpperCase();
-    var productVid = pi.metadata ? (pi.metadata.cj_vid || '') : '';
-    var country = pi.metadata ? (pi.metadata.country || 'FR') : 'FR';
-    var quantity = pi.metadata ? parseInt(pi.metadata.quantity || 1) : 1;
+    if (event.type === 'checkout.session.completed') {
+      var session = event.data.object;
+      var customerEmail = session.customer_details ? session.customer_details.email : '';
+      var orderId = 'FOLLOW-' + session.id.slice(-8).toUpperCase();
+      var amount = (session.amount_total || 0) / 100;
 
-    var amount = pi.amount / 100;
-    var customerEmail = pi.receipt_email || (pi.metadata && pi.metadata.customer_email) || '';
-    console.log('[Webhook] Paiement ' + amount + pi.currency.toUpperCase() + ' — ' + orderId);
+      console.log('[Webhook] Checkout complete ' + orderId + ' — ' + amount + 'EUR');
 
-    // Email confirmation client
-    if (customerEmail) {
-      sendConfirmationEmail(customerEmail, {
-        orderId: orderId,
-        amount: amount.toFixed(2) + pi.currency.toUpperCase()
-      });
+      if (customerEmail) {
+        sendConfirmationEmail(customerEmail, { orderId: orderId, amount: amount.toFixed(2) + 'EUR' });
+      }
+      sendAlertEmail('Nouvelle vente FOLLOW. — ' + amount + 'EUR', 'Commande: ' + orderId + '\nClient: ' + (customerEmail||'inconnu') + '\nMontant: ' + amount + 'EUR');
+      return resolve({ ok: true, order: orderId });
     }
 
-    // Alerte CEO
-    sendAlertEmail('Nouvelle vente FOLLOW. — ' + amount + pi.currency.toUpperCase(), 'Commande: ' + orderId + '\nClient: ' + (customerEmail||'inconnu') + '\nMontant: ' + amount + pi.currency.toUpperCase());
-
-    if (productVid) {
-      callCJ('/api2.0/v1/shopping/order/createOrder', 'POST', {
-        orderNumber: orderId, shippingCountry: country,
-        products: [{ vid: productVid, quantity: quantity }]
-      }).then(function(r) {
-        console.log('[Webhook] ✅ Commande CJ: ' + orderId);
-        resolve({ ok: true, order: orderId, cj: r });
-      }).catch(function(e) {
-        console.log('[Webhook] ⚠️ Erreur CJ:', e.message);
-        resolve({ ok: true, order: orderId, cj_error: e.message });
-      });
-    } else {
-      console.log('[Webhook] ⚠️ Traitement manuel requis — ' + orderId);
-      resolve({ ok: true, order: orderId, status: 'manual_required' });
+    if (event.type === 'payment_intent.succeeded') {
+      var pi = event.data.object;
+      var orderId2 = 'FOLLOW-' + pi.id.slice(-8).toUpperCase();
+      var amount2 = pi.amount / 100;
+      var customerEmail2 = pi.receipt_email || '';
+      console.log('[Webhook] Payment ' + amount2 + ' — ' + orderId2);
+      if (customerEmail2) sendConfirmationEmail(customerEmail2, { orderId: orderId2, amount: amount2.toFixed(2) + 'EUR' });
+      sendAlertEmail('Vente FOLLOW. — ' + amount2 + 'EUR', 'Commande: ' + orderId2);
+      return resolve({ ok: true, order: orderId2 });
     }
+
+    resolve({ ok: true, message: 'Event ignore' });
   });
 }
 
-// ── SÉCURITÉ ──────────────────────────────────────────────
+// ── SECURITE ──────────────────────────────────────────────
 var security = {
   ipRequests: {}, blacklist: [], requestLog: [], blockedAttempts: 0,
   RATE_LIMIT: 500, RATE_WINDOW: 3600000,
   WHITELIST: ['::1', '127.0.0.1', '::ffff:127.0.0.1', 'localhost']
 };
-var ALLOWED_ORIGINS = ['https://followtrend.shop','https://follow-store-qqbr.vercel.app','http://localhost:3000','https://follow-backend-o300.onrender.com', 'https://followtrend-shop-lake.vercel.app', 'https://www.followtrend.shop', 'null'];
-
-setInterval(function() {
-  var now = Date.now();
-  Object.keys(security.ipRequests).forEach(function(ip) {
-    security.ipRequests[ip] = security.ipRequests[ip].filter(function(t) { return now - t < security.RATE_WINDOW; });
-    if (security.ipRequests[ip].length === 0) delete security.ipRequests[ip];
-  });
-  if (security.requestLog.length > 1000) security.requestLog = security.requestLog.slice(-500);
-}, 3600000);
+var ALLOWED_ORIGINS = [
+  'https://followtrend.shop','https://www.followtrend.shop',
+  'https://follow-store-qqbr.vercel.app','https://followtrend-shop-lake.vercel.app',
+  'http://localhost:3000','https://follow-backend-o300.onrender.com','null'
+];
 
 function checkSecurity(req, res) {
   var ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
   var origin = req.headers['origin'] || '';
-  security.requestLog.push({ ip: ip, time: Date.now(), path: req.url });
-
   if (security.blacklist.includes(ip)) {
     security.blockedAttempts++;
-    res.writeHead(403); res.end(JSON.stringify({ error: 'Accès refusé' }));
+    res.writeHead(403); res.end(JSON.stringify({ error: 'Acces refuse' }));
     return false;
   }
-
   if (!security.WHITELIST.includes(ip)) {
     if (!security.ipRequests[ip]) security.ipRequests[ip] = [];
     security.ipRequests[ip].push(Date.now());
@@ -283,18 +304,10 @@ function checkSecurity(req, res) {
     if (recent.length > security.RATE_LIMIT) {
       security.blockedAttempts++;
       if (!security.blacklist.includes(ip)) security.blacklist.push(ip);
-      res.writeHead(429); res.end(JSON.stringify({ error: 'Trop de requêtes' }));
+      res.writeHead(429); res.end(JSON.stringify({ error: 'Trop de requetes' }));
       return false;
     }
   }
-
-  var sqlPatterns = ['select ', 'union ', 'drop ', 'insert ', 'delete ', '--', '/*', 'exec('];
-  if (sqlPatterns.some(function(p) { return req.url.toLowerCase().includes(p); })) {
-    security.blockedAttempts++;
-    res.writeHead(403); res.end(JSON.stringify({ error: 'Injection bloquée' }));
-    return false;
-  }
-
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Powered-By', 'FOLLOW.');
   var isAllowed = !origin || ALLOWED_ORIGINS.some(function(o) { return origin.startsWith(o); });
@@ -309,60 +322,38 @@ function checkSecurity(req, res) {
 function sendEmail(to, subject, html) {
   return new Promise(function(resolve) {
     var RESEND_KEY = process.env.RESEND_API_KEY || '';
-    if (!RESEND_KEY) {
-      console.log('[Email] No RESEND_API_KEY');
-      return resolve({ sent: false });
-    }
-    var postData = JSON.stringify({
-      from: 'FOLLOW. <support@followtrend.shop>',
-      to: [to],
-      subject: subject,
-      html: html
-    });
+    if (!RESEND_KEY) return resolve({ sent: false });
+    var postData = JSON.stringify({ from: 'FOLLOW. <support@followtrend.shop>', to: [to], subject: subject, html: html });
     var options = {
-      hostname: 'api.resend.com',
-      path: '/emails',
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + RESEND_KEY,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData)
-      }
+      hostname: 'api.resend.com', path: '/emails', method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
     };
     var req = https.request(options, function(res) {
       var data = '';
       res.on('data', function(c) { data += c; });
-      res.on('end', function() {
-        try { var r = JSON.parse(data); console.log('[Email] Sent to ' + to); resolve({ sent: true, id: r.id }); }
-        catch(e) { resolve({ sent: false }); }
-      });
+      res.on('end', function() { try { var r = JSON.parse(data); resolve({ sent: true, id: r.id }); } catch(e) { resolve({ sent: false }); } });
     });
     req.on('error', function() { resolve({ sent: false }); });
-    req.write(postData);
-    req.end();
+    req.write(postData); req.end();
   });
 }
 
 function sendAlertEmail(subject, body) {
   var html = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#070709;color:#f0f0f8;padding:32px;border-radius:12px"><div style="font-size:28px;font-weight:900;letter-spacing:4px;margin-bottom:24px">FOLLOW<span style="color:#C8FF00">.</span></div><div style="background:#0d0d18;border:1px solid #1c1c26;border-radius:8px;padding:20px"><h2 style="color:#C8FF00;margin-bottom:12px">' + subject + '</h2><pre style="color:#aaa;font-family:Arial,sans-serif;white-space:pre-wrap">' + (body||'') + '</pre></div></div>';
-  console.log('[AlertCEO] Email -> ' + CEO_EMAIL + ' : ' + subject);
   return sendEmail(CEO_EMAIL, subject, html);
 }
 
 function sendConfirmationEmail(customerEmail, orderDetails) {
   var html = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px"><div style="background:#070709;padding:20px;border-radius:8px;margin-bottom:24px;text-align:center"><div style="font-size:28px;font-weight:900;letter-spacing:4px;color:#fff">FOLLOW<span style="color:#C8FF00">.</span></div></div><h1 style="color:#070709;font-size:24px;margin-bottom:8px">Commande confirmee !</h1><p style="color:#666;margin-bottom:24px">Merci pour votre commande.</p><div style="background:#f8f8f8;border-radius:8px;padding:20px;margin-bottom:24px"><div style="margin-bottom:8px"><span style="color:#666">Reference : </span><strong>' + orderDetails.orderId + '</strong></div><div style="margin-bottom:8px"><span style="color:#666">Montant : </span><strong>' + orderDetails.amount + '</strong></div><div><span style="color:#666">Livraison : </span><strong>7-15 jours</strong></div></div><p style="color:#999;font-size:11px">FOLLOW. followtrend.shop - Retour gratuit 30 jours</p></div>';
-  console.log('[Email] Confirmation -> ' + customerEmail);
   return sendEmail(customerEmail, 'Commande confirmee - FOLLOW.', html);
 }
-
-var goldwatch = { activation_threshold: 50000, max_budget: 5000, harvest_threshold: 15000 };
 
 // ── SERVEUR ───────────────────────────────────────────────
 var server = http.createServer(function(req, res) {
 
   if (req.url === '/' || req.url === '/ping') { res.writeHead(200); res.end('OK'); return; }
 
-  // ── EMAIL INBOUND — IA AUTO-RÉPONSE ──────────────────
+  // ── EMAIL INBOUND IA ──────────────────────────────────
   if (req.url === '/email-inbound' && req.method === 'POST') {
     var emailBody = '';
     req.on('data', function(chunk) { emailBody += chunk; });
@@ -370,46 +361,15 @@ var server = http.createServer(function(req, res) {
       res.writeHead(200);
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ received: true }));
-
       try {
         var emailData = JSON.parse(emailBody);
         var fromEmail = emailData.from || emailData.sender || '';
         var subject = emailData.subject || 'Votre message';
-        var messageText = emailData.text || emailData.html || emailData.plain_text || '';
-
-        // Nettoie le HTML si nécessaire
-        messageText = messageText.replace(/<[^>]*>/g, '').trim().substring(0, 1000);
-
+        var messageText = (emailData.text || emailData.html || '').replace(/<[^>]*>/g, '').trim().substring(0, 1000);
         if (!fromEmail || !messageText) return;
-
-        console.log('[EmailAI] 📧 Email reçu de ' + fromEmail + ' — ' + subject);
-
-        // Appel Claude pour genere la reponse
-        var prompt = "Tu es le service client de FOLLOW., boutique e-commerce (followtrend.shop). " +
-          "Reponds professionnellement en francais a cet email client. " +
-          "Sois concis (max 150 mots). " +
-          "Livraison: 7-15 jours. Retour gratuit 30 jours. " +
-          "Pour retour ou reclamation, proposer remboursement integral. " +
-          "Termine toujours par: L equipe FOLLOW. \n\nEmail client:\nSujet: " + subject + "\nMessage: " + messageText;
-
-        var postData = JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 500,
-          messages: [{ role: 'user', content: prompt }]
-        });
-
-        var aiOptions = {
-          hostname: 'api.anthropic.com',
-          path: '/v1/messages',
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-            'anthropic-version': '2023-06-01',
-            'Content-Length': Buffer.byteLength(postData)
-          }
-        };
-
+        var prompt = "Tu es le service client de FOLLOW., boutique e-commerce (followtrend.shop). Reponds professionnellement en francais. Sois concis (max 150 mots). Livraison 7-15 jours. Retour gratuit 30 jours. Termine par: L equipe FOLLOW.\n\nEmail:\nSujet: " + subject + "\nMessage: " + messageText;
+        var postData = JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 500, messages: [{ role: 'user', content: prompt }] });
+        var aiOptions = { hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY || '', 'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(postData) } };
         var aiReq = https.request(aiOptions, function(aiRes) {
           var aiData = '';
           aiRes.on('data', function(c) { aiData += c; });
@@ -418,38 +378,19 @@ var server = http.createServer(function(req, res) {
               var parsed = JSON.parse(aiData);
               var replyText = parsed.content && parsed.content[0] ? parsed.content[0].text : '';
               if (!replyText) return;
-
-              console.log('[EmailAI] ✅ Réponse générée pour ' + fromEmail);
-
-              // Envoie la réponse au client
-              var replyHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px">' +
-                '<div style="background:#070709;padding:20px;border-radius:8px;margin-bottom:24px;text-align:center">' +
-                '<div style="font-size:28px;font-weight:900;letter-spacing:4px;color:#fff">FOLLOW<span style="color:#C8FF00">.</span></div></div>' +
-                '<p style="color:#333;line-height:1.8;white-space:pre-wrap">' + replyText + '</p>' +
-                '<hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>' +
-                '<p style="color:#999;font-size:11px">FOLLOW. · support@followtrend.shop · followtrend.shop</p></div>';
-
-              sendEmail(fromEmail, 'Re: ' + subject, replyHtml).then(function() {
-                console.log('[EmailAI] ✅ Réponse envoyée à ' + fromEmail);
-                // Alerte CEO
-                sendAlertEmail("Email client traite par IA", "De: " + fromEmail + "\nSujet: " + subject + "\n\nReponse IA:\n" + replyText);
-              });
-            } catch(e) {
-              console.log('[EmailAI] ❌ Erreur parsing Claude:', e.message);
-            }
+              var replyHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px"><div style="background:#070709;padding:20px;border-radius:8px;margin-bottom:24px;text-align:center"><div style="font-size:28px;font-weight:900;letter-spacing:4px;color:#fff">FOLLOW<span style="color:#C8FF00">.</span></div></div><p style="color:#333;line-height:1.8;white-space:pre-wrap">' + replyText + '</p><hr style="border:none;border-top:1px solid #eee;margin:24px 0"/><p style="color:#999;font-size:11px">FOLLOW. support@followtrend.shop</p></div>';
+              sendEmail(fromEmail, 'Re: ' + subject, replyHtml);
+            } catch(e) { console.log('[EmailAI] Erreur:', e.message); }
           });
         });
-        aiReq.on('error', function(e) { console.log('[EmailAI] ❌ Erreur Claude:', e.message); });
-        aiReq.write(postData);
-        aiReq.end();
-
-      } catch(e) {
-        console.log('[EmailAI] ❌ Erreur parsing email:', e.message);
-      }
+        aiReq.on('error', function() {});
+        aiReq.write(postData); aiReq.end();
+      } catch(e) { console.log('[EmailAI] Erreur:', e.message); }
     });
     return;
   }
 
+  // ── WEBHOOK STRIPE ────────────────────────────────────
   if (req.url === '/webhook' && req.method === 'POST') {
     var rawBody = '';
     req.on('data', function(chunk) { rawBody += chunk; });
@@ -463,6 +404,40 @@ var server = http.createServer(function(req, res) {
     return;
   }
 
+  // ── STRIPE CHECKOUT SESSION ───────────────────────────
+  if (req.url.startsWith('/create-checkout') && req.method === 'POST') {
+    var body = '';
+    req.on('data', function(chunk) { body += chunk; });
+    req.on('end', function() {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Content-Type', 'application/json');
+      try {
+        var data = JSON.parse(body);
+        var items = data.items || [];
+        var successUrl = 'https://followtrend.shop?order=success';
+        var cancelUrl = 'https://followtrend.shop?order=cancel';
+        createCheckoutSession(items, data.email || '', successUrl, cancelUrl).then(function(session) {
+          if (session.url) {
+            res.writeHead(200);
+            res.end(JSON.stringify({ success: true, url: session.url }));
+          } else {
+            console.log('[Checkout] Erreur Stripe:', JSON.stringify(session));
+            res.writeHead(500);
+            res.end(JSON.stringify({ success: false, error: session.error ? session.error.message : 'Stripe error' }));
+          }
+        }).catch(function(e) {
+          res.writeHead(500);
+          res.end(JSON.stringify({ success: false, error: e.message }));
+        });
+      } catch(e) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ success: false, error: 'Invalid JSON' }));
+      }
+    });
+    return;
+  }
+
   if (!checkSecurity(req, res)) return;
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
 
@@ -471,181 +446,49 @@ var server = http.createServer(function(req, res) {
 
   if (action === 'health') {
     res.writeHead(200);
-    res.end(JSON.stringify({
-      status: 'ok', service: 'FOLLOW. Backend v9 — CJ Dropshipping',
-      webhook: STRIPE_WEBHOOK_SECRET ? '✅ Configuré' : '⚠️ Non configuré',
-      cj: cjToken.access ? '✅ Connecté' : '⚠️ Non connecté',
-      cache: productsCache.data ? '✅ ' + (productsCache.data.winners ? productsCache.data.winners.length : 0) + ' produits CJ en cache' : '⏳ Chargement...',
-      timestamp: new Date().toISOString()
-    }));
+    res.end(JSON.stringify({ status: 'ok', service: 'FOLLOW. Backend v10 — Stripe Checkout', webhook: STRIPE_WEBHOOK_SECRET ? 'Configure' : 'Non configure', cj: cjToken.access ? 'Connecte' : 'Non connecte', cache: productsCache.data ? (productsCache.data.winners ? productsCache.data.winners.length : 0) + ' produits en cache' : 'Chargement...', timestamp: new Date().toISOString() }));
     return;
   }
 
   if (action === 'gaphunter') {
-    getCachedProducts().then(function(data) {
-      res.writeHead(200); res.end(JSON.stringify(data));
-    }).catch(function(e) {
-      res.writeHead(500); res.end(JSON.stringify({ error: e.message }));
-    });
+    getCachedProducts().then(function(data) { res.writeHead(200); res.end(JSON.stringify(data)); }).catch(function(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); });
     return;
   }
 
   if (action === 'cj') {
     var cjSub = parsed.query.sub || 'token';
-    if (cjSub === 'token') {
-      getCJToken().then(function(token) {
-        res.writeHead(200); res.end(JSON.stringify({ success: true, token_active: true, token_preview: token.substring(0,20)+'...' }));
-      }).catch(function(e) { res.writeHead(200); res.end(JSON.stringify({ success: false, error: e.message })); });
-      return;
-    }
-    if (cjSub === 'search') {
-      var kw = parsed.query.keyword || 'patch';
-      searchCJProducts(kw, 'general').then(function(products) {
-        res.writeHead(200); res.end(JSON.stringify({ success: true, keyword: kw, products: products, total: products.length }));
-      }).catch(function(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); });
-      return;
-    }
-    if (cjSub === 'order') {
-      var orderData = { orderNumber: 'FOLLOW-' + Date.now(), shippingCountry: parsed.query.country || 'FR', products: [{ vid: parsed.query.vid || '', quantity: parseInt(parsed.query.qty || 1) }] };
-      callCJ('/api2.0/v1/shopping/order/createOrder', 'POST', orderData).then(function(data) {
-        res.writeHead(200); res.end(JSON.stringify({ success: true, order: orderData, cj_response: data }));
-      }).catch(function(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); });
-      return;
-    }
-    res.writeHead(400); res.end(JSON.stringify({ error: 'CJ sub: token, search, order' }));
-    return;
+    if (cjSub === 'token') { getCJToken().then(function(t) { res.writeHead(200); res.end(JSON.stringify({ success: true, token_active: true })); }).catch(function(e) { res.writeHead(200); res.end(JSON.stringify({ success: false, error: e.message })); }); return; }
+    if (cjSub === 'search') { var kw = parsed.query.keyword || 'patch'; searchCJProducts(kw, 'general').then(function(p) { res.writeHead(200); res.end(JSON.stringify({ success: true, keyword: kw, products: p })); }).catch(function(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); }); return; }
+    res.writeHead(400); res.end(JSON.stringify({ error: 'CJ sub: token, search' })); return;
   }
 
   if (action === 'stripe') {
     var sub = parsed.query.sub || 'balance';
-    if (sub === 'balance') {
-      callStripe('/v1/balance').then(function(data) {
-        var available = 0, pending = 0;
-        if (data.available) data.available.forEach(function(b) { if (b.currency === 'eur') available = b.amount / 100; });
-        if (data.pending) data.pending.forEach(function(b) { if (b.currency === 'eur') pending = b.amount / 100; });
-        res.writeHead(200); res.end(JSON.stringify({ success: true, available_eur: available, pending_eur: pending, total_eur: available + pending }));
-      }).catch(function(e) { res.writeHead(200); res.end(JSON.stringify({ success: false, error: e.message, available_eur: 0, pending_eur: 0, total_eur: 0 })); });
-      return;
-    }
-    if (sub === 'payments') {
-      callStripe('/v1/payment_intents?limit=10').then(function(data) {
-        var payments = data.data ? data.data.map(function(p) { return { id: p.id, amount: p.amount/100, currency: p.currency, status: p.status }; }) : [];
-        res.writeHead(200); res.end(JSON.stringify({ success: true, payments: payments, total_revenue: payments.filter(function(p){return p.status==='succeeded';}).reduce(function(s,p){return s+p.amount;},0) }));
-      }).catch(function(e) { res.writeHead(200); res.end(JSON.stringify({ success: false, error: e.message, payments: [] })); });
-      return;
-    }
-    res.writeHead(400); res.end(JSON.stringify({ error: 'Stripe sub: balance, payments' }));
-    return;
+    if (sub === 'balance') { callStripe('/v1/balance').then(function(data) { var avail = 0, pend = 0; if (data.available) data.available.forEach(function(b) { if (b.currency === 'eur') avail = b.amount / 100; }); if (data.pending) data.pending.forEach(function(b) { if (b.currency === 'eur') pend = b.amount / 100; }); res.writeHead(200); res.end(JSON.stringify({ success: true, available_eur: avail, pending_eur: pend, total_eur: avail + pend })); }).catch(function(e) { res.writeHead(200); res.end(JSON.stringify({ success: false, error: e.message, available_eur: 0, pending_eur: 0, total_eur: 0 })); }); return; }
+    if (sub === 'payments') { callStripe('/v1/payment_intents?limit=10').then(function(data) { var payments = data.data ? data.data.map(function(p) { return { id: p.id, amount: p.amount/100, currency: p.currency, status: p.status }; }) : []; res.writeHead(200); res.end(JSON.stringify({ success: true, payments: payments })); }).catch(function(e) { res.writeHead(200); res.end(JSON.stringify({ success: false, payments: [] })); }); return; }
+    res.writeHead(400); res.end(JSON.stringify({ error: 'Stripe sub: balance, payments' })); return;
   }
 
-  if (action === 'worldwatch') {
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'WorldWatch', global_status: 'STABLE', events: [
-      {domain:'Économie',level:'green',event:'Marchés stables'},{domain:'Supply Chain',level:'green',event:'CJ Dropshipping opérationnel'},
-      {domain:'Tech',level:'green',event:'Stripe/Vercel/Render actifs'},{domain:'IA & Monnaies',level:'yellow',event:'BCE prépare Euro numérique'}
-    ], next_scan: '1h' }));
-    return;
-  }
-
-  if (action === 'trendscanner') {
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'TrendScanner', trends_detected: 4, urgent_imports: 1, trends: [
-      {platform:'TikTok',product:'Patch Énergie Naturelle',niche:'wellness',views:'2100000',score:94,price:19.99,action:'IMPORT_URGENT'},
-      {platform:'TikTok',product:'Bouchons Anti-Bruit',niche:'hearing',views:'890000',score:88,price:24.99,action:'IMPORT'},
-      {platform:'YouTube',product:'Ring Light 360°',niche:'creator',views:'1200000',score:91,price:39.99,action:'IMPORT'},
-      {platform:'Instagram',product:'Organiseur Bureau',niche:'home',views:'450000',score:82,price:34.99,action:'WATCH'},
-    ], next_scan: '15min' }));
-    return;
-  }
-
-  if (action === 'harvestbot') {
-    var opps = [
-      {source:'Google Ads Credits',amount:400,currency:'USD',status:'available',category:'marketing'},
-      {source:'TikTok Ads Credits',amount:300,currency:'USD',status:'available',category:'marketing'},
-      {source:'HubSpot Startup',amount:1200,currency:'USD',status:'available',category:'startup'},
-      {source:'Microsoft Ads Credits',amount:75,currency:'USD',status:'available',category:'marketing'},
-      {source:'Meta Ads Credits',amount:50,currency:'USD',status:'available',category:'marketing'},
-      {source:'CJ Free Warehouse',amount:50,currency:'USD',status:'available',category:'ecommerce'},
-      {source:'Vercel Free Tier',amount:20,currency:'USD',status:'active',category:'tech'},
-      {source:'Cloudflare Free',amount:20,currency:'USD',status:'active',category:'tech'},
-    ];
-    var totalEur = opps.reduce(function(s,o){return s+o.amount*0.92;},0);
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'HarvestBot', total_opportunities: opps.length, total_eur: parseFloat(totalEur.toFixed(2)), opportunities: opps, next_scan: '24h' }));
-    return;
-  }
-
-  if (action === 'alertceo') {
-    sendAlertEmail(parsed.query.subject || 'Alerte FOLLOW.').then(function() {
-      res.writeHead(200); res.end(JSON.stringify({ success: true, sent_to: CEO_EMAIL }));
-    });
-    return;
-  }
-
-  if (action === 'goldwatch') {
-    var capital = parseFloat(parsed.query.capital || 0);
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'GoldWatch', status: capital >= goldwatch.activation_threshold ? 'ACTIF' : 'VEILLE', capital_required: goldwatch.activation_threshold, capital_current: capital }));
-    return;
-  }
-
-  if (action === 'currencybot') {
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'CurrencyBot', currencies: [{name:'EUR',status:'active'},{name:'USD',status:'active'},{name:'EURC',status:'active'}], next_scan: '6h' }));
-    return;
-  }
-
-  if (action === 'legalguard') {
-    var val = (parsed.query.value || '').toUpperCase();
-    var blocked = ['RUB','IRR','KPW'].includes(val);
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'LegalGuard', legal: !blocked, blocked: blocked, verdict: blocked ? 'BLOQUÉ' : 'AUTORISÉ' }));
-    return;
-  }
-
-  if (action === 'security') {
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'SecurityGuard', status: 'ACTIF', blacklisted_ips: security.blacklist.length, blocked_attempts: security.blockedAttempts }));
-    return;
-  }
-
-  if (action === 'retirebot') {
-    var sales = parseInt(parsed.query.sales || 0);
-    var rating = parseFloat(parsed.query.rating || 4.5);
-    var shouldRetire = (sales === 0 && parseInt(parsed.query.days||14) >= 14) || rating < 3.5;
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'RetireBot', should_retire: shouldRetire, action: shouldRetire ? 'RETIRÉ' : 'GARDER' }));
-    return;
-  }
-
-  if (action === 'orderbot') {
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'OrderBot', fulfillment_supplier: 'CJ Dropshipping', estimated_delivery: '10 jours', timestamp: new Date().toISOString() }));
-    return;
-  }
-
-  if (action === 'affiliateos') {
-    var cap2 = parseFloat(parsed.query.capital || 0);
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, agent: 'AffiliateOS', status: cap2 >= 1000000 ? 'ACTIF' : 'EN VEILLE', capital_required: 1000000 }));
-    return;
-  }
-
-  if (action === 'priceoptimizer') {
-    var base = parseFloat(parsed.query.price || 20);
-    var market = parsed.query.market || 'fr';
-    var mult = {fr:1.0,en:1.15,es:1.0,ar:0.95,pt:0.80,sw:0.65}[market]||1.0;
-    res.writeHead(200);
-    res.end(JSON.stringify({ success: true, base_price: base, market: market, optimized_price: parseFloat((base*mult).toFixed(2)) }));
-    return;
-  }
+  if (action === 'worldwatch') { res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'WorldWatch', global_status: 'STABLE', events: [{domain:'Supply Chain',level:'green',event:'CJ operationnel'},{domain:'Tech',level:'green',event:'Stripe/Vercel/Render actifs'}], next_scan: '1h' })); return; }
+  if (action === 'trendscanner') { res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'TrendScanner', trends_detected: 4, urgent_imports: 1, trends: [{platform:'TikTok',product:'Patch Energie',niche:'wellness',views:'2100000',score:94,price:19.99,action:'IMPORT_URGENT'},{platform:'YouTube',product:'Ring Light 360',niche:'creator',views:'1200000',score:91,price:39.99,action:'IMPORT'}], next_scan: '15min' })); return; }
+  if (action === 'harvestbot') { var opps = [{source:'Google Ads Credits',amount:400,currency:'USD',status:'available'},{source:'TikTok Ads Credits',amount:300,currency:'USD',status:'available'},{source:'Meta Ads Credits',amount:50,currency:'USD',status:'available'},{source:'Vercel Free Tier',amount:20,currency:'USD',status:'active'}]; res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'HarvestBot', total_opportunities: opps.length, opportunities: opps })); return; }
+  if (action === 'alertceo') { sendAlertEmail(parsed.query.subject || 'Alerte FOLLOW.').then(function() { res.writeHead(200); res.end(JSON.stringify({ success: true, sent_to: CEO_EMAIL })); }); return; }
+  if (action === 'goldwatch') { var cap = parseFloat(parsed.query.capital || 0); res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'GoldWatch', status: cap >= 50000 ? 'ACTIF' : 'VEILLE', capital_required: 50000, capital_current: cap })); return; }
+  if (action === 'currencybot') { res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'CurrencyBot', currencies: [{name:'EUR',status:'active'},{name:'USD',status:'active'}] })); return; }
+  if (action === 'legalguard') { var val = (parsed.query.value || '').toUpperCase(); var blocked = ['RUB','IRR','KPW'].includes(val); res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'LegalGuard', legal: !blocked, blocked: blocked })); return; }
+  if (action === 'security') { res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'SecurityGuard', status: 'ACTIF', blacklisted_ips: security.blacklist.length, blocked_attempts: security.blockedAttempts })); return; }
+  if (action === 'retirebot') { var sales = parseInt(parsed.query.sales || 0); var rating = parseFloat(parsed.query.rating || 4.5); var shouldRetire = (sales === 0 && parseInt(parsed.query.days||14) >= 14) || rating < 3.5; res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'RetireBot', should_retire: shouldRetire, action: shouldRetire ? 'RETIRE' : 'GARDER' })); return; }
+  if (action === 'orderbot') { res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'OrderBot', fulfillment_supplier: 'CJ Dropshipping', estimated_delivery: '10 jours' })); return; }
+  if (action === 'affiliateos') { var cap2 = parseFloat(parsed.query.capital || 0); res.writeHead(200); res.end(JSON.stringify({ success: true, agent: 'AffiliateOS', status: cap2 >= 1000000 ? 'ACTIF' : 'EN VEILLE' })); return; }
+  if (action === 'priceoptimizer') { var base = parseFloat(parsed.query.price || 20); var market = parsed.query.market || 'fr'; var mult = {fr:1.0,en:1.15,es:1.0,ar:0.95,pt:0.80,sw:0.65}[market]||1.0; res.writeHead(200); res.end(JSON.stringify({ success: true, base_price: base, market: market, optimized_price: parseFloat((base*mult).toFixed(2)) })); return; }
 
   res.writeHead(404);
-  res.end(JSON.stringify({ error: 'Action inconnue', available: ['health','gaphunter','cj','stripe','worldwatch','trendscanner','harvestbot','alertceo','goldwatch','currencybot','legalguard','security','retirebot','orderbot','affiliateos','priceoptimizer'] }));
+  res.end(JSON.stringify({ error: 'Action inconnue' }));
 });
 
 server.listen(PORT, '0.0.0.0', function() {
-  console.log('FOLLOW. Backend v9 actif sur port ' + PORT);
-  console.log('[CJ] ⏳ Chargement produits CJ Dropshipping...');
-  console.log('[Webhook] ✅ Stripe webhook prêt sur /webhook');
+  console.log('FOLLOW. Backend v10 actif sur port ' + PORT);
+  console.log('[CJ] Chargement produits...');
+  console.log('[Webhook] Stripe webhook pret sur /webhook');
+  console.log('[Checkout] Stripe Checkout pret sur /create-checkout');
 });
