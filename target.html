@@ -1,53 +1,80 @@
-<script>
-    // Configuration de l'Agent de Tarification & Traduction
-    const products = {
-        'survie': {
-            fr: { title: "KIT DE SURVIE PROFESSIONNEL", tag: "URGENCE" },
-            en: { title: "PROFESSIONAL SURVIVAL KIT", tag: "EMERGENCY" },
-            es: { title: "KIT DE SUPERVIVENCIA PRO", tag: "EMERGENCIA" },
-            prices: { 'EUR': 89, 'USD': 99, 'CHF': 110, 'DEFAULT': 89 }
-        },
-        'eau': {
-            fr: { title: "PURIFICATEUR D'EAU MILITAIRE", tag: "QUALITÉ" },
-            en: { title: "MILITARY WATER PURIFIER", tag: "QUALITY" },
-            es: { title: "PURIFICADOR DE AGUA MILITAR", tag: "CALIDAD" },
-            prices: { 'EUR': 49, 'USD': 55, 'CHF': 60, 'DEFAULT': 49 }
-        }
-        // Ajoute les autres ici sur le même modèle...
-    };
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offre Exclusive - FollowTrend</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; text-align: center; }
+        .product-card { background: white; max-width: 400px; margin: auto; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #tag { background: #ff4757; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; }
+        .price-box { margin: 20px 0; }
+        #price { font-size: 32px; color: #2ed573; font-weight: bold; }
+        #old-price { text-decoration: line-through; color: #a4b0be; margin-left: 10px; }
+        .btn-buy { background: #2f3542; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; display: block; margin-top: 20px; }
+    </style>
+</head>
+<body>
 
-    async function initializeAgent() {
-        // 1. L'Agent détecte la localisation du client via une API gratuite
-        try {
-            const response = await fetch('https://ipapi.co/json/');
-            const geo = await response.json();
-            
-            const lang = geo.languages.split(',')[0].substring(0,2) || 'en'; // fr, en, es...
-            const currency = geo.currency || 'EUR';
-            
-            const params = new URLSearchParams(window.location.search);
-            const pId = params.get('p') || 'survie';
-            const product = products[pId];
+    <div class="product-card">
+        <span id="tag">CHARGEMENT...</span>
+        <h1 id="title">Vérification en cours...</h1>
+        
+        <div class="price-box">
+            <span id="price">--</span>
+            <span id="old-price">--</span>
+        </div>
 
-            if(product) {
-                // 2. Traduction automatique
-                const text = product[lang] || product['en'];
-                document.getElementById('title').innerText = text.title;
-                document.getElementById('tag').innerText = text.tag;
+        <p>Offre limitée à la zone de : <strong id="location">Détection...</strong></p>
+        
+        <a href="#" class="btn-buy">COMMANDER MAINTENANT</a>
+    </div>
 
-                // 3. Adaptation du prix au marché
-                const priceVal = product.prices[currency] || product.prices['DEFAULT'];
-                const symbol = currency === 'USD' ? '$' : (currency === 'CHF' ? ' CHF' : '€');
-                
-                document.getElementById('price').innerText = priceVal + symbol;
-                document.getElementById('old-price').innerText = Math.round(priceVal * 1.6) + symbol;
-                
-                console.log(`Agent : Client détecté en ${geo.country_name}. Langue: ${lang}, Devise: ${currency}`);
+    <script>
+        const products = {
+            'survie': {
+                fr: { title: "KIT DE SURVIE PROFESSIONNEL", tag: "URGENCE" },
+                en: { title: "PROFESSIONAL SURVIVAL KIT", tag: "EMERGENCY" },
+                prices: { 'EUR': 89, 'USD': 99, 'DEFAULT': 89 }
+            },
+            'eau': {
+                fr: { title: "PURIFICATEUR D'EAU MILITAIRE", tag: "QUALITÉ" },
+                en: { title: "MILITARY WATER PURIFIER", tag: "QUALITY" },
+                prices: { 'EUR': 49, 'USD': 55, 'DEFAULT': 49 }
             }
-        } catch (error) {
-            console.error("Agent : Erreur de détection, passage en mode standard.");
-        }
-    }
+        };
 
-    initializeAgent();
-</script>
+        async function initializeAgent() {
+            try {
+                // Détection Géo
+                const response = await fetch('https://ipapi.co/json/');
+                const geo = await response.json();
+                
+                const lang = geo.languages.split(',')[0].substring(0,2) || 'fr';
+                const currency = geo.currency || 'EUR';
+                
+                // Lecture du produit dans l'URL (?p=eau)
+                const params = new URLSearchParams(window.location.search);
+                const pId = params.get('p') || 'survie';
+                const product = products[pId];
+
+                if(product) {
+                    const text = product[lang] || product['en'];
+                    document.getElementById('title').innerText = text.title;
+                    document.getElementById('tag').innerText = text.tag;
+                    document.getElementById('location').innerText = geo.city + " (" + geo.country_name + ")";
+
+                    const priceVal = product.prices[currency] || product.prices['DEFAULT'];
+                    const symbol = currency === 'USD' ? '$' : '€';
+                    
+                    document.getElementById('price').innerText = priceVal + symbol;
+                    document.getElementById('old-price').innerText = Math.round(priceVal * 1.6) + symbol;
+                }
+            } catch (error) {
+                console.error("Erreur Agent.");
+            }
+        }
+        initializeAgent();
+    </script>
+</body>
+</html>
