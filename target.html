@@ -1,61 +1,124 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OFFRE EXCLUSIVE — FOLLOW.</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root { --accent: #C8FF00; --dark: #070709; --text: #f0f0f8; }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--dark); color: var(--text); font-family: 'DM Sans', sans-serif; line-height: 1.6; }
-.top-bar { background: var(--accent); color: #000; font-weight: 800; text-align: center; padding: 8px; font-size: 12px; letter-spacing: 1px; }
-.container { max-width: 600px; margin: 0 auto; padding: 20px; }
-.hero-img { width: 100%; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ffffff10; }
-h1 { font-family: 'Bebas Neue', sans-serif; font-size: 42px; line-height: 1; margin-bottom: 15px; letter-spacing: 1px; }
-.badge { display: inline-block; background: #ffffff10; padding: 4px 12px; border-radius: 5px; font-size: 12px; color: var(--accent); margin-bottom: 10px; }
-.description { color: #a0a0b0; margin-bottom: 25px; font-size: 17px; }
-.cta-box { background: #13131a; border: 1px solid #1c1c26; padding: 25px; border-radius: 20px; text-align: center; }
-.price { font-family: 'Bebas Neue', sans-serif; font-size: 54px; color: var(--accent); margin-bottom: 5px; }
-.old-price { text-decoration: line-through; color: #44445a; font-size: 20px; }
-.buy-btn { display: block; width: 100%; background: var(--accent); color: #000; text-decoration: none; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; margin-top: 15px; transition: 0.3s; box-shadow: 0 10px 20px rgba(200, 255, 0, 0.2); }
-.buy-btn:hover { transform: translateY(-3px); }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFRE EXCLUSIVE — FOLLOW.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #C8FF00; --bg: #fff; --text: #000; --dim: #f4f4f4; }
+        body { margin: 0; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--bg); }
+        
+        .promo-bar { background: #000; color: #fff; text-align: center; padding: 8px; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+        
+        header { padding: 20px; display: flex; justify-content: center; border-bottom: 1px solid var(--dim); }
+        .logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 3px; }
+        .logo span { color: #ccc; }
+
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+        
+        .product-tag { background: var(--accent); color: #000; display: inline-block; padding: 4px 10px; font-size: 10px; font-weight: 900; border-radius: 4px; margin-bottom: 15px; }
+        
+        h1 { font-family: 'Bebas Neue', sans-serif; font-size: 42px; line-height: 0.9; margin-bottom: 15px; }
+        
+        .price-box { display: flex; align-items: center; gap: 15px; margin: 20px 0; }
+        .current-price { font-size: 32px; font-weight: 700; color: #e60000; }
+        .old-price { font-size: 18px; text-decoration: line-through; color: #999; }
+
+        .product-image { width: 100%; border-radius: 15px; background: var(--dim); min-height: 300px; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; border: 1px solid #eee; }
+
+        .features { list-style: none; padding: 0; margin: 25px 0; }
+        .features li { padding: 10px 0; border-bottom: 1px solid var(--dim); display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .features li::before { content: "✓"; color: var(--accent); font-weight: bold; background: #000; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+
+        .cta-button { background: #000; color: #fff; text-decoration: none; display: block; text-align: center; padding: 20px; border-radius: 50px; font-weight: bold; font-size: 18px; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .cta-button:hover { transform: scale(1.02); background: #222; }
+
+        .urgency { text-align: center; color: #e60000; font-size: 12px; font-weight: bold; margin-top: 15px; }
+    </style>
 </head>
 <body>
-<div class="top-bar">OFFRE LIMITÉE : PLUS QUE 7 UNITÉS DISPONIBLES</div>
-<div class="container">
-    <div id="product-content">
-        <span class="badge" id="niche-badge">CHARGEMENT...</span>
-        <h1 id="main-title">ANALYSE...</h1>
-        <img src="" alt="" id="main-img" class="hero-img">
-        <p class="description" id="main-desc">Veuillez patienter...</p>
-        <div class="cta-box">
-            <div class="old-price" id="old-p">--€</div>
-            <div class="price" id="new-p">--€</div>
-            <a href="#" class="buy-btn" id="buy-link">COMMANDER MAINTENANT</a>
+
+    <div class="promo-bar">LIVRAISON GRATUITE — OFFRE LIMITÉE AUX 50 PROCHAINES COMMANDES</div>
+
+    <header>
+        <div class="logo">FOLLOW<span>.</span>SHOP</div>
+    </header>
+
+    <div class="container">
+        <div id="product-content">
+            <div class="product-tag" id="tag">CHARGEMENT...</div>
+            <h1 id="title">PRODUIT TACTIQUE</h1>
+            
+            <div class="product-image" id="image">🖼️</div>
+
+            <div class="price-box">
+                <span class="current-price" id="price">-- €</span>
+                <span class="old-price" id="old-price">-- €</span>
+            </div>
+
+            <ul class="features" id="features">
+                </ul>
+
+            <a href="#" class="cta-button" id="buy-link">COMMANDER MAINTENANT</a>
+            <div class="urgency" id="stock">🔥 Plus que 7 articles en stock</div>
         </div>
     </div>
-</div>
-<script>
-const DATA = {
-    'eau': { title: "EAU POTABLE PARTOUT", desc: "Paille filtrante grade militaire.", img: "https://images.unsplash.com/photo-1583321500900-82807e458f3c?w=600", price: "24.90€", old: "49€", link: "#" },
-    'energie': { title: "SOLAIRE PORTABLE", desc: "Autonomie totale au soleil.", img: "https://images.unsplash.com/photo-1509391366360-fe5bb6578506?w=600", price: "59€", old: "89€", link: "#" },
-    'soin': { title: "SOIN DU DOS PRO", desc: "Soulagement immédiat des tensions.", img: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600", price: "34.50€", old: "55€", link: "#" },
-    'survie': { title: "KIT SURVIE 72H", desc: "Tout le nécessaire tactique.", img: "https://images.unsplash.com/photo-1517059224940-d4af9eec41b7?w=600", price: "47€", old: "95€", link: "#" }
-};
-const params = new URLSearchParams(window.location.search);
-const pId = params.get('p') || 'eau';
-const info = DATA[pId];
-if (info) {
-    document.getElementById('niche-badge').textContent = pId.toUpperCase();
-    document.getElementById('main-title').textContent = info.title;
-    document.getElementById('main-desc').textContent = info.desc;
-    document.getElementById('main-img').src = info.img;
-    document.getElementById('new-p').textContent = info.price;
-    document.getElementById('old-p').textContent = info.old;
-    document.getElementById('buy-link').href = info.link;
-}
-</script>
+
+    <script>
+        const products = {
+            'eau': {
+                tag: 'QUALITÉ MILITAIRE',
+                title: 'SYSTÈME DE FILTRATION PURIFICATION NOMADE',
+                price: '49.90 €',
+                old: '89.00 €',
+                img: '💧',
+                features: ['Filtre 99.99% des bactéries', 'Ultra-léger (65g)', 'Utilisé par les forces spéciales', 'Durée de vie : 4000 Litres'],
+                link: 'TON_LIEN_STRIPE_OU_SHOPIFY_EAU'
+            },
+            'energie': {
+                tag: 'AUTONOMIE TOTALE',
+                title: 'PANNEAU SOLAIRE PLIABLE HAUTE PERFORMANCE',
+                price: '129.00 €',
+                old: '199.00 €',
+                img: '⚡',
+                features: ['Charge rapide USB-C', 'Résistant aux chocs et pluie', 'Poids plume pour sac à dos', 'Indicateur de charge LED'],
+                link: 'TON_LIEN_STRIPE_OU_SHOPIFY_ENERGIE'
+            },
+            'soin': {
+                tag: 'BIEN-ÊTRE TACTIQUE',
+                title: 'CORRECTEUR DE POSTURE À MÉMOIRE DE FORME',
+                price: '34.50 €',
+                old: '55.00 €',
+                img: '🧘',
+                features: ['Soulage les douleurs lombaires', 'Invisible sous les vêtements', 'Réglable toutes morphologies', 'Matériaux respirants'],
+                link: 'TON_LIEN_STRIPE_OU_SHOPIFY_SOIN'
+            },
+            'survie': {
+                tag: 'URGENCE & SÉCURITÉ',
+                title: 'KIT DE SURVIE PROFESSIONNEL - 72 HEURES',
+                price: '89.00 €',
+                old: '145.00 €',
+                img: '🎒',
+                features: ['Contient 45 outils essentiels', 'Sac étanche haute résistance', 'Rations de secours incluses', 'Couverture thermique incluse'],
+                link: 'TON_LIEN_STRIPE_OU_SHOPIFY_SURVIE'
+            }
+        };
+
+        // Récupérer le produit dans l'URL (ex: ?p=survie)
+        const params = new URLSearchParams(window.location.search);
+        const pId = params.get('p') || 'survie'; // Survie par défaut
+        const p = products[pId];
+
+        if(p) {
+            document.getElementById('tag').innerText = p.tag;
+            document.getElementById('title').innerText = p.title;
+            document.getElementById('price').innerText = p.price;
+            document.getElementById('old-price').innerText = p.old;
+            document.getElementById('image').innerText = p.img;
+            document.getElementById('buy-link').href = p.link;
+            document.getElementById('features').innerHTML = p.features.map(f => `<li>${f}</li>`).join('');
+        }
+    </script>
 </body>
 </html>
