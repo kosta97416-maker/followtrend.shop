@@ -1,30 +1,13 @@
-async function loadRealProducts() {
-    // On appelle ton serveur Render
-    const response = await fetch('/api/products'); 
-    const data = await response.json();
-    const products = data.winners || []; // Tes 150 produits arrivent ici
-
-    const container = document.getElementById('price-controls');
-    container.innerHTML = ''; // On vide
-
-    // On groupe par niche (catégorie)
-    const niches = ['energy', 'survival', 'water', 'tactical'];
-    
-    niches.forEach(niche => {
-        const nicheProducts = products.filter(p => p.niche === niche);
-        if(nicheProducts.length > 0) {
-            container.innerHTML += `<div class="card-title" style="color:var(--accent); margin-top:15px;">AGENT ${niche.toUpperCase()} (${nicheProducts.length})</div>`;
-            
-            nicheProducts.forEach(p => {
-                container.innerHTML += `
-                    <div class="price-row">
-                        <span style="font-size:10px; max-width:150px; overflow:hidden;">${p.name}</span>
-                        <div>
-                            <input type="number" value="${p.price}" id="p-${p.id}">
-                            <span style="color:var(--muted); font-size:9px;">$</span>
-                        </div>
-                    </div>`;
+// La route qui donne les produits au Dashboard
+http.createServer((req, res) => {
+    const parsedUrl = url.parse(req.url, true);
+    if (parsedUrl.pathname === '/api/products') {
+        getCachedProducts().then(data => {
+            res.writeHead(200, { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*' // Pour que le Dash puisse lire
             });
-        }
-    });
-}
+            res.end(JSON.stringify(data));
+        });
+    }
+}).listen(PORT);
