@@ -1,0 +1,25 @@
+{
+  "product_id": "10046725980409",
+  "name": "SolarGuard Pro - Hybrid Survival Torch",
+  "handle": "solarguard-pro",
+  "status": "ACTIVE",
+  "pricing": {
+    "currency": "USD",
+    "sale_price": 19.99,
+    "compare_at_price": 29.99
+  },
+  "marketing": {
+    "title": "SolarGuard Pro | The Ultimate Survival Flashlight",
+    "headline": "Never run out of power. Solar-powered reliability for the modern survivor.",
+    "description": "Engineered for absolute reliability, this dual-charge (Solar + USB-C) torch is your primary light source for camping and emergencies. 500m beam, 84g ultra-lightweight, and 4 tactical modes.",
+    "bullets": [
+      "Infinite Power: High-efficiency solar panel",
+      "Emergency Lantern: Built-in COB side light",
+      "Military Grade: High-impact ABS body"
+    ]
+  },
+  "assets": {
+    "primary_image": "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/Scbc25f263fd74b48b8d9e29604af0f5fD.webp",
+    "technical_view": "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/Sa90253293b25400281c2ebfa4df2f15fJ.webp"
+  }
+}
