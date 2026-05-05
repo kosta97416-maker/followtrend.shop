@@ -2,68 +2,39 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard CEO - FollowTrend</title>
+    <title>CEO Dashboard - FollowTrend</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 50px; }
-        .card { background: #2d2d2d; border-radius: 15px; padding: 20px; max-width: 500px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn-nav { background: black; color: white; border: 1px solid #444; padding: 10px 20px; cursor: pointer; text-decoration: none; margin: 10px; display: inline-block; border-radius: 5px; }
-        .btn-nav:hover { background: #333; }
-        input { padding: 10px; border-radius: 5px; border: none; margin-bottom: 10px; width: 80%; }
-        #content { display: none; }
-        .status-online { color: #00ff00; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: white; margin: 0; padding: 20px; }
+        .nav-bar { display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 15px 25px; border-radius: 10px; margin-bottom: 30px; }
+        .btn-view { background: black; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; border: 1px solid #333; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        .btn-view:hover { background: #333; }
+        .card { background: #1e1e1e; padding: 30px; border-radius: 15px; max-width: 600px; margin: auto; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { margin: 0; font-size: 1.5rem; }
     </style>
 </head>
 <body>
 
-    <div id="login-gate" class="card">
-        <h2>🔒 Accès Sécurisé CEO</h2>
-        <input type="password" id="pinCode" placeholder="Entrez le code PIN">
-        <br>
-        <button class="btn-nav" onclick="checkPin()">Se connecter</button>
-    </div>
+    <div class="nav-bar">
+        <a href="target.html?p=eau" target="_blank" class="btn-view">
+            <i class="fas fa-eye"></i> VOIR LA PAGE
+        </a>
+        <h1>CEO DASHBOARD</h1>
+        <div style="width: 120px;"></div> </div>
 
-    <div id="content">
-        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: auto;">
-            <a href="target.html?p=eau" target="_blank" class="btn-nav" title="Voir la boutique live">
-                <i class="fas fa-eye"></i> Voir ma boutique
-            </a>
-            <h1>TABLEAU DE BORD AGENTS</h1>
-            <button onclick="logout()" class="btn-nav">Déconnexion</button>
-        </div>
-
-        <div class="card">
-            <h3>🤖 État des Agents</h3>
-            <p>Agent de Traduction : <span class="status-online">OPÉRATIONNEL</span></p>
-            <p>Agent de Prix : <span class="status-online">ACTIF</span></p>
-            <p>Base de données : <span style="color:orange;">CONNECTÉE (Cloud)</span></p>
-        </div>
+    <div class="card">
+        <h2>Bienvenue, CEO</h2>
+        <p>Vos agents travaillent en arrière-plan.</p>
+        <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+        <p style="color: #00ff00;">● Système de vente en ligne : ACTIF</p>
     </div>
 
     <script>
-        // Ta Sécurité PIN
-        function checkPin() {
-            const pin = document.getElementById('pinCode').value;
-            if (pin === "9741") { // Remplace 1234 par ton nouveau code si tu l'as changé
-                document.getElementById('login-gate').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-                sessionStorage.setItem('accessGranted', 'true');
-            } else {
-                alert("Code incorrect !");
-            }
-        }
-
-        function logout() {
-            sessionStorage.removeItem('accessGranted');
-            location.reload();
-        }
-
-        // Protection contre l'accès direct par URL
-        window.onload = function() {
-            if (sessionStorage.getItem('accessGranted') === 'true') {
-                document.getElementById('login-gate').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-            }
+        // Sécurité par Code PIN au chargement
+        let pass = prompt("Entrez votre code PIN CEO :");
+        if (pass !== "1234") {
+            alert("Accès refusé");
+            window.location.href = "index.html";
         }
     </script>
 </body>
