@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Commande center - exécution d'ordres sur agents headless",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node server.js"
   },
