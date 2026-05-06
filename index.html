@@ -3,100 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOLLOW_HQ — COMMAND CENTER</title>
+    <title>FOLLOW_HQ — COMMAND CENTER V3</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <style>
         :root { --neon: #C8FF00; --bg: #000; --panel: #0a0a0a; --border: #1a1a1a; --amazon: #FF9900; --ai: #00F0FF; }
+        * { box-sizing: border-box; }
         body { background: var(--bg); color: #fff; font-family: 'Space Mono', monospace; margin: 0; overflow: hidden; }
 
-        /* HEADER REVENUS */
+        /* HEADER REVENUS (SIGNAUX) */
         .revenue-header { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
         .rev-card { background: var(--bg); padding: 20px; text-align: center; }
         .rev-val { font-size: 22px; font-weight: bold; display: block; }
-        .rev-label { font-size: 9px; letter-spacing: 2px; color: #555; margin-top: 5px; }
+        .rev-label { font-size: 9px; letter-spacing: 2px; color: #555; margin-top: 5px; text-transform: uppercase; }
         .shopify { color: var(--neon); }
         .amazon { color: var(--amazon); }
         .ai-aff { color: var(--ai); }
 
         /* DASHBOARD CENTRAL */
         .main-container { height: calc(100vh - 85px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .url-box { width: 100%; max-width: 700px; background: var(--panel); border: 1px solid var(--border); padding: 30px; position: relative; }
-        .url-input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; color: var(--neon); font-family: 'Space Mono'; margin-top: 10px; }
         
-        .action-btns { display: flex; gap: 10px; width: 100%; max-width: 700px; margin-top: 20px; }
-        .btn { flex: 1; padding: 15px; cursor: pointer; font-family: 'Syncopate'; font-size: 10px; border: 1px solid var(--border); transition: 0.3s; }
-        .btn-catalog { background: var(--neon); color: #000; font-weight: bold; }
-        .btn-copy { background: #000; color: #fff; }
+        .url-box { width: 100%; max-width: 750px; background: var(--panel); border: 1px solid var(--border); padding: 40px; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        .url-box::before { content: "COMMUNICATIONS_ENCRYPTÉES"; position: absolute; top: -10px; left: 20px; background: var(--bg); padding: 0 10px; font-size: 9px; color: var(--neon); }
+        
+        .url-label { font-size: 10px; color: #444; margin-bottom: 10px; letter-spacing: 1px; }
+        .url-input { width: 100%; background: #000; border: 1px solid #222; padding: 18px; color: var(--neon); font-family: 'Space Mono'; font-size: 14px; outline: none; transition: 0.3s; }
+        .url-input:focus { border-color: var(--neon); box-shadow: 0 0 15px rgba(200, 255, 0, 0.1); }
+        
+        .action-btns { display: flex; gap: 15px; width: 100%; max-width: 750px; margin-top: 25px; }
+        .btn { flex: 1; padding: 20px; cursor: pointer; font-family: 'Syncopate'; font-size: 11px; border: 1px solid var(--border); transition: 0.3s; text-transform: uppercase; }
+        .btn-catalog { background: var(--neon); color: #000; font-weight: bold; border: none; }
+        .btn-catalog:hover { background: #fff; transform: translateY(-2px); }
+        .btn-copy { background: #000; color: #fff; border: 1px solid #333; }
+        .btn-copy:hover { border-color: var(--neon); color: var(--neon); }
 
-        /* INVENTAIRE OVERLAY */
-        #inventory-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; padding: 30px; }
-        .inventory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; height: 85vh; margin-top: 20px; }
-        .col { background: var(--panel); border: 1px solid var(--border); padding: 15px; overflow-y: auto; }
-        .col-title { color: var(--neon); font-size: 12px; border-bottom: 1px solid #222; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
-        .close-btn { position: absolute; top: 20px; right: 30px; color: #ff4444; cursor: pointer; font-size: 10px; border: 1px solid #ff4444; padding: 5px 10px; }
+        /* INVENTAIRE OVERLAY (LES 4 COLONNES) */
+        #inventory-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; padding: 40px; }
+        .inventory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; height: calc(100vh - 150px); }
+        .col { background: var(--panel); border: 1px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        .col-title { color: var(--neon); font-size: 13px; font-family: 'Syncopate'; border-bottom: 1px solid #222; padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
+        
+        .close-btn { color: #ff4444; cursor: pointer; font-size: 11px; border: 1px solid #ff4444; padding: 8px 15px; font-family: 'Syncopate'; transition: 0.3s; }
+        .close-btn:hover { background: #ff4444; color: #000; }
 
-        /* ITEM PRODUIT */
-        .prod { background: #000; border: 1px solid #222; padding: 10px; margin-bottom: 10px; font-size: 11px; cursor: pointer; }
-        .prod:hover { border-color: var(--neon); }
+        /* PRODUITS DANS LES COLONNES */
+        .prod-card { background: #000; border: 1px solid #1a1a1a; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: 0.2s; }
+        .prod-card:hover { border-color: var(--neon); background: #050505; }
+        .prod-name { font-size: 11px; font-weight: bold; margin-bottom: 5px; display: block; }
+        .prod-id { font-size: 9px; color: #444; }
+
+        /* SCROLLBAR STYLE */
+        .col::-webkit-scrollbar { width: 2px; }
+        .col::-webkit-scrollbar-thumb { background: var(--neon); }
     </style>
 </head>
 <body>
 
     <div class="revenue-header">
-        <div class="rev-card"><span class="rev-val shopify" id="shop-total">0.00€</span><span class="rev-label">SHOPIFY OPS</span></div>
-        <div class="rev-card"><span class="rev-val amazon" id="amz-total">0.00€</span><span class="rev-label">AMAZON AFFILIATION</span></div>
-        <div class="rev-card"><span class="rev-val ai-aff" id="ai-total">0.00€</span><span class="rev-label">AI_AGENT COMMISSIONS</span></div>
+        <div class="rev-card">
+            <span class="rev-val shopify" id="shop-total">1,240.00€</span>
+            <span class="rev-label">SHOPIFY NET OPS</span>
+        </div>
+        <div class="rev-card">
+            <span class="rev-val amazon" id="amz-total">458.20€</span>
+            <span class="rev-label">AMAZON AFFILIATE</span>
+        </div>
+        <div class="rev-card">
+            <span class="rev-val ai-aff" id="ai-total">890.00€</span>
+            <span class="rev-label">AI_AGENT COMMISSIONS</span>
+        </div>
     </div>
 
     <div class="main-container">
         <div class="url-box">
-            <div style="font-size: 10px; color: #555;">[ MUNITION_ACTUELLE ]</div>
-            <input type="text" class="url-input" id="current-url" value="Chargement du lien...">
+            <div class="url-label">GÉNÉRATEUR DE LIEN AGENT (MUNITION) :</div>
+            <input type="text" class="url-input" id="current-url" value="https://followtrend.shop/target?p=selection">
         </div>
+
         <div class="action-btns">
-            <button class="btn btn-catalog" onclick="openInventory()">📦 OUVRIR INVENTAIRE PRODUITS</button>
-            <button class="btn btn-copy" onclick="copyLink()">COPIER LE LIEN AGENT</button>
+            <button class="btn btn-catalog" onclick="openInventory()">📦 INVENTAIRE PRODUITS</button>
+            <button class="btn btn-copy" id="copy-btn" onclick="copyLink()">COPIER LA MUNITION</button>
         </div>
     </div>
 
     <div id="inventory-overlay">
-        <div class="close-btn" onclick="closeInventory()">[ FERMER X ]</div>
-        <div style="font-family: 'Syncopate'; font-size: 18px; margin-bottom: 20px;">INVENTAIRE_PARCOURS</div>
+        <div class="inventory-header">
+            <div style="font-family: 'Syncopate'; font-size: 24px; letter-spacing: -1px;">INVENTAIRE_UNITÉS</div>
+            <div class="close-btn" onclick="closeInventory()">[ FERMER LE MODULE ]</div>
+        </div>
+        
         <div class="inventory-grid">
-            <div class="col" id="col-eau"><div class="col-title">💧 EAU</div></div>
-            <div class="col" id="col-energie"><div class="col-title">⚡ ÉNERGIE</div></div>
-            <div class="col" id="col-soin"><div class="col-title">🧘 SOIN</div></div>
-            <div class="col" id="col-survie"><div class="col-title">🎒 SURVIE</div></div>
+            <div class="col">
+                <div class="col-title">💧 EAU</div>
+                <div class="prod-card" onclick="setNiche('eau', 'FILTRE_SURVIE_V1')">
+                    <span class="prod-name">FILTRE NOMADE MILITAIRE</span>
+                    <span class="prod-id">REF: EAU-01</span>
+                </div>
+                <div class="prod-card" onclick="setNiche('eau', 'GOURDE_PURIF')">
+                    <span class="prod-name">GOURDE AUTO-NETTOYANTE</span>
+                    <span class="prod-id">REF: EAU-02</span>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="col-title">⚡ ÉNERGIE</div>
+                <div class="prod-card" onclick="setNiche('energie', 'SOLAR_PANEL')">
+                    <span class="prod-name">PANNEAU SOLAIRE PLIANT</span>
+                    <span class="prod-id">REF: NRG-01</span>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="col-title">🧘 SOIN</div>
+                <div class="prod-card" onclick="setNiche('soin', 'BACK_SUPPORT')">
+                    <span class="prod-name">CORRECTEUR DE POSTURE TACTIQUE</span>
+                    <span class="prod-id">REF: BIO-01</span>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="col-title">🎒 SURVIE</div>
+                <div class="prod-card" onclick="setNiche('survie', 'SURVIVAL_KIT')">
+                    <span class="prod-name">KIT DE SURVIE 72H ELITE</span>
+                    <span class="prod-id">REF: SUR-01</span>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURATION SÉCURISÉE RENDER
+        // CONFIGURATION SÉCURISÉE RENDER (REMPLACE PAR TON URL)
         const RENDER_API = "https://ton-service-render.onrender.com"; 
 
         function openInventory() { document.getElementById('inventory-overlay').style.display = 'block'; }
         function closeInventory() { document.getElementById('inventory-overlay').style.display = 'none'; }
 
-        // SYNC AVEC LA CUISINE
+        // Fonction pour sélectionner une niche
+        function setNiche(nicheId, prodName) {
+            const finalUrl = window.location.origin + "/target.html?p=" + nicheId;
+            document.getElementById('current-url').value = finalUrl;
+            closeInventory();
+            
+            // Log vers la cuisine
+            syncCuisine('select_product', { niche: nicheId, product: prodName });
+        }
+
+        // COPIE SÉCURISÉE AVEC FEEDBACK
+        async function copyLink() {
+            const input = document.getElementById("current-url");
+            const btn = document.getElementById("copy-btn");
+            
+            try {
+                await navigator.clipboard.writeText(input.value);
+                const originalText = btn.innerText;
+                btn.innerText = "✅ COPIÉ DANS LE PRESSE-PAPIERS";
+                btn.style.color = "var(--neon)";
+                
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.color = "#fff";
+                }, 2000);
+
+                syncCuisine('copy_action', input.value);
+            } catch (err) {
+                alert("Erreur de copie. Sélectionnez le texte manuellement.");
+            }
+        }
+
+        // LIAISON RENDER
         async function syncCuisine(action, details) {
             try {
                 await fetch(`${RENDER_API}/api/secure-log`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ action, details, auth: 'CEO_DASHBOARD' })
+                    body: JSON.stringify({ action, details, timestamp: new Date() })
                 });
-            } catch (e) { console.log("Sync..."); }
+            } catch (e) { console.log("Cuisine en attente..."); }
         }
-
-        function copyLink() {
-            const input = document.getElementById("current-url");
-            navigator.clipboard.writeText(input.value);
-            syncCuisine('copy_link', input.value);
-            alert("Lien copié.");
-        }
-
-        // Initialisation par défaut
-        document.getElementById('current-url').value = window.location.origin + "/target.html?p=selection";
     </script>
 </body>
 </html>
