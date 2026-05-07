@@ -19,10 +19,10 @@
             color: var(--text-color);
             font-family: 'JetBrains+Mono', monospace;
             margin: 0;
-            padding: 20px;
+            padding: 10px; /* Réduit */
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            height: 98vh; /* Évite le scroll */
             overflow: hidden;
         }
 
@@ -32,76 +32,82 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid var(--accent-green);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
         }
+
+        .logo { font-size: 0.9em; font-weight: bold; }
 
         .stats-bar {
             display: flex;
-            gap: 20px;
+            gap: 10px;
         }
 
         .stat-item {
             background: var(--panel-bg);
-            padding: 5px 15px;
+            padding: 2px 10px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
+            font-size: 0.8em;
         }
 
         .stat-item span {
             color: var(--accent-green);
-            font-weight: bold;
         }
 
         /* MAIN DASHBOARD */
         .dashboard {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
+            gap: 10px;
             flex-grow: 1;
+            min-height: 0; /* Important pour le flex */
         }
 
         .column {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
-            padding: 15px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             transition: all 0.3s ease;
+            overflow: hidden;
         }
 
         .column-header {
             text-align: center;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             padding-bottom: 5px;
             color: var(--accent-green);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            font-size: 0.85em;
         }
 
         .content-area {
             flex-grow: 1;
-            font-size: 0.9em;
-            line-height: 1.4;
+            font-size: 0.75em; /* Plus compact */
+            line-height: 1.2;
+            color: #888;
         }
 
-        /* DISPATCHER LOG & INPUT */
+        /* CONSOLE & INPUT RÉDUITS */
         .console-area {
-            margin-top: 20px;
+            margin-top: 10px;
             background: #000;
             border: 1px solid var(--accent-green);
-            padding: 10px;
-            height: 100px;
+            padding: 8px;
+            height: 70px; /* Plus petit */
             overflow-y: auto;
-            font-size: 0.8em;
+            font-size: 0.7em;
             color: #00ff00;
         }
 
         .input-line {
             display: flex;
-            margin-top: 10px;
-            gap: 10px;
+            margin-top: 8px;
+            gap: 8px;
         }
 
         input {
@@ -109,7 +115,8 @@
             background: #111;
             border: 1px solid var(--accent-green);
             color: white;
-            padding: 10px;
+            padding: 8px;
+            font-size: 0.8em;
             font-family: inherit;
         }
 
@@ -117,16 +124,17 @@
             background: var(--accent-green);
             color: black;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 15px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 0.8em;
         }
 
         /* ANIMATION ACTIVE */
         .active-dispatch {
             border: 2px solid var(--accent-green) !important;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
-            transform: scale(1.02);
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.2);
+            background: #1a1a1a;
         }
     </style>
 </head>
@@ -144,34 +152,33 @@
     <div class="dashboard">
         <div class="column" id="eau">
             <div class="column-header">01_EAU</div>
-            <div class="content-area" id="content-eau">MUNITION: Filtres & Purification prête.</div>
+            <div class="content-area">LOG: Prêt pour analyse de pureté...</div>
         </div>
         <div class="column" id="energie">
             <div class="column-header">02_ENERGIE</div>
-            <div class="content-area" id="content-energie">MUNITION: Batteries & Solaire en attente.</div>
+            <div class="content-area">LOG: Monitoring des tensions...</div>
         </div>
         <div class="column" id="soin">
             <div class="column-header">03_SOIN</div>
-            <div class="content-area" id="content-soin">MUNITION: Kits Médicaux & Herboristerie.</div>
+            <div class="content-area">LOG: Inventaire médical OK...</div>
         </div>
         <div class="column" id="survie">
             <div class="column-header">04_SURVIE</div>
-            <div class="content-area" id="content-survie">MUNITION: Sacs 72h & Logistique.</div>
+            <div class="content-area">LOG: Protocoles 72h chargés...</div>
         </div>
     </div>
 
     <div class="console-area" id="console">
-        > SYSTEM READY...<br>
-        > WAITING FOR DISPATCHER INSTRUCTIONS...
+        > SYSTEM BOOT... OK<br>
+        > DASHBOARD COMPACT MODE ACTIVE.
     </div>
 
     <div class="input-line">
-        <input type="text" id="user-input" placeholder="Entrez un besoin client pour tester le Dispatcher (ex: j'ai besoin d'un filtre à eau)...">
-        <button onclick="manualDispatch()">TEST DISPATCH</button>
+        <input type="text" id="user-input" placeholder="Analyse rapide client...">
+        <button onclick="manualDispatch()">DISPATCH</button>
     </div>
 
     <script>
-        // --- LOGIQUE DU DISPATCHER INSTANTANÉ ---
         const decisionTable = {
             'eau': ['filtre', 'potable', 'soif', 'pollution', 'bacterie', 'riviere', 'survie', 'eau'],
             'energie': ['batterie', 'solaire', 'panneau', 'blackout', 'electricite', 'lumiere', 'coupure', 'courant'],
@@ -194,39 +201,26 @@
         function dispatchRequest(message) {
             const msg = message.toLowerCase();
             let target = null;
-
-            logConsole(`ANALYSE DU MESSAGE: "${message}"`);
-
             for (const [column, keywords] of Object.entries(decisionTable)) {
-                if (keywords.some(kw => msg.includes(kw))) {
-                    target = column;
-                    break;
-                }
+                if (keywords.some(kw => msg.includes(kw))) { target = column; break; }
             }
-
             if (target) {
                 activateColumn(target);
-                logConsole(`CIBLE IDENTIFIÉE : [${target.toUpperCase()}]. ENVOI DE LA MUNITION...`);
+                logConsole(`CIBLE : [${target.toUpperCase()}]`);
             } else {
-                logConsole(`ERREUR : AUCUNE CIBLE IDENTIFIÉE.`);
+                logConsole(`ERROR: NO TARGET`);
             }
         }
 
         function activateColumn(id) {
-            // Reset
             document.querySelectorAll('.column').forEach(c => c.classList.remove('active-dispatch'));
-            
-            // Activate
             const col = document.getElementById(id);
             if (col) {
                 col.classList.add('active-dispatch');
-                setTimeout(() => {
-                    col.classList.remove('active-dispatch');
-                }, 5000);
+                setTimeout(() => col.classList.remove('active-dispatch'), 3000);
             }
         }
 
-        // --- MAJ STATS VIA RENDER API ---
         async function updateStats() {
             try {
                 const res = await fetch('/api/stats');
@@ -234,13 +228,9 @@
                 document.getElementById('stat-shopify').innerText = data.shopify + "€";
                 document.getElementById('stat-amazon').innerText = data.amazon + "€";
                 document.getElementById('stat-ai').innerText = data.ai + "€";
-            } catch (e) { 
-                // Silencieux en local
-            }
+            } catch (e) {}
         }
-
         setInterval(updateStats, 5000);
     </script>
 </body>
 </html>
-
