@@ -3,218 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOLLOW HQ - Command Center</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>FOLLOW_HQ - Dashboard CEO</title>
     <style>
-        :root {
-            --bg-color: #0a0a0a;
-            --text-color: #e0e0e0;
-            --accent-green: #00ff00;
-            --border-color: #333;
-            --panel-bg: #111;
+        body { background: #050505; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        #dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 100vh; gap: 10px; padding: 10px; box-sizing: border-box; }
+        .column { border: 1px solid #111; padding: 15px; background: rgba(0,20,0,0.2); overflow-y: auto; position: relative; }
+        h2 { font-size: 0.9em; border-bottom: 1px solid #00ff00; padding-bottom: 5px; color: #fff; text-transform: uppercase; }
+        
+        /* Zone d'alerte */
+        #order-display { margin-top: 20px; min-height: 200px; }
+        
+        /* Stats */
+        .stat-box { margin-bottom: 20px; }
+        .stat-value { font-size: 1.5em; font-weight: bold; }
+
+        /* Barre de test en bas */
+        .test-zone {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: #111; padding: 15px; display: flex; gap: 10px;
+            border-top: 2px solid #00ff00; box-sizing: border-box; z-index: 100;
         }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'JetBrains+Mono', monospace;
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            height: 98vh;
-            overflow: hidden;
+        input { 
+            flex-grow: 1; background: #000; border: 1px solid #00ff00; 
+            color: #00ff00; padding: 10px; outline: none; font-family: monospace;
         }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--accent-green);
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+        button { 
+            background: #00ff00; color: #000; border: none; padding: 10px 20px; 
+            cursor: pointer; font-weight: bold; text-transform: uppercase;
         }
-
-        .logo { font-size: 0.9em; font-weight: bold; color: var(--accent-green); }
-
-        .stats-bar { display: flex; gap: 10px; }
-
-        .stat-item {
-            background: var(--panel-bg);
-            padding: 2px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 0.8em;
-        }
-
-        .stat-item span { color: var(--accent-green); }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            flex-grow: 1;
-            min-height: 0;
-        }
-
-        .column {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-            overflow-y: auto;
-        }
-
-        .column-header {
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            color: var(--accent-green);
-            text-transform: uppercase;
-            font-size: 0.85em;
-        }
-
-        .content-area {
-            flex-grow: 1;
-            font-size: 0.75em;
-        }
-
-        /* BARRE DE PILOTAGE AGENT */
-        .input-line {
-            display: flex;
-            margin-top: 10px;
-            gap: 10px;
-            background: #111;
-            padding: 10px;
-            border: 1px solid var(--accent-green);
-        }
-
-        input {
-            flex-grow: 1;
-            background: #000;
-            border: 1px solid #444;
-            color: var(--accent-green);
-            padding: 10px;
-            font-family: inherit;
-            outline: none;
-        }
-
-        button {
-            background: var(--accent-green);
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        button:hover { background: #00cc00; }
-
-        /* Style des produits injectés */
-        .product-card {
-            border: 1px dashed var(--accent-green);
-            padding: 8px;
-            margin-top: 5px;
-            background: #050505;
-        }
+        button:hover { background: #fff; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">FOLLOW_HQ // MULTI_AGENT_SYSTEM</div>
-        <div class="stats-bar">
-            <div class="stat-item">SHOPIFY: <span id="stat-shopify">0.00€</span></div>
-            <div class="stat-item">AMAZON: <span id="stat-amazon">0.00€</span></div>
-            <div class="stat-item">AI_ADS: <span id="stat-ai">0.00€</span></div>
-        </div>
-    </header>
-
-    <div class="dashboard">
-        <div class="column" id="eau">
-            <div class="column-header">01_ORDRES_IA</div>
-            <div class="content-area" id="content-ordres">
-                En attente de signal réseau...
+<div id="dashboard">
+    <div class="column">
+        <h2>📡 AGENT ÉCLAIREUR</h2>
+        <p style="font-size: 0.7em;">SCANNING SOCIAL NETWORKS...</p>
+        <div id="order-display">
             </div>
-        </div>
-        <div class="column" id="energie">
-            <div class="column-header">02_ENERGIE</div>
-            <div class="content-area">SCANNER_ACTIF: Monitoring...</div>
-        </div>
-        <div class="column" id="soin">
-            <div class="column-header">03_SOIN</div>
-            <div class="content-area">LOG: Prêt.</div>
-        </div>
-        <div class="column" id="survie">
-            <div class="column-header">04_SURVIE</div>
-            <div class="content-area">LOG: Prêt.</div>
+    </div>
+
+    <div class="column">
+        <h2>📦 AGENT LOGISTIQUE</h2>
+        <div id="inventory-status">
+            <p>VÉRIFICATION SHOPIFY...</p>
+            <p style="color: #555;">Accès : OK</p>
+            <p style="color: #555;">Catalogue : Connecté</p>
         </div>
     </div>
 
-    <div class="input-line">
-        <input type="text" id="test-keyword" placeholder="Entrez un mot-clé (ex: eau) pour lancer l'agent logistique...">
-        <button onclick="triggerAiTest()">TESTER L'IA</button>
+    <div class="column">
+        <h2>📈 PERFORMANCE CEO</h2>
+        <div class="stat-box">
+            <div>REVENUS SHOPIFY</div>
+            <div class="stat-value" id="stat-shopify">0.00€</div>
+        </div>
+        <div class="stat-box">
+            <div>REVENUS AMAZON</div>
+            <div class="stat-value" id="stat-amazon">0.00€</div>
+        </div>
+        <div class="stat-box">
+            <div>ÉCONOMIE IA (TPS)</div>
+            <div class="stat-value" id="stat-ai">0h</div>
+        </div>
     </div>
+</div>
 
-    <script>
-        // 1. Rafraîchir les ordres venant du serveur (Agent Logistique)
-        async function refreshDashboard() {
-            try {
-                const res = await fetch('/api/get-order');
-                if (res.ok) {
-                    const html = await res.text();
-                    document.getElementById('content-ordres').innerHTML = html;
-                }
-            } catch (e) { console.error("Sync Error"); }
-        }
+<div class="test-zone">
+    <input type="text" id="ceo-input" placeholder="TAPEZ UN BESOIN (ex: eau, feu, kit)...">
+    <button onclick="sendTestAlert()">TESTER L'IA</button>
+</div>
 
-        // 2. Simuler l'agent Éclaireur sans passer par la console
-        async function triggerAiTest() {
-            const kw = document.getElementById('test-keyword').value;
-            if(!kw) return alert("Veuillez entrer un mot-clé !");
+<script>
+    // Mise à jour automatique du dashboard toutes les 2 secondes
+    function updateDashboard() {
+        fetch('/api/get-order')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('order-display').innerHTML = html;
+            });
 
-            document.getElementById('content-ordres').innerHTML = "L'Agent Logistique cherche sur Shopify...";
-
-            try {
-                const response = await fetch('/api/agent-alert', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        keyword: kw,
-                        platform: "MANUAL_TEST",
-                        user_issue: "Test du CEO en direct",
-                        auth: "CEO_FOLLOW"
-                    })
-                });
-                
-                const data = await response.json();
-                console.log("Agent Response:", data);
-                
-                // Forcer la mise à jour visuelle immédiate
-                setTimeout(refreshDashboard, 1000);
-            } catch (err) {
-                alert("Erreur de connexion au serveur");
-            }
-        }
-
-        // 3. Mise à jour des Stats
-        async function updateStats() {
-            try {
-                const res = await fetch('/api/stats');
-                const data = await res.json();
+        fetch('/api/stats')
+            .then(res => res.json())
+            .then(data => {
                 document.getElementById('stat-shopify').innerText = data.shopify + "€";
                 document.getElementById('stat-amazon').innerText = data.amazon + "€";
-                document.getElementById('stat-ai').innerText = data.ai + "€";
-            } catch (e) {}
+                document.getElementById('stat-ai').innerText = data.ai + "h";
+            });
+    }
+
+    // FONCTION DE TEST CORRIGÉE
+    function sendTestAlert() {
+        const inputField = document.getElementById('ceo-input');
+        const text = inputField.value.trim();
+
+        if (text === "") {
+            alert("Veuillez entrer un mot-clé !");
+            return;
         }
 
-        // Boucles de rafraîchissement
-        setInterval(refreshDashboard, 3000); // Check les ordres IA toutes les 3s
-        setInterval(updateStats, 5000); // Check les stats toutes les 5s
-    </script>
+        // On nettoie l'écran immédiatement pour montrer que ça travaille
+        document.getElementById('order-display').innerHTML = "<p style='color:yellow;'>IA en cours d'analyse...</p>";
+
+        console.log("Envoi au serveur : " + text);
+
+        fetch('/api/agent-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                keyword: text,
+                user_issue: "Test manuel du CEO : " + text,
+                platform: "DIRECT_DASHBOARD",
+                auth: "CEO_FOLLOW"
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log("Réponse reçue :", data);
+            // On force le rafraîchissement
+            setTimeout(updateDashboard, 500);
+        })
+        .catch(err => {
+            console.error("Erreur :", err);
+            alert("Erreur de connexion au serveur Render.");
+        });
+    }
+
+    setInterval(updateDashboard, 2000);
+</script>
+
 </body>
 </html>
