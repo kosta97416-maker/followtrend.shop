@@ -3,54 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOLLOW_HQ — RENDER MONOLITH</title>
+    <title>FOLLOW_HQ — COMMAND CENTER</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <style>
         :root { --neon: #C8FF00; --bg: #000; --panel: #0a0a0a; --border: #1a1a1a; }
         * { box-sizing: border-box; }
-        body { background: var(--bg); color: #fff; font-family: 'Space Mono', monospace; margin: 0; }
+        body { background: var(--bg); color: #fff; font-family: 'Space Mono', monospace; margin: 0; overflow-x: hidden; }
+        
         .header { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--border); border-bottom: 1px solid var(--border); }
         .stat-card { background: var(--bg); padding: 20px; text-align: center; border-right: 1px solid var(--border); }
         .val { font-size: 22px; font-weight: bold; color: var(--neon); display: block; }
-        .lbl { font-size: 9px; color: #555; margin-top: 5px; text-transform: uppercase; }
+        .lbl { font-size: 9px; color: #555; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
         .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; height: calc(100vh - 85px); }
         .module { background: var(--panel); border: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; }
         .title { font-size: 10px; color: var(--neon); margin-bottom: 15px; letter-spacing: 2px; border-bottom: 1px solid #111; padding-bottom: 10px; }
-        textarea { flex: 1; background: #000; border: 1px solid #222; color: #fff; padding: 15px; font-family: 'Space Mono'; font-size: 11px; margin-bottom: 15px; resize: none; outline: none; }
-        .btn { padding: 20px; cursor: pointer; font-family: 'Syncopate'; font-size: 10px; border: none; text-transform: uppercase; font-weight: bold; }
+
+        textarea { flex: 1; background: #000; border: 1px solid #222; color: #fff; padding: 15px; font-family: 'Space Mono'; font-size: 11px; margin-bottom: 15px; resize: none; outline: none; border-radius: 0; }
+        textarea:focus { border-color: var(--neon); }
+
+        .btn { padding: 20px; cursor: pointer; font-family: 'Syncopate'; font-size: 10px; border: none; text-transform: uppercase; font-weight: bold; transition: 0.3s; }
         .btn-main { background: var(--neon); color: #000; }
+        .btn-main:hover { background: #fff; box-shadow: 0 0 15px var(--neon); }
         .btn-dark { background: #111; color: #fff; border: 1px solid #222; margin-top: 10px; }
-        .url-box { background: #000; border: 1px solid #222; padding: 15px; color: var(--neon); font-size: 11px; margin-bottom: 15px; min-height: 55px; word-break: break-all; }
+
+        .url-box { background: #000; border: 1px solid #222; padding: 15px; color: var(--neon); font-size: 12px; margin-bottom: 15px; min-height: 55px; word-break: break-all; }
+
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; padding: 40px; }
         .grid-inv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
         .col-inv { background: var(--panel); border: 1px solid var(--border); padding: 15px; height: 70vh; overflow-y: auto; }
-        .prod { background: #000; border: 1px solid #222; padding: 12px; margin-bottom: 10px; cursor: pointer; font-size: 10px; }
-        .close { position: absolute; top: 20px; right: 20px; color: #ff4444; border: 1px solid #ff4444; padding: 5px 15px; cursor: pointer; }
+        .prod { background: #000; border: 1px solid #222; padding: 12px; margin-bottom: 10px; cursor: pointer; font-size: 10px; transition: 0.2s; }
+        .prod:hover { border-color: var(--neon); color: var(--neon); }
+        .close { position: absolute; top: 20px; right: 20px; color: #ff4444; border: 1px solid #ff4444; padding: 5px 15px; cursor: pointer; font-size: 10px; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <div class="stat-card"><span class="val" id="st-shop">1250.00€</span><span class="lbl">SHOPIFY LIVE</span></div>
-        <div class="stat-card"><span class="val" id="st-amz">450.00€</span><span class="lbl">AMAZON LIVE</span></div>
-        <div class="stat-card"><span class="val" id="st-ai">85.00€</span><span class="lbl">AI_AGENT LIVE</span></div>
+        <div class="stat-card"><span class="val" id="st-shop">0.00€</span><span class="lbl">SHOPIFY LIVE</span></div>
+        <div class="stat-card"><span class="val" id="st-amz">0.00€</span><span class="lbl">AMAZON LIVE</span></div>
+        <div class="stat-card"><span class="val" id="st-ai">0.00€</span><span class="lbl">AI_AGENT LIVE</span></div>
     </div>
 
     <div class="dashboard">
         <div class="module">
             <div class="title">ORDRE_TACTIQUE (CODE HTML)</div>
-            <textarea id="order-input" placeholder="Collez le code HTML ici..."></textarea>
+            <textarea id="order-input" placeholder="Collez ici le code HTML..."></textarea>
             <button class="btn btn-main" onclick="sendToCuisine()">DÉPLOYER L'ORDRE</button>
         </div>
+
         <div class="module">
             <div class="title">MUNITION_ACTUELLE</div>
-            <div class="url-box" id="url-display">SÉLECTIONNEZ UN PRODUIT</div>
+            <div class="url-box" id="url-display">SÉLECTIONNEZ UN PRODUIT DANS L'INVENTAIRE</div>
             <button class="btn btn-main" style="background:#fff" onclick="copyMunition()">COPIER MUNITION</button>
-            <button class="btn btn-dark" onclick="toggleInv(true)">📦 INVENTAIRE</button>
+            <button class="btn btn-dark" onclick="toggleInv(true)">📦 INVENTAIRE PRODUITS</button>
         </div>
     </div>
 
     <div id="overlay">
         <div class="close" onclick="toggleInv(false)">[ FERMER ]</div>
+        <div class="title" style="font-size: 20px;">INVENTAIRE_GLOBAL</div>
         <div class="grid-inv">
             <div class="col-inv"><div class="title">💧 EAU</div><div class="prod" onclick="setProd('eau')">UNITÉ_FILTRE_V1</div></div>
             <div class="col-inv"><div class="title">⚡ ÉNERGIE</div><div class="prod" onclick="setProd('energie')">SOLAIRE_V1</div></div>
@@ -60,25 +72,54 @@
     </div>
 
     <script>
-        // Automatique : on utilise l'URL actuelle du navigateur
-        const API = window.location.origin;
+        // Utilise l'URL actuelle du navigateur (Render détecte tout seul son adresse)
+        const API_URL = window.location.origin; 
 
         function toggleInv(show) { document.getElementById('overlay').style.display = show ? 'block' : 'none'; }
-        function setProd(p) { document.getElementById('url-display').innerText = API + "/target.html?p=" + p; toggleInv(false); }
-        async function copyMunition() { await navigator.clipboard.writeText(document.getElementById('url-display').innerText); alert("Copié."); }
+        
+        function setProd(p) {
+            // Création du lien munition basé sur ton URL actuelle
+            const link = API_URL + "/target.html?p=" + p;
+            document.getElementById('url-display').innerText = link;
+            toggleInv(false);
+        }
+
+        async function copyMunition() {
+            const text = document.getElementById('url-display').innerText;
+            if(text.includes("SÉLECTIONNEZ")) return alert("Choisissez un produit.");
+            await navigator.clipboard.writeText(text);
+            alert("Lien copié.");
+        }
 
         async function sendToCuisine() {
-            const code = document.getElementById('order-input').value;
-            const encoded = btoa(encodeURIComponent(code));
+            const htmlCode = document.getElementById('order-input').value;
+            if(!htmlCode) return alert("Zone vide.");
+
+            const encoded = btoa(encodeURIComponent(htmlCode));
+
             try {
-                const res = await fetch(`${API}/api/deploy`, {
+                const res = await fetch(`${API_URL}/api/deploy`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ order: encoded, auth: "CEO_FOLLOW" })
                 });
-                if(res.ok) alert("ORDRE TRANSMIS.");
-            } catch (e) { alert("ERREUR."); }
+                if(res.ok) alert("ORDRE DÉPLOYÉ AVEC SUCCÈS.");
+                else alert("ERREUR SERVEUR.");
+            } catch (e) {
+                alert("ERREUR RÉSEAU : Impossible de joindre le serveur.");
+            }
         }
+
+        // Refresh stats
+        setInterval(async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/stats`);
+                const data = await res.json();
+                document.getElementById('st-shop').innerText = data.shopify + "€";
+                document.getElementById('st-amz').innerText = data.amazon + "€";
+                document.getElementById('st-ai').innerText = data.ai + "€";
+            } catch(e) {}
+        }, 10000);
     </script>
 </body>
 </html>
