@@ -1,45 +1,18 @@
 const express = require('express');
 const cors = require('cors');
-const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
-const AUTH_KEY = "CEO_FOLLOW";
-
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
-app.post('/api/deploy', async (req, res) => {
-    const { order, auth } = req.body;
-    if (auth !== AUTH_KEY) return res.status(403).json({ error: "Auth invalide" });
-    if (!order) return res.status(400).json({ error: "Aucun ordre" });
+let order = "<h1>WAITING CEO ORDER</h1>";
 
-    let html;
-    try {
-        html = decodeURIComponent(Buffer.from(order, 'base64').toString('ascii'));
-    } catch(e) {
-        return res.status(400).json({ error: "Encodage invalide" });
-    }
-
-    let browser;
-    try {
-        browser = await puppeteer.launch({
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
-            executablePath: await chromium.executablePath(),
-            headless: 'new',
-        });
-        const page = await browser.newPage();
-        await page.setContent(html);
-        await new Promise(r => setTimeout(r, 3000));
-        await browser.close();
-        res.json({ status: "executed", logs: ["Ordre exécuté"] });
-    } catch(err) {
-        if (browser) await browser.close();
-        res.status(500).json({ error: err.message });
-    }
+app.post('/api/deploy', (req, res) => {
+    if(req.body.auth !== "CEO_FOLLOW") return res.sendStatus(403);
+    order = decodeURIComponent(atob(req.body.order));
+    res.sendStatus(200);
 });
 
-app.get('/health', (req, res) => res.json({ status: "ok" }));
+app.get('/api/get-order', (req, res) => res.send(order));
+app.get('/api/stats', (req, res) => res.json({shopify: "0.00", amazon: "0.00", ai: "0.00"}));
 
-app.listen(PORT, () => console.log(`Backend actif sur port ${PORT}`));
+app.listen(process.env.PORT || 3000);
