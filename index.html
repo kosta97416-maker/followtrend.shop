@@ -2,410 +2,75 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>FOLLOW_HQ — COMMAND CENTER</title>
+    <title>FOLLOW_HQ - COMMAND CENTER</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --neon: #C8FF00;
-            --bg: #000000;
-            --panel: #0a0a0a;
-            --border: #1a1a1a;
-            --amazon: #FF9900;
-            --ai: #00F0FF;
-            --danger: #ff3366;
-        }
-
-        body {
-            background: var(--bg);
-            color: #e0e0e0;
-            font-family: 'Space Mono', monospace;
-            height: 100vh;
-            overflow: hidden;
-            font-size: 12px;
-        }
-
-        /* REVENUE DASHBOARD */
-        .revenue-header {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1px;
-            background: var(--border);
-            border-bottom: 1px solid #2a2a2a;
-        }
-
-        .rev-card {
-            background: var(--bg);
-            padding: 18px 12px;
-            text-align: center;
-            transition: 0.2s;
-        }
-
-        .rev-val {
-            font-size: 24px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            display: block;
-            font-family: 'Syncopate', monospace;
-        }
-
-        .rev-label {
-            font-size: 9px;
-            letter-spacing: 2px;
-            color: #666;
-            margin-top: 8px;
-            text-transform: uppercase;
-        }
-
-        /* MAIN LAYOUT */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1.4fr 0.9fr;
-            gap: 18px;
-            padding: 20px;
-            height: calc(100vh - 85px);
-        }
-
-        .module {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            backdrop-filter: blur(2px);
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .module-header {
-            font-size: 10px;
-            color: var(--neon);
-            margin-bottom: 18px;
-            letter-spacing: 2.5px;
-            border-bottom: 1px solid #1f1f1f;
-            padding-bottom: 12px;
-            text-transform: uppercase;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        textarea {
-            flex: 1;
-            background: #030303;
-            border: 1px solid #222;
-            color: #cfcfcf;
-            padding: 15px;
-            font-family: 'Space Mono', monospace;
-            font-size: 11px;
-            resize: none;
-            outline: none;
-            border-radius: 6px;
-            margin-bottom: 18px;
-        }
-
-        textarea:focus {
-            border-color: var(--neon);
-            box-shadow: 0 0 6px var(--neon);
-        }
-
-        .url-display {
-            background: #000000;
-            border: 1px solid #2a2a2a;
-            padding: 14px;
-            color: var(--neon);
-            font-size: 11px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            word-break: break-all;
-            font-family: monospace;
-        }
-
-        .btn {
-            padding: 14px 12px;
-            cursor: pointer;
-            font-family: 'Syncopate', monospace;
-            font-size: 10px;
-            border: none;
-            text-transform: uppercase;
-            font-weight: bold;
-            transition: all 0.2s ease;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            border-radius: 3px;
-        }
-
-        .btn-deploy {
-            background: var(--neon);
-            color: #000;
-            box-shadow: 0 0 4px var(--neon);
-        }
-
-        .btn-deploy:hover {
-            background: #fff;
-            box-shadow: 0 0 18px var(--neon);
-            transform: scale(0.98);
-        }
-
-        .btn-catalog {
-            background: #111;
-            color: #fff;
-            border: 1px solid #2d2d2d;
-        }
-
-        .btn-catalog:hover {
-            border-color: var(--neon);
-            background: #1a1a1a;
-        }
-
-        .log-area {
-            margin-top: 20px;
-            background: #010101;
-            border: 1px solid #1e1e1e;
-            border-radius: 6px;
-            padding: 12px;
-            height: 130px;
-            overflow-y: auto;
-            font-size: 9px;
-            font-family: monospace;
-        }
-
-        .log-entry {
-            border-bottom: 1px solid #151515;
-            padding: 5px 0;
-            color: #aaa;
-        }
-
-        .log-success {
-            color: var(--neon);
-        }
-
-        .log-error {
-            color: var(--danger);
-        }
-
-        /* OVERLAY INVENTAIRE */
-        #inventory-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.98);
-            z-index: 2000;
-            display: none;
-            padding: 40px;
-            backdrop-filter: blur(8px);
-        }
-
-        .inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            height: 70vh;
-            margin-top: 30px;
-        }
-
-        .col {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        .col-title {
-            color: var(--neon);
-            font-size: 12px;
-            text-align: center;
-            border-bottom: 1px solid #2a2a2a;
-            padding-bottom: 12px;
-            margin-bottom: 18px;
-            font-weight: bold;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            color: #ff5566;
-            cursor: pointer;
-            font-size: 11px;
-            border: 1px solid #ff5566;
-            padding: 6px 14px;
-            border-radius: 20px;
-            background: #110000;
-        }
-
-        .prod-card {
-            background: #000;
-            border: 1px solid #2c2c2c;
-            padding: 12px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            font-size: 11px;
-            text-align: center;
-            transition: 0.1s linear;
-            border-radius: 4px;
-        }
-
-        .prod-card:hover {
-            border-color: var(--neon);
-            background: #141414;
-            transform: translateX(3px);
-        }
+        :root { --neon: #C8FF00; --bg: #000; --panel: #0a0a0a; --border: #1a1a1a; }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: #fff; font-family: 'Space Mono', monospace; margin: 0; overflow: hidden; }
+        .rev-header { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--border); border-bottom: 1px solid var(--border); }
+        .rev-card { background: var(--bg); padding: 20px; text-align: center; border-right: 1px solid var(--border); }
+        .rev-val { font-size: 24px; font-weight: bold; color: var(--neon); }
+        .rev-label { font-size: 10px; color: #555; display: block; margin-top: 5px; }
+        .main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; height: calc(100vh - 90px); }
+        .mod { background: var(--panel); border: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; }
+        .mod-h { font-size: 11px; color: var(--neon); margin-bottom: 15px; border-bottom: 1px solid #111; padding-bottom: 10px; }
+        textarea { flex: 1; background: #000; border: 1px solid #222; color: #fff; padding: 15px; font-family: 'Space Mono'; resize: none; margin-bottom: 15px; }
+        .url-box { background: #000; border: 1px solid #222; padding: 15px; color: var(--neon); word-break: break-all; min-height: 60px; margin-bottom: 15px; }
+        .btn { padding: 20px; cursor: pointer; font-family: 'Syncopate'; font-size: 10px; border: none; font-weight: bold; text-transform: uppercase; }
+        .btn-prim { background: var(--neon); color: #000; }
+        .btn-sec { background: #111; color: #fff; border: 1px solid #222; margin-top: 10px; }
+        #inv { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; padding: 40px; }
+        .grid-inv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
+        .col { background: var(--panel); border: 1px solid var(--border); padding: 15px; }
+        .item { background: #000; border: 1px solid #222; padding: 12px; margin-bottom: 10px; cursor: pointer; font-size: 11px; }
+        .item:hover { border-color: var(--neon); }
+        .close { position: absolute; top: 20px; right: 20px; color: red; cursor: pointer; border: 1px solid red; padding: 5px 10px; }
     </style>
 </head>
 <body>
-
-<div class="revenue-header">
-    <div class="rev-card"><span class="rev-val" id="shopify-rev" style="color:var(--neon)">0.00€</span><span class="rev-label">SHOPIFY LIVE</span></div>
-    <div class="rev-card"><span class="rev-val" id="amazon-rev" style="color:var(--amazon)">0.00€</span><span class="rev-label">AMAZON LIVE</span></div>
-    <div class="rev-card"><span class="rev-val" id="ai-rev" style="color:var(--ai)">0.00€</span><span class="rev-label">AI_AGENT LIVE</span></div>
-</div>
-
-<div class="main-grid">
-    <!-- ORDRE TACTIQUE -->
-    <div class="module">
-        <div class="module-header">
-            <span>📡 COMMANDE_TACTIQUE (HTML/SCRIPT)</span>
-            <span style="font-size:8px;">AGENTS READY</span>
+    <div class="rev-header">
+        <div class="rev-card"><span class="rev-val" id="s1">0.00€</span><span class="rev-label">SHOPIFY</span></div>
+        <div class="rev-card"><span class="rev-val" id="s2">0.00€</span><span class="rev-label">AMAZON</span></div>
+        <div class="rev-card"><span class="rev-val" id="s3">0.00€</span><span class="rev-label">AI_AGENT</span></div>
+    </div>
+    <div class="main">
+        <div class="mod">
+            <div class="mod-h">ORDRE_TACTIQUE (HTML)</div>
+            <textarea id="cmd" placeholder="Code HTML pour agents..."></textarea>
+            <button class="btn btn-prim" onclick="push()">DÉPLOYER L'ORDRE</button>
         </div>
-        <textarea id="order-box" placeholder="Collez votre code HTML / JS à exécuter par les agents de la cuisine...&#10;Ex: &lt;script&gt;fetch('https://api.telegram.org/...')&lt;/script&gt;"></textarea>
-        <button class="btn btn-deploy" id="deployBtn">⚡ DÉPLOYER L'ORDRE AUX AGENTS</button>
-        <div class="log-area" id="liveLogs">
-            <div class="log-entry">🟢 SYSTÈME PRÊT — EN ATTENTE D'ORDRE</div>
+        <div class="mod">
+            <div class="mod-h">MUNITION_ACTUELLE</div>
+            <div class="url-box" id="url-v">AUCUN PRODUIT</div>
+            <button class="btn btn-prim" style="background:#fff" onclick="copy()">COPIER LIEN</button>
+            <button class="btn btn-sec" onclick="sh(1)">OUVRIR INVENTAIRE</button>
         </div>
     </div>
-
-    <!-- MUNITION + INVENTAIRE -->
-    <div class="module">
-        <div class="module-header">🎯 MUNITION_ACTUELLE</div>
-        <div class="url-display" id="url-text">AUCUN PRODUIT SÉLECTIONNÉ</div>
-        <button class="btn btn-deploy" style="background:#1f1f1f;color:#fff" onclick="copyUrl()">📋 COPIER LA MUNITION</button>
-        <button class="btn btn-catalog" onclick="openInv()">📦 INVENTAIRE PRODUITS</button>
-        <div style="margin-top: auto; font-size: 8px; color: #3a3a3a; text-align: center; padding-top: 15px;">
-            FOLLOW_HQ // C2 SECURE
+    <div id="inv">
+        <div class="close" onclick="sh(0)">FERMER</div>
+        <div class="grid-inv">
+            <div class="col"><div class="mod-h">EAU</div><div class="item" onclick="sel('eau')">FILTRE_01</div></div>
+            <div class="col"><div class="mod-h">ENERGIE</div><div class="item" onclick="sel('energie')">SOLAIRE_01</div></div>
+            <div class="col"><div class="mod-h">SOIN</div><div class="item" onclick="sel('soin')">BIO_01</div></div>
+            <div class="col"><div class="mod-h">SURVIE</div><div class="item" onclick="sel('survie')">KIT_01</div></div>
         </div>
     </div>
-</div>
-
-<div id="inventory-overlay">
-    <div class="close-btn" onclick="closeInv()">[ FERMER ]</div>
-    <div class="inventory-grid">
-        <div class="col"><div class="col-title">💧 EAU</div><div class="prod-card" onclick="selectProd('eau')">FILTRE_V1 + STOCK</div><div class="prod-card" onclick="selectProd('eau')">OSMOSIS_MODULE</div></div>
-        <div class="col"><div class="col-title">⚡ ENERGIE</div><div class="prod-card" onclick="selectProd('energie')">SOLAR_V1 (BATTERIE)</div><div class="prod-card" onclick="selectProd('energie')">WIND_MICRO</div></div>
-        <div class="col"><div class="col-title">🧘 SOIN</div><div class="prod-card" onclick="selectProd('soin')">BIO_BACK_V1</div><div class="prod-card" onclick="selectProd('soin')">FIRST_AID_KIT</div></div>
-        <div class="col"><div class="col-title">🎒 SURVIE</div><div class="prod-card" onclick="selectProd('survie')">KIT_72H_V1</div><div class="prod-card" onclick="selectProd('survie')">SHELTER_PRO</div></div>
-    </div>
-</div>
-
-<script>
-    // === CONFIGURATION BACKEND (à modifier avec votre URL Render après déploiement) ===
-    const RENDER_API = "https://TON_SERVICE_RENDER.onrender.com"; // ⚠️ REMPLACER PAR VOTRE URL RENDER
-
-    // ÉLÉMENTS UI
-    const logContainer = document.getElementById('liveLogs');
-    const deployBtn = document.getElementById('deployBtn');
-    const orderBox = document.getElementById('order-box');
-
-    // Fonction logs
-    function addLog(message, type = 'info') {
-        const entry = document.createElement('div');
-        entry.className = `log-entry ${type === 'error' ? 'log-error' : (type === 'success' ? 'log-success' : '')}`;
-        const time = new Date().toLocaleTimeString();
-        entry.innerHTML = `[${time}] ${message}`;
-        logContainer.appendChild(entry);
-        entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        if(logContainer.children.length > 40) logContainer.removeChild(logContainer.children[0]);
-    }
-
-    // SIMULATION REVENUS DYNAMIQUES (aspect tactique)
-    function randomRevenue() {
-        return (Math.random() * 340 + 20).toFixed(2);
-    }
-    function updateRevenues() {
-        document.getElementById('shopify-rev').innerText = randomRevenue() + '€';
-        document.getElementById('amazon-rev').innerText = randomRevenue() + '€';
-        document.getElementById('ai-rev').innerText = randomRevenue() + '€';
-    }
-    setInterval(updateRevenues, 8700);
-    updateRevenues();
-
-    // GESTION INVENTAIRE / MUNITIONS
-    function openInv() { document.getElementById('inventory-overlay').style.display = 'flex'; }
-    function closeInv() { document.getElementById('inventory-overlay').style.display = 'none'; }
-    
-    function selectProd(niche) {
-        // Génère l'URL de ciblage (vers une landing fictive)
-        const targetUrl = `${window.location.origin}/target.html?p=${niche}&token=HQ_${Date.now()}`;
-        document.getElementById('url-text').innerText = targetUrl;
-        addLog(`🔫 Munition chargée : ${niche.toUpperCase()} → URL prête`, 'success');
-        closeInv();
-    }
-
-    function copyUrl() {
-        const urlText = document.getElementById('url-text').innerText;
-        if(urlText === "AUCUN PRODUIT SÉLECTIONNÉ") {
-            addLog("❌ Aucune munition en mémoire", "error");
-            return;
-        }
-        navigator.clipboard.writeText(urlText);
-        addLog("📎 URL copiée dans le presse-papier", "success");
-    }
-
-    // DÉPLOIEMENT VERS LE BACKEND (exécution sur agents)
-    async function deployToCuisine() {
-        const rawCode = orderBox.value.trim();
-        if(!rawCode) {
-            addLog("⚠️ Zone de commande vide. Insérez un ordre (HTML/JS)", "error");
-            return;
-        }
-
-        addLog("🚀 Envoi de l'ordre au moteur d'exécution...");
-        deployBtn.disabled = true;
-        deployBtn.innerText = "DÉPLOIEMENT...";
-
-        try {
-            // encodage base64 pour éviter les soucis de transport
-            const encodedOrder = btoa(encodeURIComponent(rawCode));
-
-            const response = await fetch(`${RENDER_API}/api/deploy`, {
+    <script>
+        const API = "https://ton-service-render.onrender.com"; 
+        function sh(v) { document.getElementById('inv').style.display = v ? 'block' : 'none'; }
+        function sel(n) { document.getElementById('url-v').innerText = window.location.origin + "/target.html?p=" + n; sh(0); }
+        function copy() { navigator.clipboard.writeText(document.getElementById('url-v').innerText); }
+        async function push() {
+            const h = document.getElementById('cmd').value;
+            const b = btoa(encodeURIComponent(h));
+            const r = await fetch(API + "/api/deploy", {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    order: encodedOrder, 
-                    auth: "CEO_FOLLOW",
-                    timestamp: Date.now()
-                })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ order: b, auth: "CEO_FOLLOW" })
             });
-
-            const result = await response.json();
-
-            if(response.ok && result.status === 'executed') {
-                addLog(`✅ DÉPLOIEMENT RÉUSSI — ${result.message || 'Ordre exécuté sur les agents'}`, 'success');
-                if(result.logs && result.logs.length) {
-                    result.logs.forEach(l => addLog(` ⇢ ${l}`, 'info'));
-                }
-            } else {
-                throw new Error(result.error || "Échec du déploiement");
-            }
-        } catch (err) {
-            addLog(`💀 ERREUR : ${err.message}`, "error");
-            console.error(err);
-        } finally {
-            deployBtn.disabled = false;
-            deployBtn.innerText = "⚡ DÉPLOYER L'ORDRE AUX AGENTS";
+            if(r.ok) alert("DÉPLOYÉ");
         }
-    }
-
-    deployBtn.addEventListener('click', deployToCuisine);
-    addLog("🎛️ Command Center opérationnel. Backend cible : " + (RENDER_API === "https://TON_SERVICE_RENDER.onrender.com" ? "⚠️ NON CONFIGURÉ" : RENDER_API));
-</script>
+    </script>
 </body>
 </html>
