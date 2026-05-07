@@ -19,14 +19,13 @@
             color: var(--text-color);
             font-family: 'JetBrains+Mono', monospace;
             margin: 0;
-            padding: 10px; /* Réduit */
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            height: 98vh; /* Évite le scroll */
+            height: 98vh;
             overflow: hidden;
         }
 
-        /* HEADER & STATS */
         header {
             display: flex;
             justify-content: space-between;
@@ -36,12 +35,9 @@
             margin-bottom: 10px;
         }
 
-        .logo { font-size: 0.9em; font-weight: bold; }
+        .logo { font-size: 0.9em; font-weight: bold; color: var(--accent-green); }
 
-        .stats-bar {
-            display: flex;
-            gap: 10px;
-        }
+        .stats-bar { display: flex; gap: 10px; }
 
         .stat-item {
             background: var(--panel-bg);
@@ -51,17 +47,14 @@
             font-size: 0.8em;
         }
 
-        .stat-item span {
-            color: var(--accent-green);
-        }
+        .stat-item span { color: var(--accent-green); }
 
-        /* MAIN DASHBOARD */
         .dashboard {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             flex-grow: 1;
-            min-height: 0; /* Important pour le flex */
+            min-height: 0;
         }
 
         .column {
@@ -71,7 +64,7 @@
             display: flex;
             flex-direction: column;
             transition: all 0.3s ease;
-            overflow: hidden;
+            overflow-y: auto;
         }
 
         .column-header {
@@ -81,67 +74,59 @@
             padding-bottom: 5px;
             color: var(--accent-green);
             text-transform: uppercase;
-            letter-spacing: 1px;
             font-size: 0.85em;
         }
 
         .content-area {
             flex-grow: 1;
-            font-size: 0.75em; /* Plus compact */
-            line-height: 1.2;
-            color: #888;
+            font-size: 0.75em;
         }
 
-        /* CONSOLE & INPUT RÉDUITS */
-        .console-area {
-            margin-top: 10px;
-            background: #000;
-            border: 1px solid var(--accent-green);
-            padding: 8px;
-            height: 70px; /* Plus petit */
-            overflow-y: auto;
-            font-size: 0.7em;
-            color: #00ff00;
-        }
-
+        /* BARRE DE PILOTAGE AGENT */
         .input-line {
             display: flex;
-            margin-top: 8px;
-            gap: 8px;
+            margin-top: 10px;
+            gap: 10px;
+            background: #111;
+            padding: 10px;
+            border: 1px solid var(--accent-green);
         }
 
         input {
             flex-grow: 1;
-            background: #111;
-            border: 1px solid var(--accent-green);
-            color: white;
-            padding: 8px;
-            font-size: 0.8em;
+            background: #000;
+            border: 1px solid #444;
+            color: var(--accent-green);
+            padding: 10px;
             font-family: inherit;
+            outline: none;
         }
 
         button {
             background: var(--accent-green);
             color: black;
             border: none;
-            padding: 8px 15px;
+            padding: 10px 20px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.8em;
+            text-transform: uppercase;
         }
 
-        /* ANIMATION ACTIVE */
-        .active-dispatch {
-            border: 2px solid var(--accent-green) !important;
-            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.2);
-            background: #1a1a1a;
+        button:hover { background: #00cc00; }
+
+        /* Style des produits injectés */
+        .product-card {
+            border: 1px dashed var(--accent-green);
+            padding: 8px;
+            margin-top: 5px;
+            background: #050505;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">FOLLOW_HQ // CEO_ACCESS</div>
+        <div class="logo">FOLLOW_HQ // MULTI_AGENT_SYSTEM</div>
         <div class="stats-bar">
             <div class="stat-item">SHOPIFY: <span id="stat-shopify">0.00€</span></div>
             <div class="stat-item">AMAZON: <span id="stat-amazon">0.00€</span></div>
@@ -151,76 +136,72 @@
 
     <div class="dashboard">
         <div class="column" id="eau">
-            <div class="column-header">01_EAU</div>
-            <div class="content-area">LOG: Prêt pour analyse de pureté...</div>
+            <div class="column-header">01_ORDRES_IA</div>
+            <div class="content-area" id="content-ordres">
+                En attente de signal réseau...
+            </div>
         </div>
         <div class="column" id="energie">
             <div class="column-header">02_ENERGIE</div>
-            <div class="content-area">LOG: Monitoring des tensions...</div>
+            <div class="content-area">SCANNER_ACTIF: Monitoring...</div>
         </div>
         <div class="column" id="soin">
             <div class="column-header">03_SOIN</div>
-            <div class="content-area">LOG: Inventaire médical OK...</div>
+            <div class="content-area">LOG: Prêt.</div>
         </div>
         <div class="column" id="survie">
             <div class="column-header">04_SURVIE</div>
-            <div class="content-area">LOG: Protocoles 72h chargés...</div>
+            <div class="content-area">LOG: Prêt.</div>
         </div>
     </div>
 
-    <div class="console-area" id="console">
-        > SYSTEM BOOT... OK<br>
-        > DASHBOARD COMPACT MODE ACTIVE.
-    </div>
-
     <div class="input-line">
-        <input type="text" id="user-input" placeholder="Analyse rapide client...">
-        <button onclick="manualDispatch()">DISPATCH</button>
+        <input type="text" id="test-keyword" placeholder="Entrez un mot-clé (ex: eau) pour lancer l'agent logistique...">
+        <button onclick="triggerAiTest()">TESTER L'IA</button>
     </div>
 
     <script>
-        const decisionTable = {
-            'eau': ['filtre', 'potable', 'soif', 'pollution', 'bacterie', 'riviere', 'survie', 'eau'],
-            'energie': ['batterie', 'solaire', 'panneau', 'blackout', 'electricite', 'lumiere', 'coupure', 'courant'],
-            'soin': ['blessure', 'infection', 'douleur', 'pharmacie', 'soin', 'pansement', 'sante', 'hopital'],
-            'survie': ['sac', 'evacuation', 'campement', 'abri', 'froid', 'boussole', '72h', 'foret']
-        };
-
-        function logConsole(msg) {
-            const cons = document.getElementById('console');
-            cons.innerHTML += `<br>> ${msg}`;
-            cons.scrollTop = cons.scrollHeight;
+        // 1. Rafraîchir les ordres venant du serveur (Agent Logistique)
+        async function refreshDashboard() {
+            try {
+                const res = await fetch('/api/get-order');
+                if (res.ok) {
+                    const html = await res.text();
+                    document.getElementById('content-ordres').innerHTML = html;
+                }
+            } catch (e) { console.error("Sync Error"); }
         }
 
-        function manualDispatch() {
-            const input = document.getElementById('user-input');
-            dispatchRequest(input.value);
-            input.value = '';
-        }
+        // 2. Simuler l'agent Éclaireur sans passer par la console
+        async function triggerAiTest() {
+            const kw = document.getElementById('test-keyword').value;
+            if(!kw) return alert("Veuillez entrer un mot-clé !");
 
-        function dispatchRequest(message) {
-            const msg = message.toLowerCase();
-            let target = null;
-            for (const [column, keywords] of Object.entries(decisionTable)) {
-                if (keywords.some(kw => msg.includes(kw))) { target = column; break; }
-            }
-            if (target) {
-                activateColumn(target);
-                logConsole(`CIBLE : [${target.toUpperCase()}]`);
-            } else {
-                logConsole(`ERROR: NO TARGET`);
-            }
-        }
+            document.getElementById('content-ordres').innerHTML = "L'Agent Logistique cherche sur Shopify...";
 
-        function activateColumn(id) {
-            document.querySelectorAll('.column').forEach(c => c.classList.remove('active-dispatch'));
-            const col = document.getElementById(id);
-            if (col) {
-                col.classList.add('active-dispatch');
-                setTimeout(() => col.classList.remove('active-dispatch'), 3000);
+            try {
+                const response = await fetch('/api/agent-alert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        keyword: kw,
+                        platform: "MANUAL_TEST",
+                        user_issue: "Test du CEO en direct",
+                        auth: "CEO_FOLLOW"
+                    })
+                });
+                
+                const data = await response.json();
+                console.log("Agent Response:", data);
+                
+                // Forcer la mise à jour visuelle immédiate
+                setTimeout(refreshDashboard, 1000);
+            } catch (err) {
+                alert("Erreur de connexion au serveur");
             }
         }
 
+        // 3. Mise à jour des Stats
         async function updateStats() {
             try {
                 const res = await fetch('/api/stats');
@@ -230,7 +211,10 @@
                 document.getElementById('stat-ai').innerText = data.ai + "€";
             } catch (e) {}
         }
-        setInterval(updateStats, 5000);
+
+        // Boucles de rafraîchissement
+        setInterval(refreshDashboard, 3000); // Check les ordres IA toutes les 3s
+        setInterval(updateStats, 5000); // Check les stats toutes les 5s
     </script>
 </body>
 </html>
