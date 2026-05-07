@@ -1,12 +1,14 @@
 {
-  "name": "follow-hq",
+  "name": "followtrend-shop",
   "version": "1.0.0",
-  "main": "server.js",
   "scripts": {
+    "dev": "node server.js",
+    "build": "echo 'No build step required'",
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3"
   }
 }
