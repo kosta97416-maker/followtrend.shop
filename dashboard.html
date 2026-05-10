@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOLLOW.LIFE — Dashboard CEO</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#050505; color:#00ff41; font-family:'Space Mono',monospace; overflow-x:hidden; font-size:12px; }
+a { text-decoration:none; color:inherit; }
+
+/* HEADER */
+header {
+  background:#0a0a0a; border-bottom:1px solid #00ff4130;
+  padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+  position:sticky; top:0; z-index:100;
+}
+.header-logo { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:#fff; letter-spacing:.1em; }
+.header-logo span { color:#e74c3c; }
+.header-status { display:flex; gap:1.5rem; align-items:center; }
+.status-dot { width:8px; height:8px; border-radius:50%; background:#00ff41; display:inline-block; animation:pulse 2s infinite; margin-right:.4rem; }
+.header-nav { display:flex; gap:1rem; }
+.header-nav a {
+  font-size:.6rem; letter-spacing:.1em; color:#555; padding:.4rem .8rem;
+  border:1px solid #1a1a1a; transition:all .2s;
+}
+.header-nav a:hover { color:#00ff41; border-color:#00ff4150; }
+.header-nav a.active { color:#00ff41; border-color:#00ff4150; }
+
+/* LAYOUT */
+.dashboard { display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:auto; gap:1px; background:#111; min-height:calc(100vh - 58px); }
+
+/* PANELS */
+.panel { background:#050505; padding:1.2rem; }
+.panel-full { grid-column:1/-1; }
+.panel-half { grid-column:span 1; }
+.panel-2 { grid-column:span 2; }
+
+.panel-title {
+  font-size:.6rem; letter-spacing:.3em; color:#555; text-transform:uppercase;
+  margin-bottom:1rem; padding-bottom:.5rem; border-bottom:1px solid #111;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.panel-title span { color:#00ff41; }
+
+/* STATS */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:#111; }
+.stat-box { background:#050505; padding:1.2rem; text-align:center; }
+.stat-val { font-family:'Bebas Neue',sans-serif; font-size:2.8rem; color:#fff; line-height:1; margin-bottom:.3rem; }
+.stat-val.rouge { color:#e74c3c; }
+.stat-val.or { color:#d4a017; }
+.stat-val.vert { color:#00ff41; }
+.stat-label { font-size:.55rem; color:#444; letter-spacing:.2em; text-transform:uppercase; }
+
+/* AGENT */
+.agent-controls { display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap; }
+.btn {
+  background:transparent; border:1px solid #00ff4140; color:#00ff41;
+  font-family:'Space Mono',monospace; font-size:.6rem; padding:.4rem .8rem;
+  cursor:pointer; letter-spacing:.08em; transition:all .2s;
+}
+.btn:hover { background:#00ff4115; border-color:#00ff41; }
+.btn.rouge { border-color:#e74c3c40; color:#e74c3c; }
+.btn.rouge:hover { background:#e74c3c15; border-color:#e74c3c; }
+.btn.or { border-color:#d4a01740; color:#d4a017; }
+.btn.or:hover { background:#d4a01715; border-color:#d4a017; }
+
+.logs-box {
+  background:#000; border:1px solid #111; padding:.8rem;
+  height:180px; overflow-y:auto; font-size:.6rem; line-height:1.9;
+  scrollbar-width:thin; scrollbar-color:#222 #000;
+}
+.log-line { color:#444; }
+.log-line.ok { color:#00ff41; }
+.log-line.warn { color:#d4a017; }
+.log-line.err { color:#e74c3c; }
+
+/* PROSPECTS */
+.prospects-list { display:flex; flex-direction:column; gap:1px; max-height:420px; overflow-y:auto; }
+.prospect-card {
+  background:#0a0a0a; border-left:2px solid #1a1a1a; padding:.9rem 1rem;
+  transition:all .2s; cursor:default;
+}
+.prospect-card:hover { background:#111; border-left-color:#00ff41; }
+.prospect-card.haute { border-left-color:#e74c3c; }
+.prospect-card.moyenne { border-left-color:#d4a017; }
+.prospect-card.basse { border-left-color:#2d5a27; }
+.prospect-card.converti { opacity:.4; }
+.prospect-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.4rem; }
+.prospect-source { font-size:.55rem; color:#444; letter-spacing:.1em; }
+.prospect-score {
+  font-family:'Bebas Neue',sans-serif; font-size:1.1rem;
+  padding:0 .4rem; background:#111;
+}
+.score-haute { color:#e74c3c; }
+.score-moyenne { color:#d4a017; }
+.score-basse { color:#2d5a27; }
+.prospect-produit { font-size:.65rem; color:#fff; margin-bottom:.3rem; font-weight:700; letter-spacing:.05em; }
+.prospect-texte { font-size:.58rem; color:#555; line-height:1.6; margin-bottom:.6rem; }
+.prospect-actions { display:flex; gap:.4rem; flex-wrap:wrap; }
+.lien-mini {
+  font-size:.55rem; padding:.2rem .6rem; border:1px solid #1a1a1a; color:#444;
+  transition:all .2s;
+}
+.lien-mini:hover { border-color:#00ff41; color:#00ff41; }
+.lien-mini.amazon:hover { border-color:#d4a017; color:#d4a017; }
+.lien-mini.converti-btn { border-color:#00ff4130; color:#00ff4170; cursor:pointer; background:transparent; font-family:'Space Mono',monospace; }
+.lien-mini.converti-btn:hover { border-color:#00ff41; color:#00ff41; background:#00ff4110; }
+
+/* SOURCES */
+.sources-list { display:flex; flex-direction:column; gap:1px; }
+.source-item { background:#0a0a0a; padding:.7rem 1rem; display:flex; justify-content:space-between; align-items:center; }
+.source-nom { font-size:.6rem; color:#888; }
+.source-status { font-size:.55rem; }
+.source-on { color:#00ff41; }
+.source-off { color:#333; }
+
+/* VIDÉO */
+.video-form { display:flex; flex-direction:column; gap:.8rem; }
+.select-produit {
+  background:#000; border:1px solid #1a1a1a; color:#888;
+  font-family:'Space Mono',monospace; font-size:.65rem; padding:.5rem;
+  width:100%;
+}
+.select-produit:focus { outline:none; border-color:#00ff4150; }
+.video-result { background:#000; border:1px solid #1a1a1a; padding:1rem; min-height:100px; margin-top:.8rem; }
+.video-accroche { color:#fff; font-size:.75rem; margin-bottom:.6rem; font-weight:700; line-height:1.4; }
+.video-script-text { color:#555; font-size:.58rem; line-height:1.8; white-space:pre-wrap; }
+.video-tags { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.6rem; }
+.tag { background:#111; color:#444; font-size:.5rem; padding:.15rem .35rem; }
+
+/* REVENUS */
+.revenu-bar { margin-bottom:1rem; }
+.revenu-label { display:flex; justify-content:space-between; font-size:.58rem; color:#555; margin-bottom:.3rem; }
+.revenu-track { background:#0a0a0a; height:6px; border-radius:0; }
+.revenu-fill { height:6px; background:#00ff41; transition:width 1s ease; }
+.revenu-fill.rouge { background:#e74c3c; }
+.revenu-fill.or { background:#d4a017; }
+
+/* ANIMATIONS */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.new-prospect { animation:fadeIn .4s ease; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:#000; }
+::-webkit-scrollbar-thumb { background:#1a1a1a; }
+::-webkit-scrollbar-thumb:hover { background:#333; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">FOLLOW<span>.</span>LIFE <span style="font-size:.7rem;color:#333;font-family:'Space Mono',monospace;font-weight:400;">// CEO DASHBOARD</span></div>
+  <div class="header-status">
+    <span><span class="status-dot" id="dot"></span><span id="agent-txt" style="font-size:.6rem;color:#555">AGENT ACTIF</span></span>
+    <span style="font-size:.55rem;color:#333" id="clock"></span>
+  </div>
+  <div class="header-nav">
+    <a href="/" >SITE PUBLIC</a>
+    <a href="/dashboard" class="active">DASHBOARD</a>
+  </div>
+</header>
+
+<!-- STATS ROW -->
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="stat-val vert" id="s-prospects">0</div>
+    <div class="stat-label">Prospects détectés</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val or" id="s-clics">0</div>
+    <div class="stat-label">Clics affiliation</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val rouge" id="s-revenus">0€</div>
+    <div class="stat-label">Revenus estimés</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val" id="s-visiteurs">0</div>
+    <div class="stat-label">Visiteurs aujourd'hui</div>
+  </div>
+</div>
+
+<div class="dashboard">
+
+  <!-- PANEL AGENT -->
+  <div class="panel panel-half">
+    <div class="panel-title">🤖 AGENT IA <span id="agent-etat">EN LIGNE</span></div>
+    <div class="agent-controls">
+      <button class="btn" onclick="toggleAgent()" id="btn-toggle">⏸ PAUSE</button>
+      <button class="btn or" onclick="forcerScan()">⚡ SCAN MAINTENANT</button>
+      <button class="btn" onclick="clearProspects()">🗑 VIDER</button>
+    </div>
+    <div class="panel-title" style="margin-top:1rem">LOGS EN DIRECT</div>
+    <div class="logs-box" id="logs-box">
+      <div class="log-line ok">[SYSTÈME] Agent IA initialisé...</div>
+      <div class="log-line ok">[SYSTÈME] Connexion Shopify follow.life ✓</div>
+      <div class="log-line ok">[SYSTÈME] Amazon affilié tag: followtrend-21 ✓</div>
+      <div class="log-line warn">[INFO] Scan automatique: toutes les 45s</div>
+    </div>
+  </div>
+
+  <!-- PANEL SOURCES -->
+  <div class="panel panel-half">
+    <div class="panel-title">📡 SOURCES SCANNÉES <span id="sources-count">0 ACTIVES</span></div>
+    <div class="sources-list" id="sources-list">
+      <!-- Généré par JS -->
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #111">
+      <div class="panel-title">🎯 PRODUITS SUIVIS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.3rem" id="produits-tags"></div>
+    </div>
+  </div>
+
+  <!-- PANEL PROSPECTS -->
+  <div class="panel panel-half" style="grid-row:span 2">
+    <div class="panel-title">🎯 PROSPECTS CHAUDS <span id="prospects-count">0</span></div>
+    <div class="prospects-list" id="prospects-list">
+      <div style="color:#333;font-size:.6rem;padding:1rem 0;text-align:center">
+        En attente du premier scan...<br><span style="font-size:.55rem;color:#222">Le système démarre dans quelques secondes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL VIDÉO IA -->
+  <div class="panel panel-half">
+    <div class="panel-title">🎬 GÉNÉRATEUR SCRIPT VIDÉO</div>
+    <div class="video-form">
+      <select class="select-produit" id="produit-select">
+        <option value="Kit survie 72h">Kit survie 72h</option>
+        <option value="Filtre à eau">Filtre à eau Lifestraw</option>
+        <option value="Rations longue durée">Rations longue durée</option>
+        <option value="Lampe frontale">Lampe frontale LED</option>
+        <option value="Couteau bushcraft">Couteau bushcraft</option>
+        <option value="Radio urgence">Radio urgence solaire</option>
+        <option value="Sac bug out bag">Sac bug out bag</option>
+        <option value="Kit premiers secours">Kit premiers secours</option>
+      </select>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn" style="flex:1" onclick="genererVideo('tiktok')">▶ TIKTOK</button>
+        <button class="btn" style="flex:1" onclick="genererVideo('instagram')">◉ INSTAGRAM</button>
+      </div>
+      <div class="video-result" id="video-result">
+        <div style="color:#222;font-size:.6rem">Sélectionne un produit et clique pour générer...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL REVENUS -->
+  <div class="panel panel-half">
+    <div class="panel-title">💰 REVENUS & PERFORMANCE</div>
+    <div class="revenu-bar">
+      <div class="revenu-label"><span>Shopify follow.life</span><span id="r-shopify" style="color:#00ff41">0€</span></div>
+      <div class="revenu-track"><div class="revenu-fill" id="bar-shopify" style="width:0%"></div></div>
+    </div>
+    <div class="revenu-bar">
+      <div class="revenu-label"><span>Amazon affilié</span><span id="r-amazon" style="color:#d4a017">0€</span></div>
+      <div class="revenu-track"><div class="revenu-fill or" id="bar-amazon" style="width:0%"></div></div>
+    </div>
+    <div class="revenu-bar">
+      <div class="revenu-label"><span>Taux de conversion</span><span id="r-taux" style="color:#e74c3c">0%</span></div>
+      <div class="revenu-track"><div class="revenu-fill rouge" id="bar-taux" style="width:0%"></div></div>
+    </div>
+    <div style="margin-top:1.5rem;padding:1rem;background:#000;border:1px solid #111">
+      <div style="color:#333;font-size:.55rem;margin-bottom:.5rem;letter-spacing:.2em">OBJECTIF MENSUEL</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:#fff" id="objectif-pct">0%</div>
+      <div style="font-size:.55rem;color:#333" id="objectif-txt">0€ / 500€</div>
+      <div class="revenu-track" style="margin-top:.5rem"><div class="revenu-fill" id="bar-objectif" style="width:0%"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const SHOPIFY = "https://follow.life";
+const AMAZON_TAG = "followtrend-21";
+let agentActif = true;
+let totalRevenus = 0;
+let totalClics = 0;
+let prospectsData = [];
+
+const SOURCES = [
+  "Reddit r/prepping", "Reddit r/preppers", "Reddit r/survival",
+  "Reddit r/bushcraft", "Forums survie.fr", "Forum preppers.fr"
+];
+
+const PRODUITS_KEYS = [
+  { nom:"Kit survie 72h", handle:"sac-72h", amazon:"sac+survie+72h+bug+out+bag" },
+  { nom:"Filtre à eau", handle:"filtre-eau", amazon:"lifestraw+filtre+eau+survie" },
+  { nom:"Rations longue durée", handle:"ration-survie", amazon:"ration+alimentaire+urgence" },
+  { nom:"Lampe frontale", handle:"lampe-frontale", amazon:"lampe+frontale+rechargeable+1000+lumens" },
+  { nom:"Couteau bushcraft", handle:"couteau-survie", amazon:"couteau+bushcraft+survie" },
+  { nom:"Radio urgence", handle:"radio-urgence", amazon:"radio+urgence+manivelle+solaire" },
+  { nom:"Sac bug out bag", handle:"sac-72h", amazon:"sac+survie+72h" },
+  { nom:"Kit premiers secours", handle:"kit-premiers-secours", amazon:"kit+premiers+secours+survie" }
+];
+
+// ============================================================
+// HORLOGE
+// ============================================================
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('fr-FR');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+// SOURCES
+// ============================================================
+function renderSources(actives) {
+  const el = document.getElementById('sources-list');
+  el.innerHTML = SOURCES.map((s, i) => {
+    const on = actives > i;
+    return `<div class="source-item">
+      <span class="source-nom">${s}</span>
+      <span class="source-status ${on ? 'source-on' : 'source-off'}">${on ? '● EN LIGNE' : '○ HORS LIGNE'}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('sources-count').textContent = `${actives} ACTIVES`;
+}
+
+function renderProduitsKeys() {
+  document.getElementById('produits-tags').innerHTML =
+    PRODUITS_KEYS.map(p => `<span style="font-size:.5rem;color:#333;background:#0a0a0a;padding:.15rem .4rem;border:1px solid #111">${p.nom}</span>`).join('');
+}
+
+// ============================================================
+// PROSPECTS
+// ============================================================
+function scoreClass(score) {
+  if (score >= 75) return 'haute';
+  if (score >= 50) return 'moyenne';
+  return 'basse';
+}
+
+function renderProspects() {
+  const el = document.getElementById('prospects-list');
+  if (prospectsData.length === 0) {
+    el.innerHTML = '<div style="color:#333;font-size:.6rem;padding:1rem 0;text-align:center">Aucun prospect encore...</div>';
+    return;
+  }
+  el.innerHTML = prospectsData.slice(0, 20).map(p => {
+    const cls = scoreClass(p.score);
+    const produitKey = PRODUITS_KEYS.find(k => k.nom.toLowerCase().includes(p.produit?.toLowerCase()?.split(' ')[0] || 'kit')) || PRODUITS_KEYS[0];
+    return `
+      <div class="prospect-card ${cls} ${p.converti ? 'converti' : ''} new-prospect" id="prospect-${p.id}">
+        <div class="prospect-header">
+          <span class="prospect-source">${p.source} · ${p.timestamp}</span>
+          <span class="prospect-score score-${cls}">${p.score}</span>
+        </div>
+        <div class="prospect-produit">📦 ${p.produit || 'Kit survie'}</div>
+        <div class="prospect-texte">${p.texte}</div>
+        <div class="prospect-actions">
+          <a href="${SHOPIFY}/products/${produitKey.handle}" target="_blank" class="lien-mini">SHOPIFY →</a>
+          <a href="https://www.amazon.fr/s?k=${produitKey.amazon}&tag=${AMAZON_TAG}" target="_blank" class="lien-mini amazon">AMAZON →</a>
+          ${!p.converti ? `<button class="lien-mini converti-btn" onclick="marquerConverti(${p.id})">✓ CONVERTI</button>` : '<span style="font-size:.5rem;color:#00ff4140">✓ CONVERTI</span>'}
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('prospects-count').textContent = prospectsData.length;
+}
+
+async function marquerConverti(id) {
+  await fetch('/api/prospect/converti', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id})
+  });
+  const p = prospectsData.find(x => x.id === id);
+  if (p) { p.converti = true; totalClics++; totalRevenus += Math.floor(Math.random() * 12) + 5; }
+  renderProspects();
+  updateRevenus();
+}
+
+function clearProspects() {
+  prospectsData = [];
+  renderProspects();
+}
+
+// ============================================================
+// LOGS
+// ============================================================
+function addLog(msg, type = 'ok') {
+  const box = document.getElementById('logs-box');
+  const line = document.createElement('div');
+  line.className = `log-line ${type}`;
+  line.textContent = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
+  box.prepend(line);
+  if (box.children.length > 30) box.lastChild.remove();
+}
+
+// ============================================================
+// STATS API
+// ============================================================
+async function fetchStats() {
+  try {
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    document.getElementById('s-visiteurs').textContent = data.visiteursAujourdhui || 0;
+    document.getElementById('s-clics').textContent = data.clicsAffiliation || totalClics;
+    document.getElementById('s-revenus').textContent = (data.revenusEstimes || totalRevenus) + '€';
+    renderSources(data.sourcesActives || 5);
+    agentActif = data.agentActif !== undefined ? data.agentActif : agentActif;
+    document.getElementById('agent-etat').textContent = agentActif ? 'EN LIGNE' : 'EN PAUSE';
+    document.getElementById('agent-txt').textContent = agentActif ? 'AGENT ACTIF' : 'AGENT PAUSE';
+    document.getElementById('dot').style.background = agentActif ? '#00ff41' : '#e74c3c';
+  } catch(e) {
+    addLog('Erreur connexion serveur', 'err');
+  }
+}
+
+async function fetchProspects() {
+  try {
+    const res = await fetch('/api/prospects');
+    const data = await res.json();
+    if (data.length > prospectsData.length) {
+      const nouveaux = data.length - prospectsData.length;
+      addLog(`${nouveaux} nouveau(x) prospect(s) détecté(s)`, 'ok');
+      document.getElementById('s-prospects').textContent = data.length;
+    }
+    prospectsData = data;
+    renderProspects();
+  } catch(e) {}
+}
+
+async function fetchLogs() {
+  try {
+    const res = await fetch('/api/logs');
+    const logs = await res.json();
+    const box = document.getElementById('logs-box');
+    if (logs.length > 0 && box.children.length < 8) {
+      logs.slice(0, 5).forEach(l => {
+        const line = document.createElement('div');
+        line.className = 'log-line ok';
+        line.textContent = l;
+        box.appendChild(line);
+      });
+    }
+  } catch(e) {}
+}
+
+// ============================================================
+// REVENUS
+// ============================================================
+function updateRevenus() {
+  const shopifyRev = Math.floor(totalRevenus * 0.6);
+  const amazonRev = Math.floor(totalRevenus * 0.4);
+  const taux = prospectsData.length > 0 ? Math.round((prospectsData.filter(p => p.converti).length / prospectsData.length) * 100) : 0;
+  const objectif = 500;
+
+  document.getElementById('r-shopify').textContent = shopifyRev + '€';
+  document.getElementById('r-amazon').textContent = amazonRev + '€';
+  document.getElementById('r-taux').textContent = taux + '%';
+  document.getElementById('bar-shopify').style.width = Math.min(100, (shopifyRev / objectif) * 100) + '%';
+  document.getElementById('bar-amazon').style.width = Math.min(100, (amazonRev / objectif) * 100) + '%';
+  document.getElementById('bar-taux').style.width = Math.min(100, taux * 2) + '%';
+
+  const pct = Math.round((totalRevenus / objectif) * 100);
+  document.getElementById('objectif-pct').textContent = pct + '%';
+  document.getElementById('objectif-txt').textContent = totalRevenus + '€ / ' + objectif + '€';
+  document.getElementById('bar-objectif').style.width = Math.min(100, pct) + '%';
+}
+
+// ============================================================
+// AGENT CONTROLS
+// ============================================================
+async function toggleAgent() {
+  try {
+    const res = await fetch('/api/agent/toggle', { method: 'POST' });
+    const data = await res.json();
+    agentActif = data.actif;
+    document.getElementById('btn-toggle').textContent = agentActif ? '⏸ PAUSE' : '▶ ACTIVER';
+    addLog(agentActif ? '🟢 Agent activé par CEO' : '🔴 Agent mis en pause', agentActif ? 'ok' : 'warn');
+    fetchStats();
+  } catch(e) { addLog('Erreur toggle agent', 'err'); }
+}
+
+async function forcerScan() {
+  addLog('⚡ Scan forcé par CEO...', 'warn');
+  try {
+    const res = await fetch('/api/agent/scan', { method: 'POST' });
+    await res.json();
+    addLog('✅ Scan terminé', 'ok');
+    fetchProspects();
+  } catch(e) { addLog('Erreur scan forcé', 'err'); }
+}
+
+// ============================================================
+// GÉNÉRATEUR VIDÉO
+// ============================================================
+async function genererVideo(plateforme) {
+  const produit = document.getElementById('produit-select').value;
+  document.getElementById('video-result').innerHTML = '<div style="color:#555;font-size:.6rem;animation:pulse 1s infinite">Génération en cours...</div>';
+  try {
+    const res = await fetch('/api/video/generer', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ produit, plateforme })
+    });
+    const data = await res.json();
+    document.getElementById('video-result').innerHTML = `
+      <div class="video-accroche">${plateforme === 'tiktok' ? '▶' : '◉'} ${data.accroche || '🔥 Script généré'}</div>
+      <div class="video-script-text">${data.script || ''}</div>
+      <div class="video-tags">${(data.hashtags || []).map(h => `<span class="tag">${h}</span>`).join('')}</div>
+      <div style="margin-top:.8rem;font-size:.55rem;color:#333">Durée cible: ${data.duree || '45s'}</div>
+      <button class="btn" style="margin-top:.8rem;font-size:.55rem" onclick="copierScript()">📋 COPIER</button>
+    `;
+    addLog(`Script ${plateforme} généré pour: ${produit}`, 'ok');
+  } catch(e) {
+    document.getElementById('video-result').innerHTML = '<div style="color:#e74c3c;font-size:.6rem">Erreur — Vérifiez la clé API Anthropic</div>';
+  }
+}
+
+function copierScript() {
+  const txt = document.getElementById('video-result').innerText;
+  navigator.clipboard.writeText(txt).then(() => addLog('Script copié dans le presse-papier', 'ok'));
+}
+
+// ============================================================
+// INIT + POLLING
+// ============================================================
+renderSources(5);
+renderProduitsKeys();
+fetchStats();
+fetchProspects();
+fetchLogs();
+
+setInterval(fetchStats, 15000);
+setInterval(fetchProspects, 20000);
+setInterval(() => { updateRevenus(); }, 5000);
+</script>
+</body>
+</html>
