@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOLLOW.LIFE — Accès Privé</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#050505; color:#00ff41; font-family:'Space Mono',monospace;
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+body::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse at center, rgba(192,57,43,.1) 0%, transparent 60%),
+    linear-gradient(rgba(0,255,65,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,65,.02) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+.login-box {
+  background:#0a0a0a; border:1px solid #1a1a1a;
+  padding:3rem 2.5rem; width:90%; max-width:420px;
+  position:relative; z-index:10;
+  clip-path:polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+
+.logo {
+  font-family:'Bebas Neue',sans-serif; font-size:2.2rem; color:#fff;
+  letter-spacing:.1em; text-align:center; margin-bottom:.3rem;
+}
+.logo span { color:#e74c3c; }
+
+.subtitle {
+  text-align:center; color:#444; font-size:.6rem; letter-spacing:.3em;
+  text-transform:uppercase; margin-bottom:2.5rem;
+}
+
+.form-group { margin-bottom:1.2rem; }
+
+label {
+  display:block; font-size:.55rem; color:#666;
+  letter-spacing:.2em; text-transform:uppercase; margin-bottom:.5rem;
+}
+
+input[type="password"] {
+  width:100%; background:#000; border:1px solid #1a1a1a; color:#00ff41;
+  font-family:'Space Mono',monospace; font-size:.9rem;
+  padding:.9rem 1rem; outline:none; transition:border .2s;
+  letter-spacing:.1em;
+}
+input[type="password"]:focus { border-color:#00ff41; }
+input[type="password"]::placeholder { color:#222; }
+
+.btn-login {
+  width:100%; background:#e74c3c; color:#fff; border:none;
+  font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:.15em;
+  padding:1rem; cursor:pointer; transition:all .2s; margin-top:.5rem;
+}
+.btn-login:hover { background:#c0392b; }
+.btn-login:disabled { opacity:.5; cursor:not-allowed; }
+
+.error {
+  color:#e74c3c; font-size:.6rem; text-align:center;
+  margin-top:1rem; min-height:1rem; letter-spacing:.05em;
+}
+
+.warning {
+  text-align:center; margin-top:2rem; padding-top:1.5rem;
+  border-top:1px solid #1a1a1a; font-size:.55rem; color:#333;
+  letter-spacing:.1em; line-height:1.8;
+}
+.warning span { color:#d4a017; }
+
+.status {
+  position:absolute; top:1.5rem; left:1.5rem;
+  font-size:.55rem; color:#444; letter-spacing:.2em;
+}
+.status::before {
+  content:''; display:inline-block; width:6px; height:6px;
+  background:#00ff41; border-radius:50%; margin-right:.5rem;
+  animation:pulse 2s infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
+.shake { animation:shake .3s ease; }
+</style>
+</head>
+<body>
+
+<div class="status">SYSTÈME EN LIGNE</div>
+
+<div class="login-box" id="login-box">
+  <div class="logo">FOLLOW<span>.</span>LIFE</div>
+  <p class="subtitle">// ACCÈS CEO</p>
+
+  <form onsubmit="connexion(event)">
+    <div class="form-group">
+      <label for="pwd">Mot de passe</label>
+      <input type="password" id="pwd" placeholder="••••••••••" required autofocus>
+    </div>
+    <button type="submit" class="btn-login" id="btn">ACCÉDER AU DASHBOARD</button>
+    <div class="error" id="error"></div>
+  </form>
+
+  <div class="warning">
+    🔒 ACCÈS RÉSERVÉ AU CEO<br>
+    <span>Toute tentative non autorisée est journalisée</span>
+  </div>
+</div>
+
+<script>
+async function connexion(e) {
+  e.preventDefault();
+  const pwd = document.getElementById('pwd').value;
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('error');
+  const box = document.getElementById('login-box');
+
+  btn.disabled = true;
+  btn.textContent = 'VÉRIFICATION...';
+  err.textContent = '';
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      sessionStorage.setItem('follow_auth', 'ok');
+      btn.textContent = '✓ CONNEXION RÉUSSIE';
+      btn.style.background = '#00ff41';
+      btn.style.color = '#000';
+      setTimeout(() => window.location.href = '/dashboard', 600);
+    } else {
+      box.classList.add('shake');
+      err.textContent = '❌ MOT DE PASSE INCORRECT';
+      btn.disabled = false;
+      btn.textContent = 'RÉESSAYER';
+      document.getElementById('pwd').value = '';
+      setTimeout(() => box.classList.remove('shake'), 300);
+    }
+  } catch (e) {
+    err.textContent = '⚠️ ERREUR SERVEUR';
+    btn.disabled = false;
+    btn.textContent = 'RÉESSAYER';
+  }
+}
+
+// Auto-redirect si déjà connecté
+if (sessionStorage.getItem('follow_auth') === 'ok') {
+  window.location.href = '/dashboard';
+}
+</script>
+</body>
+</html>
