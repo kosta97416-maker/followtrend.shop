@@ -254,11 +254,11 @@ header {
   <div class="panel panel-half">
     <div class="panel-title">💰 REVENUS & PERFORMANCE</div>
     <div class="revenu-bar">
-      <div class="revenu-label"><span>Shopify follow.life</span><span id="r-shopify" style="color:#00ff41">0€</span></div>
+      <div class="revenu-label"><span>🛒 Ventes Shopify (100%)</span><span id="r-shopify" style="color:#00ff41">0€</span></div>
       <div class="revenu-track"><div class="revenu-fill" id="bar-shopify" style="width:0%"></div></div>
     </div>
     <div class="revenu-bar">
-      <div class="revenu-label"><span>Amazon affilié</span><span id="r-amazon" style="color:#d4a017">0€</span></div>
+      <div class="revenu-label"><span>📦 Affiliation Amazon</span><span id="r-amazon" style="color:#444">À venir</span></div>
       <div class="revenu-track"><div class="revenu-fill or" id="bar-amazon" style="width:0%"></div></div>
     </div>
     <div class="revenu-bar">
@@ -370,8 +370,7 @@ function renderProspects() {
         <div class="prospect-produit">📦 ${p.produit || 'Kit survie'}</div>
         <div class="prospect-texte">${p.texte}</div>
         <div class="prospect-actions">
-          <a href="${SHOPIFY}/products/${produitKey.handle}" target="_blank" class="lien-mini">SHOPIFY →</a>
-          <a href="https://www.amazon.fr/s?k=${produitKey.amazon}&tag=${AMAZON_TAG}" target="_blank" class="lien-mini amazon">AMAZON →</a>
+          <a href="${SHOPIFY}/products/${produitKey.handle}" target="_blank" class="lien-mini" style="border-color:#00ff4140;color:#00ff41">🛒 VOIR DANS MA BOUTIQUE →</a>
           ${!p.converti ? `<button class="lien-mini converti-btn" onclick="marquerConverti(${p.id})">✓ CONVERTI</button>` : '<span style="font-size:.5rem;color:#00ff4140">✓ CONVERTI</span>'}
         </div>
       </div>`;
@@ -462,16 +461,13 @@ async function fetchLogs() {
 // REVENUS
 // ============================================================
 function updateRevenus() {
-  const shopifyRev = Math.floor(totalRevenus * 0.6);
-  const amazonRev = Math.floor(totalRevenus * 0.4);
+  const shopifyRev = totalRevenus; // 100% Shopify maintenant
   const taux = prospectsData.length > 0 ? Math.round((prospectsData.filter(p => p.converti).length / prospectsData.length) * 100) : 0;
   const objectif = 500;
 
   document.getElementById('r-shopify').textContent = shopifyRev + '€';
-  document.getElementById('r-amazon').textContent = amazonRev + '€';
   document.getElementById('r-taux').textContent = taux + '%';
   document.getElementById('bar-shopify').style.width = Math.min(100, (shopifyRev / objectif) * 100) + '%';
-  document.getElementById('bar-amazon').style.width = Math.min(100, (amazonRev / objectif) * 100) + '%';
   document.getElementById('bar-taux').style.width = Math.min(100, taux * 2) + '%';
 
   const pct = Math.round((totalRevenus / objectif) * 100);
