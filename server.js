@@ -290,15 +290,33 @@ app.post('/api/agent-alert', async (req, res) => {
 // ============================================================
 app.use(express.static(__dirname));
 
+// Mot de passe dashboard
+const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || "Survie2026";
+
 // Page principale (landing page)
 app.get('/', (req, res) => {
     stats.visiteursAujourdhui++;
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Dashboard CEO (protégé)
+// Vérification du mot de passe
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    if (password === DASHBOARD_PASSWORD) {
+        res.json({ ok: true });
+    } else {
+        res.status(401).json({ ok: false, error: "Mot de passe incorrect" });
+    }
+});
+
+// Dashboard CEO (la protection se fait côté client via login.html)
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// Page de connexion
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
 });
 
 // ============================================================
