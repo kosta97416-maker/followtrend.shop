@@ -38,6 +38,7 @@ nav {
 .lang-selector {
   display:flex; gap:.3rem; background:rgba(255,255,255,.04);
   padding:.3rem; border:1px solid rgba(255,255,255,.08);
+  flex-wrap:wrap;
 }
 .lang-btn {
   font-family:'Space Mono',monospace; font-size:.55rem;
@@ -254,6 +255,11 @@ footer { padding:2.5rem 6vw; border-top:1px solid rgba(255,255,255,.05); display
       <button class="lang-btn active" data-lang="fr" onclick="setLang('fr')">FR</button>
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" data-lang="de" onclick="setLang('de')">DE</button>
+      <button class="lang-btn" data-lang="it" onclick="setLang('it')">IT</button>
+      <button class="lang-btn" data-lang="pt" onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" data-lang="nl" onclick="setLang('nl')">NL</button>
+      <button class="lang-btn" data-lang="pl" onclick="setLang('pl')">PL</button>
     </div>
   </div>
 </nav>
@@ -531,6 +537,166 @@ const TR = {
     u_t1:"NO APUESTES", u_t2:"A LA SUERTE",
     u_p:"Un solo apagón puede cambiarlo todo. Prepárate ahora mientras puedas.", u_btn:"IR A LA TIENDA",
     f_shop:"TIENDA", f_eq:"EQUIPO", f_ai:"HERRAMIENTAS", f_dash:"DASHBOARD"
+  },
+  de: {
+    nav_eq:"AUSRÜSTUNG", nav_ai:"KI-TOOLS", nav_content:"INHALT", nav_shop:"SHOP",
+    h_tag:"Überleben & Resilienz — Ausgewählte Ausrüstung",
+    h_t1:"BEREIT FÜR", h_t2:"ALLES", h_t3:"WAS KOMMT",
+    h_sub:"Überlebensausrüstung <strong>getestet und geprüft</strong>. Notfall-Kits, Wasserfilter, Langzeit-Rationen.",
+    h_cta1:"AUSRÜSTUNG ANSEHEN", h_cta2:"MEIN SHOP",
+    agent_on:"🟢 KI-AGENT AKTIV", sys_auto:"AUTONOMES SYSTEM", scroll:"↓ SCROLLEN",
+    p_label:"// Ausgewählter Katalog", p_t1:"ÜBERLEBENS", p_t2:"AUSRÜSTUNG",
+    w_label:"// Warum wir", w_t1:"AUSGEWÄHLT", w_t2:"FÜR DICH",
+    w1t:"GETESTETE PRODUKTE", w1d:"Jedes Teil von Survival-Profis ausgewählt. Schluss mit Gadgets, die versagen.",
+    w2t:"SCHNELLE LIEFERUNG", w2d:"Ein Notfall kann jederzeit passieren, Warten ist keine Option.",
+    w3t:"FAIRE PREISE", w3d:"Du zahlst den fairen Preis, ohne unnötige Zwischenhändler.",
+    w4t:"COMMUNITY", w4d:"Schließe dich Tausenden Familien an, die sich vorbereiten.",
+    o_label:"// Empfohlene KI-Tools", o_t1:"MEINE KI-TOOLS", o_t2:"ZUM ERSTELLEN VON VIDEOS",
+    o_intro:"Die Tools, die ich <strong style='color:var(--beige)'>wirklich nutze</strong> für meinen Content. Getestet und bewährt.",
+    o_e_cat:"KI-STIMME — REALISTISCH",
+    o_e_desc:"Das Tool, das ich für alle Stimmen meiner Videos nutze. Ultra-realistische deutsche Stimmen.",
+    o_e_b:"✓ Perfektes Deutsch<br>✓ Gratis-Plan zum Testen<br>✓ Pro: ~5€/Monat unbegrenzt<br>✓ Perfekt für TikTok/Insta",
+    o_e_btn:"🚀 KOSTENLOS TESTEN →",
+    o_h_cat:"KI-VIDEO-AVATARE — BALD", o_h_desc:"Videos mit KI-Avatar erstellen. Perfekt für Tutorials ohne dich zu filmen.",
+    o_g_cat:"E-MAIL-MARKETING — BALD", o_g_desc:"Um Kunden zu binden und ihnen Tipps + Angebote zu senden.",
+    o_i_cat:"KI-VIDEOSCHNITT — BALD", o_i_desc:"Automatischer Videoschnitt für TikTok/Reels.",
+    o_wait:"WARTE AUF FREIGABE...", o_wait2:"WARTE AUF FREIGABE...", o_wait3:"WARTE AUF FREIGABE...",
+    o_disc:"⚠️ Affiliate-Links: Wenn du über meine Links kaufst, erhalte ich eine kleine Provision. Keine Extrakosten für dich 🙏",
+    v_label:"// KI-generierter Inhalt", v_t1:"VIDEO-SKRIPTE", v_t2:"TIKTOK & INSTAGRAM",
+    v_clic:"Klicken um virales Skript zu generieren...", v_clic2:"Klicken um virales Skript zu generieren...",
+    v_btn_t:"⚡ TIKTOK-SKRIPT ERSTELLEN", v_btn_i:"⚡ INSTA-SKRIPT ERSTELLEN",
+    v_load:"Generiere", v_load2:"Generiere",
+    u_t1:"WETTE NICHT", u_t2:"AUF GLÜCK",
+    u_p:"Ein einziger Stromausfall kann alles ändern. Bereite dich jetzt vor.", u_btn:"ZUM SHOP",
+    f_shop:"SHOP", f_eq:"AUSRÜSTUNG", f_ai:"KI-TOOLS", f_dash:"DASHBOARD"
+  },
+  it: {
+    nav_eq:"EQUIPAGGIAMENTO", nav_ai:"STRUMENTI IA", nav_content:"CONTENUTI", nav_shop:"NEGOZIO",
+    h_tag:"Sopravvivenza & Resilienza — Equipaggiamento selezionato",
+    h_t1:"PRONTO PER", h_t2:"TUTTO", h_t3:"QUEL CHE VIENE",
+    h_sub:"Materiale di sopravvivenza <strong>testato e approvato</strong>. Kit d'emergenza, filtri acqua, razioni lunga durata.",
+    h_cta1:"VEDI L'EQUIPAGGIAMENTO", h_cta2:"IL MIO NEGOZIO",
+    agent_on:"🟢 AGENTE IA ATTIVO", sys_auto:"SISTEMA AUTONOMO", scroll:"↓ SCORRI",
+    p_label:"// Catalogo selezionato", p_t1:"EQUIPAGGIAMENTO", p_t2:"DI SOPRAVVIVENZA",
+    w_label:"// Perché noi", w_t1:"SELEZIONATO", w_t2:"PER TE",
+    w1t:"PRODOTTI TESTATI", w1d:"Ogni pezzo selezionato da appassionati di sopravvivenza. Basta gadget che falliscono.",
+    w2t:"CONSEGNA RAPIDA", w2d:"Un'emergenza può succedere in qualsiasi momento, aspettare non è un'opzione.",
+    w3t:"PREZZI EQUI", w3d:"Paghi il prezzo giusto, senza intermediari inutili.",
+    w4t:"COMUNITÀ", w4d:"Unisciti a migliaia di famiglie che si preparano.",
+    o_label:"// Stack IA consigliato", o_t1:"I MIEI STRUMENTI IA", o_t2:"PER CREARE VIDEO",
+    o_intro:"Gli strumenti che <strong style='color:var(--beige)'>uso davvero</strong> per produrre i miei contenuti. Testati e approvati.",
+    o_e_cat:"VOCE IA — REALISTICA",
+    o_e_desc:"Lo strumento che uso per tutte le voci dei miei video. Voci italiane ultra-realistiche.",
+    o_e_b:"✓ Italiano perfetto<br>✓ Piano gratuito per testare<br>✓ Pro: ~5€/mese illimitato<br>✓ Perfetto per TikTok/Insta",
+    o_e_btn:"🚀 PROVA GRATIS →",
+    o_h_cat:"AVATAR VIDEO IA — PRESTO", o_h_desc:"Crea video con avatar IA. Perfetto per tutorial senza filmarti.",
+    o_g_cat:"EMAIL MARKETING — PRESTO", o_g_desc:"Per fidelizzare i tuoi clienti e inviare consigli + offerte.",
+    o_i_cat:"MONTAGGIO VIDEO IA — PRESTO", o_i_desc:"Montaggio video automatico per TikTok/Reels.",
+    o_wait:"IN ATTESA DI VALIDAZIONE...", o_wait2:"IN ATTESA DI VALIDAZIONE...", o_wait3:"IN ATTESA DI VALIDAZIONE...",
+    o_disc:"⚠️ Link affiliati: se acquisti tramite i miei link, ricevo una piccola commissione. Nessun costo extra 🙏",
+    v_label:"// Contenuti generati da IA", v_t1:"SCRIPT VIDEO", v_t2:"TIKTOK & INSTAGRAM",
+    v_clic:"Clicca per generare uno script virale...", v_clic2:"Clicca per generare uno script virale...",
+    v_btn_t:"⚡ GENERA SCRIPT TIKTOK", v_btn_i:"⚡ GENERA SCRIPT INSTA",
+    v_load:"Generazione", v_load2:"Generazione",
+    u_t1:"NON SCOMMETTERE", u_t2:"SULLA FORTUNA",
+    u_p:"Una singola interruzione di corrente può cambiare tutto. Preparati adesso.", u_btn:"VAI AL NEGOZIO",
+    f_shop:"NEGOZIO", f_eq:"EQUIPAGGIAMENTO", f_ai:"STRUMENTI IA", f_dash:"DASHBOARD"
+  },
+  pt: {
+    nav_eq:"EQUIPAMENTO", nav_ai:"FERRAMENTAS IA", nav_content:"CONTEÚDO", nav_shop:"LOJA",
+    h_tag:"Sobrevivência & Resiliência — Equipamento selecionado",
+    h_t1:"PRONTO PARA", h_t2:"TUDO", h_t3:"O QUE VIER",
+    h_sub:"Material de sobrevivência <strong>testado e aprovado</strong>. Kits de emergência, filtros de água, rações longa duração.",
+    h_cta1:"VER O EQUIPAMENTO", h_cta2:"MINHA LOJA",
+    agent_on:"🟢 AGENTE IA ATIVO", sys_auto:"SISTEMA AUTÔNOMO", scroll:"↓ ROLAR",
+    p_label:"// Catálogo selecionado", p_t1:"EQUIPAMENTO", p_t2:"DE SOBREVIVÊNCIA",
+    w_label:"// Por que nós", w_t1:"SELECIONADO", w_t2:"PARA VOCÊ",
+    w1t:"PRODUTOS TESTADOS", w1d:"Cada equipamento selecionado por especialistas. Acabaram-se os gadgets que falham.",
+    w2t:"ENTREGA RÁPIDA", w2d:"Uma emergência pode acontecer a qualquer momento, esperar não é opção.",
+    w3t:"PREÇOS JUSTOS", w3d:"Você paga o preço justo, sem intermediários desnecessários.",
+    w4t:"COMUNIDADE", w4d:"Junte-se a milhares de famílias que se preparam.",
+    o_label:"// Stack IA recomendado", o_t1:"MINHAS FERRAMENTAS IA", o_t2:"PARA CRIAR VÍDEOS",
+    o_intro:"As ferramentas que <strong style='color:var(--beige)'>realmente uso</strong> para produzir meu conteúdo. Testadas e aprovadas.",
+    o_e_cat:"VOZ IA — REALISTA",
+    o_e_desc:"A ferramenta que uso para criar todas as vozes dos meus vídeos. Vozes ultra-realistas.",
+    o_e_b:"✓ Português perfeito<br>✓ Plano grátis para testar<br>✓ Pro: ~5€/mês ilimitado<br>✓ Perfeito para TikTok/Insta",
+    o_e_btn:"🚀 EXPERIMENTAR GRÁTIS →",
+    o_h_cat:"AVATARES VÍDEO IA — EM BREVE", o_h_desc:"Criar vídeos com avatar IA. Ideal para tutoriais sem se filmar.",
+    o_g_cat:"EMAIL MARKETING — EM BREVE", o_g_desc:"Para fidelizar seus clientes e enviar dicas + ofertas.",
+    o_i_cat:"EDIÇÃO VÍDEO IA — EM BREVE", o_i_desc:"Edição automática de vídeo para TikTok/Reels.",
+    o_wait:"AGUARDANDO VALIDAÇÃO...", o_wait2:"AGUARDANDO VALIDAÇÃO...", o_wait3:"AGUARDANDO VALIDAÇÃO...",
+    o_disc:"⚠️ Links de afiliação: se você comprar através dos meus links, recebo uma pequena comissão. Sem custo extra 🙏",
+    v_label:"// Conteúdo gerado por IA", v_t1:"SCRIPTS DE VÍDEO", v_t2:"TIKTOK & INSTAGRAM",
+    v_clic:"Clique para gerar um script viral...", v_clic2:"Clique para gerar um script viral...",
+    v_btn_t:"⚡ GERAR SCRIPT TIKTOK", v_btn_i:"⚡ GERAR SCRIPT INSTA",
+    v_load:"Gerando", v_load2:"Gerando",
+    u_t1:"NÃO APOSTE", u_t2:"NA SORTE",
+    u_p:"Uma única queda de energia pode mudar tudo. Prepare-se agora.", u_btn:"IR PARA A LOJA",
+    f_shop:"LOJA", f_eq:"EQUIPAMENTO", f_ai:"FERRAMENTAS", f_dash:"DASHBOARD"
+  },
+  nl: {
+    nav_eq:"UITRUSTING", nav_ai:"AI-TOOLS", nav_content:"CONTENT", nav_shop:"SHOP",
+    h_tag:"Overleven & Veerkracht — Geselecteerde uitrusting",
+    h_t1:"KLAAR VOOR", h_t2:"ALLES", h_t3:"WAT KOMT",
+    h_sub:"Overlevingsuitrusting <strong>getest en goedgekeurd</strong>. Noodkits, waterfilters, langhoudbare rantsoenen.",
+    h_cta1:"BEKIJK DE UITRUSTING", h_cta2:"MIJN SHOP",
+    agent_on:"🟢 AI-AGENT ACTIEF", sys_auto:"AUTONOOM SYSTEEM", scroll:"↓ SCROLLEN",
+    p_label:"// Geselecteerde catalogus", p_t1:"OVERLEVINGS", p_t2:"UITRUSTING",
+    w_label:"// Waarom wij", w_t1:"GESELECTEERD", w_t2:"VOOR JOU",
+    w1t:"GETESTE PRODUCTEN", w1d:"Elke uitrusting geselecteerd door survival-experts. Geen gadgets meer die falen.",
+    w2t:"SNELLE LEVERING", w2d:"Een noodgeval kan elk moment gebeuren, wachten is geen optie.",
+    w3t:"EERLIJKE PRIJZEN", w3d:"Je betaalt de juiste prijs, zonder onnodige tussenpersonen.",
+    w4t:"COMMUNITY", w4d:"Sluit je aan bij duizenden families die zich voorbereiden.",
+    o_label:"// Aanbevolen AI-stack", o_t1:"MIJN AI-TOOLS", o_t2:"OM VIDEO'S TE MAKEN",
+    o_intro:"De tools die ik <strong style='color:var(--beige)'>echt gebruik</strong> voor mijn content. Getest en goedgekeurd.",
+    o_e_cat:"AI-STEM — REALISTISCH",
+    o_e_desc:"De tool die ik gebruik om alle stemmen voor mijn video's te maken. Ultra-realistische stemmen.",
+    o_e_b:"✓ Perfect Nederlands<br>✓ Gratis plan om te testen<br>✓ Pro: ~5€/maand onbeperkt<br>✓ Perfect voor TikTok/Insta",
+    o_e_btn:"🚀 GRATIS PROBEREN →",
+    o_h_cat:"AI-VIDEO-AVATARS — BINNENKORT", o_h_desc:"Video's maken met AI-avatar. Perfect voor tutorials zonder jezelf te filmen.",
+    o_g_cat:"E-MAILMARKETING — BINNENKORT", o_g_desc:"Om klanten te behouden en hen tips + aanbiedingen te sturen.",
+    o_i_cat:"AI-VIDEOMONTAGE — BINNENKORT", o_i_desc:"Automatische videomontage voor TikTok/Reels.",
+    o_wait:"WACHT OP GOEDKEURING...", o_wait2:"WACHT OP GOEDKEURING...", o_wait3:"WACHT OP GOEDKEURING...",
+    o_disc:"⚠️ Affiliate-links: als je via mijn links koopt, krijg ik een kleine commissie. Geen extra kosten 🙏",
+    v_label:"// AI-gegenereerde content", v_t1:"VIDEO-SCRIPTS", v_t2:"TIKTOK & INSTAGRAM",
+    v_clic:"Klik om viraal script te genereren...", v_clic2:"Klik om viraal script te genereren...",
+    v_btn_t:"⚡ GENEREER TIKTOK-SCRIPT", v_btn_i:"⚡ GENEREER INSTA-SCRIPT",
+    v_load:"Genereren", v_load2:"Genereren",
+    u_t1:"GOK NIET", u_t2:"OP GELUK",
+    u_p:"Eén stroomstoring kan alles veranderen. Bereid je nu voor.", u_btn:"NAAR DE SHOP",
+    f_shop:"SHOP", f_eq:"UITRUSTING", f_ai:"AI-TOOLS", f_dash:"DASHBOARD"
+  },
+  pl: {
+    nav_eq:"SPRZĘT", nav_ai:"NARZĘDZIA AI", nav_content:"TREŚCI", nav_shop:"SKLEP",
+    h_tag:"Przetrwanie & Odporność — Wybrany sprzęt",
+    h_t1:"GOTOWY NA", h_t2:"WSZYSTKO", h_t3:"CO NADCHODZI",
+    h_sub:"Sprzęt survivalowy <strong>przetestowany i zatwierdzony</strong>. Zestawy awaryjne, filtry wody, racje długoterminowe.",
+    h_cta1:"ZOBACZ SPRZĘT", h_cta2:"MÓJ SKLEP",
+    agent_on:"🟢 AGENT AI AKTYWNY", sys_auto:"SYSTEM AUTONOMICZNY", scroll:"↓ PRZEWIŃ",
+    p_label:"// Wybrany katalog", p_t1:"SPRZĘT", p_t2:"SURVIVALOWY",
+    w_label:"// Dlaczego my", w_t1:"WYBRANE", w_t2:"DLA CIEBIE",
+    w1t:"PRZETESTOWANE PRODUKTY", w1d:"Każdy sprzęt wybrany przez ekspertów. Koniec z gadżetami, które zawodzą.",
+    w2t:"SZYBKA DOSTAWA", w2d:"Awaria może zdarzyć się w każdej chwili, czekanie nie wchodzi w grę.",
+    w3t:"UCZCIWE CENY", w3d:"Płacisz uczciwą cenę, bez zbędnych pośredników.",
+    w4t:"SPOŁECZNOŚĆ", w4d:"Dołącz do tysięcy rodzin, które się przygotowują.",
+    o_label:"// Polecany stack AI", o_t1:"MOJE NARZĘDZIA AI", o_t2:"DO TWORZENIA WIDEO",
+    o_intro:"Narzędzia, których <strong style='color:var(--beige)'>naprawdę używam</strong> do tworzenia treści. Przetestowane.",
+    o_e_cat:"GŁOS AI — REALISTYCZNY",
+    o_e_desc:"Narzędzie, którego używam do tworzenia wszystkich głosów do moich filmów. Ultra-realistyczne głosy.",
+    o_e_b:"✓ Doskonały polski<br>✓ Darmowy plan do testów<br>✓ Pro: ~5€/miesiąc bez limitu<br>✓ Idealne na TikTok/Insta",
+    o_e_btn:"🚀 WYPRÓBUJ ZA DARMO →",
+    o_h_cat:"AWATARY WIDEO AI — WKRÓTCE", o_h_desc:"Twórz filmy z awatarem AI. Idealne do tutoriali bez kamery.",
+    o_g_cat:"EMAIL MARKETING — WKRÓTCE", o_g_desc:"Aby zatrzymać klientów i wysyłać im wskazówki + oferty.",
+    o_i_cat:"MONTAŻ WIDEO AI — WKRÓTCE", o_i_desc:"Automatyczny montaż wideo dla TikTok/Reels.",
+    o_wait:"OCZEKIWANIE NA WALIDACJĘ...", o_wait2:"OCZEKIWANIE NA WALIDACJĘ...", o_wait3:"OCZEKIWANIE NA WALIDACJĘ...",
+    o_disc:"⚠️ Linki afiliacyjne: jeśli kupisz przez moje linki, otrzymam małą prowizję. Bez dodatkowych kosztów 🙏",
+    v_label:"// Treści generowane przez AI", v_t1:"SKRYPTY WIDEO", v_t2:"TIKTOK & INSTAGRAM",
+    v_clic:"Kliknij aby wygenerować wirusowy skrypt...", v_clic2:"Kliknij aby wygenerować wirusowy skrypt...",
+    v_btn_t:"⚡ GENERUJ SKRYPT TIKTOK", v_btn_i:"⚡ GENERUJ SKRYPT INSTA",
+    v_load:"Generowanie", v_load2:"Generowanie",
+    u_t1:"NIE STAWIAJ", u_t2:"NA SZCZĘŚCIE",
+    u_p:"Pojedyncza awaria prądu może wszystko zmienić. Przygotuj się teraz.", u_btn:"DO SKLEPU",
+    f_shop:"SKLEP", f_eq:"SPRZĘT", f_ai:"NARZĘDZIA AI", f_dash:"DASHBOARD"
   }
 };
 
@@ -564,11 +730,70 @@ const PRODUITS = {
     { e:"📻", n:"RADIO EMERGENCIA SOLAR", d:"Manivela + solar + USB. AM/FM/WX. Banco de energía.", h:"radio-urgence", s:"86/100" },
     { e:"🏥", n:"KIT PRIMEROS AUXILIOS", d:"Torniquete, vendajes, NRC, guía. Grado militar.", h:"kit-premiers-secours", s:"95/100" },
     { e:"🔥", n:"KIT ENCENDIDO FUEGO", d:"Encendedor plasma, palo de fuego, yesca. Funciona en agua.", h:"kit-feu", s:"89/100" }
+  ],
+  de: [
+    { e:"🎒", n:"BUG-OUT-TASCHE 72H", d:"Komplette Evakuierungstasche für 72h. Wasserdicht, militärisch, geländegängig.", h:"sac-72h", s:"94/100" },
+    { e:"💧", n:"WASSERFILTER", d:"Reinigt 1000L Wasser. Entfernt 99,9% der Bakterien.", h:"filtre-eau", s:"97/100" },
+    { e:"🥫", n:"30-TAGE-RATIONEN", d:"Gefriergetrocknetes Langzeit-Paket. Bis zu 25 Jahre haltbar.", h:"ration-survie", s:"91/100" },
+    { e:"🔦", n:"STIRNLAMPE 1000LM", d:"USB-C aufladbar, IPX7. 200h Batterielaufzeit.", h:"lampe-frontale", s:"88/100" },
+    { e:"🔪", n:"BUSHCRAFT-MESSER", d:"12C27-Stahl, Micarta-Griff. Das Profi-Messer für den Einsatz.", h:"couteau-survie", s:"92/100" },
+    { e:"📻", n:"SOLAR-NOTFALLRADIO", d:"Kurbel + Solar + USB. AM/FM/WX. Eingebaute Powerbank.", h:"radio-urgence", s:"86/100" },
+    { e:"🏥", n:"ERSTE-HILFE-KIT", d:"Tourniquet, Bandagen, NRC, Feldführer. Militärqualität.", h:"kit-premiers-secours", s:"95/100" },
+    { e:"🔥", n:"FEUERSTART-KIT", d:"Plasma-Feuerzeug, Feuerstab, Zunder. Funktioniert im Wasser.", h:"kit-feu", s:"89/100" }
+  ],
+  it: [
+    { e:"🎒", n:"ZAINO BUG OUT 72H", d:"Zaino completo per 72h. Impermeabile, militare, all-terrain.", h:"sac-72h", s:"94/100" },
+    { e:"💧", n:"FILTRO ACQUA", d:"Purifica 1000L d'acqua. Elimina 99,9% dei batteri.", h:"filtre-eau", s:"97/100" },
+    { e:"🥫", n:"RAZIONI 30 GIORNI", d:"Pack alimentare liofilizzato lunga durata. Fino a 25 anni di conservazione.", h:"ration-survie", s:"91/100" },
+    { e:"🔦", n:"LAMPADA FRONTALE 1000LM", d:"Ricaricabile USB-C, IPX7. 200h di autonomia.", h:"lampe-frontale", s:"88/100" },
+    { e:"🔪", n:"COLTELLO BUSHCRAFT", d:"Acciaio 12C27, manico micarta. Il coltello dei professionisti.", h:"couteau-survie", s:"92/100" },
+    { e:"📻", n:"RADIO EMERGENZA SOLARE", d:"Manovella + solare + USB. AM/FM/WX. Power bank integrato.", h:"radio-urgence", s:"86/100" },
+    { e:"🏥", n:"KIT PRIMO SOCCORSO", d:"Laccio, bende, NRC, guida da campo. Grado militare.", h:"kit-premiers-secours", s:"95/100" },
+    { e:"🔥", n:"KIT ACCENSIONE FUOCO", d:"Accendino plasma, bastone fuoco, esca. Funziona in acqua.", h:"kit-feu", s:"89/100" }
+  ],
+  pt: [
+    { e:"🎒", n:"MOCHILA EVACUAÇÃO 72H", d:"Mochila completa para 72h. Impermeável, militar, todo terreno.", h:"sac-72h", s:"94/100" },
+    { e:"💧", n:"FILTRO DE ÁGUA", d:"Purifica 1000L de água. Elimina 99,9% das bactérias.", h:"filtre-eau", s:"97/100" },
+    { e:"🥫", n:"RAÇÕES 30 DIAS", d:"Pack alimentar liofilizado longa duração. Até 25 anos de conservação.", h:"ration-survie", s:"91/100" },
+    { e:"🔦", n:"LANTERNA FRONTAL 1000LM", d:"Recarregável USB-C, IPX7. 200h de autonomia.", h:"lampe-frontale", s:"88/100" },
+    { e:"🔪", n:"FACA BUSHCRAFT", d:"Aço 12C27, cabo micarta. A faca dos profissionais.", h:"couteau-survie", s:"92/100" },
+    { e:"📻", n:"RÁDIO EMERGÊNCIA SOLAR", d:"Manivela + solar + USB. AM/FM/WX. Power bank integrado.", h:"radio-urgence", s:"86/100" },
+    { e:"🏥", n:"KIT PRIMEIROS SOCORROS", d:"Torniquete, ligaduras, NRC, guia de campo. Grau militar.", h:"kit-premiers-secours", s:"95/100" },
+    { e:"🔥", n:"KIT IGNIÇÃO FOGO", d:"Isqueiro plasma, bastão de fogo, isca. Funciona na água.", h:"kit-feu", s:"89/100" }
+  ],
+  nl: [
+    { e:"🎒", n:"BUG-OUT-TAS 72H", d:"Complete evacuatietas voor 72u. Waterdicht, militair, all-terrain.", h:"sac-72h", s:"94/100" },
+    { e:"💧", n:"WATERFILTER", d:"Zuivert 1000L water. 99,9% bacteriën verwijderd.", h:"filtre-eau", s:"97/100" },
+    { e:"🥫", n:"30-DAAGSE RANTSOENEN", d:"Langhoudbaar gevriesdroogd pakket. Tot 25 jaar houdbaar.", h:"ration-survie", s:"91/100" },
+    { e:"🔦", n:"HOOFDLAMP 1000LM", d:"USB-C oplaadbaar, IPX7. 200u batterijduur.", h:"lampe-frontale", s:"88/100" },
+    { e:"🔪", n:"BUSHCRAFT-MES", d:"12C27 staal, micarta handvat. Het mes van de profs.", h:"couteau-survie", s:"92/100" },
+    { e:"📻", n:"ZONNENOODRADIO", d:"Slinger + zonnepaneel + USB. AM/FM/WX. Ingebouwde powerbank.", h:"radio-urgence", s:"86/100" },
+    { e:"🏥", n:"EHBO-KIT", d:"Tourniquet, drukverbanden, NRC, veldgids. Militaire kwaliteit.", h:"kit-premiers-secours", s:"95/100" },
+    { e:"🔥", n:"VUUR-STARTKIT", d:"Plasma-aansteker, vuurstok, tondel. Werkt in water.", h:"kit-feu", s:"89/100" }
+  ],
+  pl: [
+    { e:"🎒", n:"PLECAK EWAKUACYJNY 72H", d:"Kompletny plecak na 72h. Wodoodporny, militarny, terenowy.", h:"sac-72h", s:"94/100" },
+    { e:"💧", n:"FILTR WODY", d:"Oczyszcza 1000L wody. Usuwa 99,9% bakterii.", h:"filtre-eau", s:"97/100" },
+    { e:"🥫", n:"RACJE 30 DNI", d:"Liofilizowana żywność długoterminowa. Do 25 lat przechowywania.", h:"ration-survie", s:"91/100" },
+    { e:"🔦", n:"LATARKA CZOŁOWA 1000LM", d:"Ładowanie USB-C, IPX7. 200h pracy.", h:"lampe-frontale", s:"88/100" },
+    { e:"🔪", n:"NÓŻ BUSHCRAFT", d:"Stal 12C27, rękojeść micarta. Nóż profesjonalistów.", h:"couteau-survie", s:"92/100" },
+    { e:"📻", n:"RADIO AWARYJNE SOLARNE", d:"Korbka + solar + USB. AM/FM/WX. Wbudowany power bank.", h:"radio-urgence", s:"86/100" },
+    { e:"🏥", n:"APTECZKA PIERWSZEJ POMOCY", d:"Opaska, bandaże, NRC, przewodnik. Klasa wojskowa.", h:"kit-premiers-secours", s:"95/100" },
+    { e:"🔥", n:"ZESTAW DO ROZPALANIA", d:"Zapalniczka plazmowa, krzesiwo, podpałka. Działa w wodzie.", h:"kit-feu", s:"89/100" }
   ]
 };
 
 const SHOPIFY = "https://6bbgv0-f4.myshopify.com";
-const BTN_LABEL = { fr:"🛒 ACHETER MAINTENANT →", en:"🛒 BUY NOW →", es:"🛒 COMPRAR AHORA →" };
+const BTN_LABEL = {
+  fr:"🛒 ACHETER MAINTENANT →",
+  en:"🛒 BUY NOW →",
+  es:"🛒 COMPRAR AHORA →",
+  de:"🛒 JETZT KAUFEN →",
+  it:"🛒 COMPRA ORA →",
+  pt:"🛒 COMPRAR AGORA →",
+  nl:"🛒 NU KOPEN →",
+  pl:"🛒 KUP TERAZ →"
+};
 
 let currentLang = localStorage.getItem('lang') || 'fr';
 
