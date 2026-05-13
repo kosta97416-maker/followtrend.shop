@@ -1,19 +1,18 @@
-
 {
-  "name": "follow-hq-monolith",
-  "version": "1.0.0",
-  "description": "Interface et Serveur FollowTrend combinés",
+  "name": "follow-life-sophie",
+  "version": "2.0.0",
+  "description": "Follow.Life · Sophie, l'amie virtuelle pour les mamans solo 🤍",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch server.js",
+    "test": "echo \"Pas encore de tests\" && exit 0"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "path": "^0.12.7"
+    "cors": "^2.8.5"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   }
 }
