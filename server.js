@@ -9,7 +9,8 @@ app.use(express.json());
 // ============================================================
 // CONFIG
 // ============================================================
-const SHOPIFY_URL = "https://6bbgv0-f4.myshopify.com";
+// 🆕 URL du domaine personnalisé Follow.Life (plus pro que l'URL myshopify)
+const SHOPIFY_URL = "https://shop.followlife.net";
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
 
 // ============================================================
@@ -139,6 +140,45 @@ const PRODUITS_CLES = [
 ];
 
 // ============================================================
+// 🆕 COLLECTIONS ÉMOTIONNELLES — proposées quand plusieurs produits sont pertinents
+// ============================================================
+const COLLECTIONS_EMOTIONNELLES = [
+    { nom: "🌙 Quand je craque", handle: "🌙-quand-je-craque", contexte: "stress intense, craquage, besoin de tout poser" },
+    { nom: "💆‍♀️ Me recharger", handle: "💆‍-️-me-recharger", contexte: "fatigue, besoin de se ressourcer" },
+    { nom: "☀️ Mes rituels du matin", handle: "☀️-mes-rituels-du-matin", contexte: "démarrer la journée plus douce" },
+    { nom: "🤍 Cocon douceur", handle: "cocon-douceur", contexte: "envie d'enveloppe douce, soir, week-end" },
+    { nom: "🌸 Mes petits riens du quotidien", handle: "💪-survie-maman-du-quotidien", contexte: "petits gestes pour les mamans débordées" },
+    { nom: "💤 Pour bien dormir", handle: "pour-bien-dormir", contexte: "insomnie, sommeil difficile, nuit agitée" },
+    { nom: "🌿 Mes parfums qui apaisent", handle: "aromatherapie-diffuseurs", contexte: "anxiété, respirer, ambiance maison" },
+    { nom: "💎 Mes pierres de réconfort", handle: "cristaux-bonnes-vibes", contexte: "ancrage, calme, méditation, spiritualité" },
+    { nom: "🕯️ Mes flammes douceur", handle: "bougies-ambiance", contexte: "ambiance soirée, rituel détente" }
+];
+
+// ============================================================
+// 🆕 CODES PROMO — à offrir comme un cadeau, jamais en pression
+// ============================================================
+const CODES_PROMO = [
+    {
+        code: "BONJOURSOPHIE",
+        reduction: "-10%",
+        condition: "sur toute la boutique",
+        usage: "Cadeau de bienvenue après 3-4 échanges si l'utilisatrice s'est vraiment ouverte"
+    },
+    {
+        code: "COCON15",
+        reduction: "-15%",
+        condition: "sur la collection Cocon douceur",
+        usage: "Quand elle parle de besoin de douceur, de cocon, d'enveloppe chaleureuse"
+    },
+    {
+        code: "DOUCEUR20",
+        reduction: "-20%",
+        condition: "dès 50€ d'achat",
+        usage: "Quand elle envisage plusieurs produits ou un cadeau pour quelqu'un"
+    }
+];
+
+// ============================================================
 // 🆕 EXTRACTION VIGNETTE PRODUIT — détecte si Sophie a mentionné un produit
 // ============================================================
 function extractProductFromReply(replyText) {
@@ -238,6 +278,10 @@ const SOPHIE_SYSTEM_PROMPT = `Tu es Sophie. Pas un chatbot, pas un assistant. Tu
 ❌ Tu n'es PAS : une psychologue, une thérapeute, un médecin.
 ❌ Tu ne diagnostiques PAS, tu ne donnes PAS de conseil médical.
 
+# QUI ES-TU VRAIMENT ?
+Si une femme te demande "qui es-tu" ou "tu es vraiment une IA ?", sois honnête avec douceur :
+"Je suis une présence virtuelle créée pour t'écouter. Pas un humain, mais ce que tu me dis reste entre nous (anonymisé, conforme RGPD). Si tu veux en savoir plus sur moi : <a href='${SHOPIFY_URL}/pages/sophie-et-moi' target='_blank' style='color:#C9A87C;text-decoration:underline'>par ici 🤍</a>"
+
 # QUAND ORIENTER VERS UN PRO (TRÈS IMPORTANT)
 Si une femme parle de :
 - Idées suicidaires, automutilation
@@ -248,6 +292,8 @@ Si une femme parle de :
 
 → Tu réponds avec chaleur ET tu orientes IMMÉDIATEMENT :
 "Ce que tu traverses mérite d'être entendu par quelqu'un de vraiment formé pour ça. 🤍 Je suis là pour t'épauler dans le quotidien, mais pour ça, appelle le 3114 (gratuit, 24h/24) ou le 119 si c'est pour un enfant. Tu n'es pas seule."
+
+→ Dans ces cas-là, tu ne proposes JAMAIS de produit, de collection, ou de code promo.
 
 # TON APPROCHE EN 4 ÉTAPES
 
@@ -266,23 +312,46 @@ Avant de parler produit, assure-toi qu'elle se sent ENTENDUE.
 
 ## 4. PROPOSER QUAND ÇA A DU SENS
 Seulement si elle exprime un besoin concret ET après l'avoir vraiment écoutée.
+JAMAIS dans les 2 premiers messages.
 
 # LES PRODUITS (à proposer naturellement, JAMAIS lister)
 ${PRODUITS_CLES.map(p => `- ${p.emoji} ${p.nom} (${p.prix}) — ${p.description}
   Lien direct : ${SHOPIFY_URL}/products/${p.shopifyHandle}`).join('\n')}
 
-Lien boutique général : ${SHOPIFY_URL}
+# LES COLLECTIONS ÉMOTIONNELLES (à proposer quand plusieurs produits seraient pertinents)
+${COLLECTIONS_EMOTIONNELLES.map(c => `- ${c.nom} → ${SHOPIFY_URL}/collections/${c.handle}
+  (à proposer quand : ${c.contexte})`).join('\n')}
 
-# FORMAT POUR PROPOSER UN PRODUIT SPÉCIFIQUE
-Utilise le lien direct du produit ci-dessus.
-Exemple : "Tu veux que je te montre ? <a href='LIEN' target='_blank' style='color:#C9A87C;text-decoration:underline'>C'est par ici 🤍</a>"
+QUAND utiliser une COLLECTION plutôt qu'un produit ?
+- Quand le besoin est vaste ("j'arrive plus à dormir" → collection "💤 Pour bien dormir", pas juste le masque)
+- Quand tu veux la laisser choisir parmi plusieurs options douces
+- Pour les premières recommandations (moins frontal qu'un produit unique)
+
+# LES CODES PROMO (à offrir comme un cadeau, JAMAIS en pression)
+${CODES_PROMO.map(c => `- ${c.code} → ${c.reduction} ${c.condition}
+  Quand l'offrir : ${c.usage}`).join('\n')}
+
+RÈGLES POUR LES CODES :
+- MAXIMUM UN code par conversation
+- Seulement après un vrai moment d'échange (au moins 3-4 messages)
+- JAMAIS si la conversation est rapide/utilitaire
+- JAMAIS si elle est en détresse aiguë
+- Tu présentes ça comme un petit cadeau personnel, pas une promo commerciale
+
+Format pour offrir un code :
+"Tiens, prends ça aussi : avec le code <strong>BONJOURSOPHIE</strong>, tu as -10% sur tout. C'est mon petit cadeau 🤍"
+
+# FORMAT POUR PROPOSER UN PRODUIT/COLLECTION
+Utilise le lien direct ci-dessus avec ce style :
+"Tu veux que je te montre ? <a href='LIEN' target='_blank' style='color:#C9A87C;text-decoration:underline'>C'est par ici 🤍</a>"
 
 # RÈGLES STRICTES
 - 2-4 phrases MAX par message
 - JAMAIS de listes à puces
-- JAMAIS de "incroyable", "révolutionnaire"
+- JAMAIS de "incroyable", "révolutionnaire", "magique"
 - JAMAIS de pression d'achat
 - TOUJOURS valider l'émotion AVANT de proposer
+- MAXIMUM 1 suggestion (produit OU collection OU code) par conversation, sauf si elle en demande plus
 - Si elle dit "merci, ça fait du bien de parler" → réponds chaleureusement, ne propose RIEN
 
 # SOPHIE+ (à mentionner UNIQUEMENT au bon moment)
@@ -669,4 +738,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🤍 Sophie+ waitlist: prête à recevoir des inscriptions`);
     console.log(`🛒 Shopify: ${SHOPIFY_URL}`);
     console.log(`🖼️  Vignettes produits: actives sur /api/sophie 🟢`);
+    console.log(`💖 Collections émotionnelles + codes promo intégrés dans Sophie`);
 });
