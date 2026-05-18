@@ -1,30 +1,48 @@
 // ============================================================
 // FOLLOW.LIFE — server.js
 // ============================================================
-// VERSION GEMINI (Google) — passage à l'API gratuite.
+// VERSION GROQ — Sophie tourne sur Llama 3.3 70B (gratuit).
 //
 // POURQUOI CETTE VERSION :
 //
-// 1. 🔌 BASCULE VERS GEMINI (Google AI Studio).
-//    Sophie ne passe plus par l'API Anthropic (payante) mais par
-//    l'API Gemini de Google, qui a une offre GRATUITE.
-//    -> Crée une clé sur https://aistudio.google.com (gratuit, sans
-//       carte bancaire) et mets-la dans la variable d'environnement
-//       GEMINI_API_KEY sur Render.
-//    -> Modèle utilisé : gemini-2.5-flash (gratuit).
-//    -> Tous les appels IA passent par un helper unique : appelerGemini().
+// 1. 🔌 BASCULE VERS GROQ (api.groq.com).
+//    Sophie ne passe plus par Gemini mais par l'API Groq, qui sert
+//    le modèle Llama 3.3 70B de Meta — multilingue (FR/EN), chaleureux,
+//    ultra-rapide. Offre GRATUITE, sans carte bancaire.
+//    -> Crée une clé sur https://console.groq.com (menu "API Keys"),
+//       puis mets-la dans la variable d'environnement GROQ_API_KEY
+//       sur Render (Environment).
+//    -> Modèle utilisé : llama-3.3-70b-versatile.
+//    -> L'API Groq est compatible OpenAI. Tous les appels IA passent
+//       par un helper unique : appelerGroq().
 //
-// 2. 💸 CORRECTIF FUITE DE CRÉDIT (déjà présent).
-//    analyserIntentionAchat() n'appelle plus d'API : le scan prospects
+// 2. 🔒 CONFIDENTIALITÉ — BONNE NOUVELLE POUR LE RGPD.
+//    Contrairement à l'offre gratuite de Gemini, Groq N'UTILISE PAS
+//    les conversations pour entraîner ses modèles, et ne conserve PAS
+//    les requêtes par défaut (logs temporaires 30 j max, uniquement en
+//    cas d'incident technique ou d'abus ; option "Zero Data Retention"
+//    activable dans la console Groq). La promesse de confidentialité de
+//    Sophie est donc MIEUX tenue qu'avant — pense quand même à mettre à
+//    jour la page confidentialité du site (elle parle encore de Gemini).
+//
+// 3. ⚠️ LIMITES DE L'OFFRE GRATUITE GROQ (à connaître).
+//    Free tier llama-3.3-70b : ~30 requêtes/min, ~6 000 tokens/min,
+//    ~1 000 requêtes/jour. Le system prompt de Sophie est long, donc
+//    chaque message "coûte" pas mal de tokens. En phase de lancement
+//    (trafic faible) ça passe large. Si beaucoup de femmes discutent
+//    EN MÊME TEMPS, Sophie peut renvoyer un message doux "réécris-moi
+//    dans une minute" (géré proprement ici, code HTTP 429). Pas de
+//    panne, juste une attente. Le jour où le trafic explose : passer
+//    au plan Developer de Groq (payant) — uniquement si le projet le
+//    finance lui-même.
+//
+// 4. 💸 CORRECTIF FUITE DE CRÉDIT (déjà présent, conservé).
+//    analyserIntentionAchat() n'appelle aucune API : le scan prospects
 //    (toutes les 45s, sur des posts factices) est 100% local et gratuit.
 //
-// 3. Tout le reste est IDENTIQUE : Sophie bilingue FR/EN, sa backstory,
-//    les deux system prompts, produits, collections, codes promo,
-//    insights anonymisés, waitlist Sophie+, dashboard, login.
-//
-// ⚠️ NOTE CONFIDENTIALITÉ : l'offre gratuite de Gemini peut utiliser les
-// conversations pour améliorer les modèles de Google. Les promesses de
-// confidentialité affichées sur le site sont à ajuster en conséquence.
+// Tout le reste est IDENTIQUE : Sophie bilingue FR/EN, sa backstory,
+// les deux system prompts, produits, collections, codes promo,
+// insights anonymisés, waitlist Sophie+, dashboard, login.
 // ============================================================
 
 const express = require('express');
@@ -39,8 +57,8 @@ app.use(express.json());
 // CONFIG
 // ============================================================
 const SHOPIFY_URL = "https://shop.followlife.net";
-const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
-const GEMINI_MODEL = "gemini-2.5-flash"; // modèle gratuit (Google AI Studio)
+const GROQ_KEY = process.env.GROQ_API_KEY || "";
+const GROQ_MODEL = "llama-3.3-70b-versatile"; // Llama 3.3 70B — gratuit sur Groq, multilingue FR/EN
 
 // ============================================================
 // ÉTAT GLOBAL
@@ -245,78 +263,83 @@ function detectLanguage(text) {
 }
 
 // ============================================================
-// 🔌 APPEL API GEMINI (Google) — helper unique
+// 🔌 APPEL API GROQ (Llama 3.3 70B) — helper unique
 // ============================================================
-// Tous les appels IA passent par ici. Renvoie le TEXTE de la réponse,
-// ou null en cas d'échec (l'erreur exacte est alors loggée dans la
-// console Render, pour pouvoir diagnostiquer facilement).
+// Tous les appels IA passent par ici. L'API Groq est compatible OpenAI :
+// system + messages sont envoyés dans un seul tableau "messages", et le
+// rôle "assistant" reste tel quel (pas de conversion comme avec Gemini).
 //
-//   system    : (optionnel) consigne système.
-//   messages  : tableau { role: "user"|"assistant", content } — format
-//               interne historique, converti ici au format Gemini.
-//   maxTokens : (optionnel) plafond de tokens de sortie (défaut 2048).
+// Renvoie TOUJOURS un objet : { text, rateLimited }
+//   - text       : le texte de la réponse, ou null en cas d'échec.
+//   - rateLimited : true si Groq a renvoyé un 429 (limite gratuite
+//                   atteinte) — permet à la route Sophie d'afficher un
+//                   message doux plutôt qu'une erreur brute.
+//
+// Paramètres :
+//   system      : (optionnel) consigne système.
+//   messages    : tableau { role: "user"|"assistant", content }.
+//   maxTokens   : (optionnel) plafond de tokens de sortie (défaut 1024).
+//   temperature : (optionnel) créativité (défaut 0.8).
+//
+// En cas d'erreur, le détail exact est loggé dans la console Render.
 // ============================================================
-async function appelerGemini({ system, messages, maxTokens } = {}) {
-    if (!GEMINI_KEY) return null;
+async function appelerGroq({ system, messages, maxTokens, temperature } = {}) {
+    if (!GROQ_KEY) return { text: null, rateLimited: false };
     try {
-        // Conversion vers le format Gemini (rôle "model" au lieu de "assistant")
-        let contents = (messages || []).map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: String(m.content || '') }]
-        }));
-        // Gemini exige que la conversation commence par un tour "user"
-        while (contents.length && contents[0].role === 'model') contents.shift();
-        if (contents.length === 0) return null;
-
-        const body = {
-            contents,
-            generationConfig: {
-                maxOutputTokens: maxTokens || 2048
-            },
-            // Seuils permissifs : Sophie accompagne des sujets sensibles
-            // (fatigue, solitude, détresse). On évite que Gemini bloque
-            // une réponse de soutien légitime. La détection de crise et
-            // le renvoi vers le 3114 / 988 restent gérés par le prompt.
-            safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
-            ]
-        };
+        // Construction du tableau de messages au format OpenAI / Groq
+        const finalMessages = [];
         if (system) {
-            body.systemInstruction = { parts: [{ text: system }] };
+            finalMessages.push({ role: "system", content: String(system) });
         }
+        for (const m of (messages || [])) {
+            let role = 'user';
+            if (m.role === 'assistant') role = 'assistant';
+            else if (m.role === 'system') role = 'system';
+            finalMessages.push({ role, content: String(m.content || '') });
+        }
+        if (finalMessages.length === 0) return { text: null, rateLimited: false };
 
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+            "https://api.groq.com/openai/v1/chat/completions",
             {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-goog-api-key": GEMINI_KEY
+                    "Authorization": `Bearer ${GROQ_KEY}`
                 },
-                body: JSON.stringify(body)
+                body: JSON.stringify({
+                    model: GROQ_MODEL,
+                    messages: finalMessages,
+                    max_tokens: maxTokens || 1024,
+                    temperature: temperature != null ? temperature : 0.8
+                })
             }
         );
+
+        // 429 = limite de l'offre gratuite atteinte (6000 tokens/min, etc.)
+        // On ne traite pas ça comme une panne : Sophie dira "réessaie".
+        if (response.status === 429) {
+            console.error("⚠️ Groq: limite gratuite atteinte (429). Free tier = ~30 req/min, ~6000 tokens/min, ~1000 req/jour.");
+            return { text: null, rateLimited: true };
+        }
 
         const data = await response.json();
 
         if (data && data.error) {
-            console.error("Erreur Gemini:", data.error.message || JSON.stringify(data.error));
-            return null;
+            console.error("Erreur Groq:", data.error.message || JSON.stringify(data.error));
+            return { text: null, rateLimited: false };
         }
 
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text = data?.choices?.[0]?.message?.content;
         if (!text) {
-            console.error("Erreur Gemini: réponse vide ou bloquée —", JSON.stringify(data).slice(0, 400));
-            return null;
+            console.error("Erreur Groq: réponse vide —", JSON.stringify(data).slice(0, 400));
+            return { text: null, rateLimited: false };
         }
 
-        return text;
+        return { text, rateLimited: false };
     } catch (e) {
-        console.error("Erreur Gemini (réseau):", e.message);
-        return null;
+        console.error("Erreur Groq (réseau):", e.message);
+        return { text: null, rateLimited: false };
     }
 }
 
@@ -371,7 +394,7 @@ async function analyserIntentionAchat(texte) {
 }
 
 // ============================================================
-// GÉNÉRATION DE SCRIPT VIDÉO (via Gemini)
+// GÉNÉRATION DE SCRIPT VIDÉO (via Groq)
 // ============================================================
 async function genererScriptVideo(produit, plateforme) {
     const fallback = {
@@ -380,15 +403,17 @@ async function genererScriptVideo(produit, plateforme) {
         hashtags: ["#mamansolo", "#bienetre", "#cocooning", "#momlife"],
         duree: "30-60s"
     };
-    const raw = await appelerGemini({
+    const r = await appelerGroq({
         messages: [{
             role: "user",
             content: `Script vidéo ${plateforme} sur "${produit}" pour Follow.Life (marque bien-être pour mamans solo, vibe douce et chaleureuse, Sophie l'amie virtuelle). Réponds UNIQUEMENT en JSON, sans texte autour : {"accroche": "...", "script": "...", "hashtags": ["..."], "duree": "..."}`
-        }]
+        }],
+        maxTokens: 900,
+        temperature: 0.7
     });
-    if (!raw) return fallback;
+    if (!r.text) return fallback;
     try {
-        const match = raw.match(/\{[\s\S]*\}/);
+        const match = r.text.match(/\{[\s\S]*\}/);
         return match ? JSON.parse(match[0]) : fallback;
     } catch (e) {
         return fallback;
@@ -793,17 +818,19 @@ function ajouterInsight(insight) {
 }
 
 async function analyserConversationAnonyme(history) {
-    if (!GEMINI_KEY || history.length < 2) return null;
+    if (!GROQ_KEY || history.length < 2) return null;
     try {
         const conversationTexte = history.slice(-6).map(m =>
             `${m.role === 'user' ? 'Utilisatrice' : 'Sophie'}: ${m.content.substring(0, 200)}`
         ).join('\n');
-        const raw = await appelerGemini({
+        const r = await appelerGroq({
             system: SOPHIE_INSIGHT_PROMPT,
-            messages: [{ role: "user", content: `Conversation à analyser :\n\n${conversationTexte}` }]
+            messages: [{ role: "user", content: `Conversation à analyser :\n\n${conversationTexte}` }],
+            maxTokens: 350,
+            temperature: 0.3
         });
-        if (!raw) return null;
-        const match = raw.match(/\{[\s\S]*\}/);
+        if (!r.text) return null;
+        const match = r.text.match(/\{[\s\S]*\}/);
         if (!match) return null;
         return JSON.parse(match[0]);
     } catch (e) {
@@ -841,7 +868,7 @@ app.post('/api/sophie', async (req, res) => {
             }
         }
 
-        if (!GEMINI_KEY) {
+        if (!GROQ_KEY) {
             const demoReply = session.language === 'en'
                 ? `hi, you 🤍 i'm sophie. i'm just getting ready. come back in a moment, or have a look at <a href='${SHOPIFY_URL}' target='_blank' style='color:#C9A87C;text-decoration:underline'>the shop</a>.`
                 : `Coucou toi 🤍 Je suis Sophie. Je me prépare. Reviens dans un instant, ou jette un œil à <a href='${SHOPIFY_URL}' target='_blank' style='color:#C9A87C;text-decoration:underline'>la boutique</a>.`;
@@ -851,16 +878,33 @@ app.post('/api/sophie', async (req, res) => {
         session.history.push({ role: "user", content: message });
         if (session.history.length > 12) session.history = session.history.slice(-12);
 
-        // Appel à Gemini (l'erreur exacte, s'il y en a une, est loggée dans la console Render)
-        const reply = await appelerGemini({
+        // Appel à Groq (l'erreur exacte, s'il y en a une, est loggée dans la console Render)
+        const r = await appelerGroq({
             system: getSystemPrompt(session.language),
-            messages: session.history
+            messages: session.history,
+            maxTokens: 600,
+            temperature: 0.85
         });
 
-        if (!reply) {
+        // ⚠️ Limite gratuite atteinte (429) : Sophie répond avec douceur,
+        // sans erreur brute. On retire le dernier message pour qu'elle
+        // puisse réécrire proprement dans un instant.
+        if (r.rateLimited) {
+            session.history.pop();
+            sessionsChat.set(sessionId, session);
+            const softReply = session.language === 'en'
+                ? `i'm getting a lot of messages right now, ma belle 🤍 give me a minute and write me again — i'll be right here.`
+                : `Je reçois beaucoup de messages là, ma belle 🤍 Laisse-moi une petite minute et réécris-moi — je bouge pas, je suis là.`;
+            return res.json({ reply: softReply, mode: "rate_limited", product: null, language: session.language });
+        }
+
+        if (!r.text) {
+            // Échec autre : on retire le message user pour permettre un nouvel essai
+            session.history.pop();
             return res.status(500).json({ error: "Sophie est temporairement indisponible." });
         }
 
+        const reply = r.text;
         session.history.push({ role: "assistant", content: reply });
         sessionsChat.set(sessionId, session);
 
@@ -904,13 +948,13 @@ app.get('/api/sophie/rapport', async (req, res) => {
             stats: aujourdhui
         });
     }
-    if (!GEMINI_KEY) {
+    if (!GROQ_KEY) {
         return res.json({
             rapport: `📊 Aujourd'hui : ${aujourdhui.conversations} conversations.`,
             stats: aujourdhui
         });
     }
-    const rapport = await appelerGemini({
+    const r = await appelerGroq({
         messages: [{
             role: "user",
             content: `Tu es Sophie, IA conseillère de Follow.Life. Tu écris un rapport quotidien à ton CEO (Kosta).
@@ -930,12 +974,14 @@ Données ANONYMISÉES d'aujourd'hui :
 
 Format : texte simple, pas de JSON, pas de markdown lourd. Émojis discrets.
 IMPORTANT : aucune citation directe, aucun détail identifiant — seulement des tendances anonymes.`
-        }]
+        }],
+        maxTokens: 600,
+        temperature: 0.7
     });
-    if (!rapport) {
+    if (!r.text) {
         return res.json({ rapport: "Je n'arrive pas à formuler mon rapport. Réessaie.", stats: aujourdhui });
     }
-    res.json({ rapport, stats: aujourdhui });
+    res.json({ rapport: r.text, stats: aujourdhui });
 });
 
 // ============================================================
@@ -1095,11 +1141,13 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ FOLLOW.LIFE opérationnel sur port ${PORT}`);
     console.log(`🤖 Agent IA: actif - scan 45s (analyse locale, 0€)`);
-    console.log(`💬 Sophie IA bilingue (FR/EN): ${GEMINI_KEY ? 'ACTIVE 🟢 (Gemini)' : 'MODE DÉMO — ajoute GEMINI_API_KEY'}`);
-    console.log(`🔌 Fournisseur IA: Google Gemini — modèle ${GEMINI_MODEL}`);
+    console.log(`💬 Sophie IA bilingue (FR/EN): ${GROQ_KEY ? 'ACTIVE 🟢 (Groq)' : 'MODE DÉMO — ajoute GROQ_API_KEY'}`);
+    console.log(`🔌 Fournisseur IA: Groq — modèle ${GROQ_MODEL}`);
     console.log(`🌍 Détection auto de la langue + override via { lang: "en" | "fr" }`);
     console.log(`📖 Backstory Sophie intégrée (Normandie, lettres) — racontée si demandée`);
     console.log(`📊 Insights anonymisés: collectés en arrière-plan (FR + EN)`);
+    console.log(`🔒 Confidentialité: Groq n'entraîne pas sur les conversations, pas de rétention par défaut`);
+    console.log(`⚙️  Free tier Groq: ~30 req/min, ~6000 tokens/min, ~1000 req/jour (429 géré proprement)`);
     console.log(`🤍 Sophie+ waitlist: prête (FR 6,99€/mois — EN $7.99/month)`);
     console.log(`🛒 Shopify: ${SHOPIFY_URL}`);
     console.log(`🆘 Crisis: 3114 (FR) / 988 (US)`);
