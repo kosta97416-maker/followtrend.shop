@@ -1,40 +1,38 @@
 // ============================================================
 // FOLLOW.LIFE — server.js
 // ============================================================
-// VERSION GROQ — Sophie tourne sur Llama 3.3 70B (gratuit).
+// VERSION GROQ + CEREBRAS — Sophie tourne sur Llama 3.3 70B,
+// avec bascule automatique entre deux fournisseurs gratuits.
 //
-// POURQUOI CETTE VERSION :
+// COMMENT ÇA MARCHE :
 //
-// 1. 🔌 BASCULE VERS GROQ (api.groq.com).
-//    Sophie ne passe plus par Gemini mais par l'API Groq, qui sert
-//    le modèle Llama 3.3 70B de Meta — multilingue (FR/EN), chaleureux,
-//    ultra-rapide. Offre GRATUITE, sans carte bancaire.
-//    -> Crée une clé sur https://console.groq.com (menu "API Keys"),
-//       puis mets-la dans la variable d'environnement GROQ_API_KEY
-//       sur Render (Environment).
-//    -> Modèle utilisé : llama-3.3-70b-versatile.
-//    -> L'API Groq est compatible OpenAI. Tous les appels IA passent
-//       par un helper unique : appelerGroq().
+// 1. 🔌 DEUX FOURNISSEURS, UN SEUL MODÈLE (Llama 3.3 70B).
+//    Tous les appels IA passent par appelerIA(), qui essaie :
+//      1) GROQ en priorité      (api.groq.com)
+//      2) CEREBRAS en secours   (api.cerebras.ai) — si Groq est
+//         saturé (429) ou indisponible.
+//    Résultat : si une offre gratuite est à sec, Sophie continue
+//    sur l'autre. Elle ne tombe quasiment jamais. Toujours 0€.
+//    -> Clé Groq     : https://console.groq.com   → variable GROQ_API_KEY
+//    -> Clé Cerebras : https://cloud.cerebras.ai   → variable CEREBRAS_API_KEY
+//    (Sophie marche déjà avec UNE seule des deux clés. Les deux = idéal.)
+//    -> Modèle : llama-3.3-70b-versatile (Groq) / llama-3.3-70b (Cerebras).
+//    -> Les deux APIs sont compatibles OpenAI.
 //
-// 2. 🔒 CONFIDENTIALITÉ — BONNE NOUVELLE POUR LE RGPD.
-//    Contrairement à l'offre gratuite de Gemini, Groq N'UTILISE PAS
-//    les conversations pour entraîner ses modèles, et ne conserve PAS
-//    les requêtes par défaut (logs temporaires 30 j max, uniquement en
-//    cas d'incident technique ou d'abus ; option "Zero Data Retention"
-//    activable dans la console Groq). La promesse de confidentialité de
-//    Sophie est donc MIEUX tenue qu'avant — pense quand même à mettre à
-//    jour la page confidentialité du site (elle parle encore de Gemini).
+// 2. 🔒 CONFIDENTIALITÉ — OK POUR LE RGPD AVEC LES DEUX.
+//    Ni Groq ni Cerebras n'utilisent les conversations pour entraîner
+//    leurs modèles. Groq ne conserve pas les requêtes par défaut ;
+//    Cerebras ne conserve ni n'entraîne sur les inputs/outputs. La
+//    promesse de confidentialité de Sophie tient avec les deux.
+//    -> Pense quand même à mettre à jour la page confidentialité du
+//       site : elle doit mentionner Groq ET Cerebras.
 //
-// 3. ⚠️ LIMITES DE L'OFFRE GRATUITE GROQ (à connaître).
-//    Free tier llama-3.3-70b : ~30 requêtes/min, ~6 000 tokens/min,
-//    ~1 000 requêtes/jour. Le system prompt de Sophie est long, donc
-//    chaque message "coûte" pas mal de tokens. En phase de lancement
-//    (trafic faible) ça passe large. Si beaucoup de femmes discutent
-//    EN MÊME TEMPS, Sophie peut renvoyer un message doux "réécris-moi
-//    dans une minute" (géré proprement ici, code HTTP 429). Pas de
-//    panne, juste une attente. Le jour où le trafic explose : passer
-//    au plan Developer de Groq (payant) — uniquement si le projet le
-//    finance lui-même.
+// 3. ⚠️ LIMITES DES OFFRES GRATUITES (à connaître).
+//    Chaque fournisseur a ses propres limites gratuites (~30 req/min
+//    chacun). En les cumulant, Sophie a deux fois plus de marge.
+//    Si les DEUX saturent en même temps, Sophie répond avec douceur
+//    "réécris-moi dans une minute" (géré proprement, code HTTP 429).
+//    Pas de panne — juste une petite attente.
 //
 // 4. 💸 CORRECTIF FUITE DE CRÉDIT (déjà présent, conservé).
 //    analyserIntentionAchat() n'appelle aucune API : le scan prospects
@@ -57,8 +55,14 @@ app.use(express.json());
 // CONFIG
 // ============================================================
 const SHOPIFY_URL = "https://shop.followlife.net";
+
+// --- Fournisseur principal : Groq ---
 const GROQ_KEY = process.env.GROQ_API_KEY || "";
-const GROQ_MODEL = "llama-3.3-70b-versatile"; // Llama 3.3 70B — gratuit sur Groq, multilingue FR/EN
+const GROQ_MODEL = "llama-3.3-70b-versatile"; // Llama 3.3 70B sur Groq
+
+// --- Fournisseur de secours : Cerebras ---
+const CEREBRAS_KEY = process.env.CEREBRAS_API_KEY || "";
+const CEREBRAS_MODEL = "llama-3.3-70b"; // même modèle Llama 3.3 70B, nom différent chez Cerebras
 
 // ============================================================
 // ÉTAT GLOBAL
@@ -263,40 +267,45 @@ function detectLanguage(text) {
 }
 
 // ============================================================
-// 🔌 APPEL API GROQ (Llama 3.3 70B) — helper unique
+// 🔌 APPELS API IA — Groq (principal) + Cerebras (secours)
 // ============================================================
-// Tous les appels IA passent par ici. L'API Groq est compatible OpenAI :
-// system + messages sont envoyés dans un seul tableau "messages", et le
-// rôle "assistant" reste tel quel (pas de conversion comme avec Gemini).
+// appelerIA() est le SEUL point d'entrée utilisé partout dans le code.
+// Il essaie Groq d'abord, puis Cerebras si Groq échoue (429 ou erreur).
 //
-// Renvoie TOUJOURS un objet : { text, rateLimited }
-//   - text       : le texte de la réponse, ou null en cas d'échec.
-//   - rateLimited : true si Groq a renvoyé un 429 (limite gratuite
-//                   atteinte) — permet à la route Sophie d'afficher un
-//                   message doux plutôt qu'une erreur brute.
+// Les deux APIs sont compatibles OpenAI : system + messages dans un
+// seul tableau "messages", le rôle "assistant" reste tel quel.
 //
-// Paramètres :
-//   system      : (optionnel) consigne système.
-//   messages    : tableau { role: "user"|"assistant", content }.
-//   maxTokens   : (optionnel) plafond de tokens de sortie (défaut 1024).
-//   temperature : (optionnel) créativité (défaut 0.8).
+// Chaque helper renvoie TOUJOURS un objet :
+//   { text, rateLimited }
+//     - text        : texte de la réponse, ou null en cas d'échec.
+//     - rateLimited : true si l'API a renvoyé un 429 (offre gratuite
+//                     saturée).
+// appelerIA() ajoute en plus :
+//     - fournisseur : "Groq" | "Cerebras" | null (qui a répondu).
 //
 // En cas d'erreur, le détail exact est loggé dans la console Render.
 // ============================================================
+
+// --- Helper bas niveau : construit le tableau de messages OpenAI ---
+function construireMessages(system, messages) {
+    const finalMessages = [];
+    if (system) {
+        finalMessages.push({ role: "system", content: String(system) });
+    }
+    for (const m of (messages || [])) {
+        let role = 'user';
+        if (m.role === 'assistant') role = 'assistant';
+        else if (m.role === 'system') role = 'system';
+        finalMessages.push({ role, content: String(m.content || '') });
+    }
+    return finalMessages;
+}
+
+// --- Fournisseur 1 : GROQ ---
 async function appelerGroq({ system, messages, maxTokens, temperature } = {}) {
     if (!GROQ_KEY) return { text: null, rateLimited: false };
     try {
-        // Construction du tableau de messages au format OpenAI / Groq
-        const finalMessages = [];
-        if (system) {
-            finalMessages.push({ role: "system", content: String(system) });
-        }
-        for (const m of (messages || [])) {
-            let role = 'user';
-            if (m.role === 'assistant') role = 'assistant';
-            else if (m.role === 'system') role = 'system';
-            finalMessages.push({ role, content: String(m.content || '') });
-        }
+        const finalMessages = construireMessages(system, messages);
         if (finalMessages.length === 0) return { text: null, rateLimited: false };
 
         const response = await fetch(
@@ -316,10 +325,9 @@ async function appelerGroq({ system, messages, maxTokens, temperature } = {}) {
             }
         );
 
-        // 429 = limite de l'offre gratuite atteinte (6000 tokens/min, etc.)
-        // On ne traite pas ça comme une panne : Sophie dira "réessaie".
+        // 429 = limite de l'offre gratuite atteinte → on tentera Cerebras
         if (response.status === 429) {
-            console.error("⚠️ Groq: limite gratuite atteinte (429). Free tier = ~30 req/min, ~6000 tokens/min, ~1000 req/jour.");
+            console.error("⚠️ Groq: limite gratuite atteinte (429).");
             return { text: null, rateLimited: true };
         }
 
@@ -341,6 +349,83 @@ async function appelerGroq({ system, messages, maxTokens, temperature } = {}) {
         console.error("Erreur Groq (réseau):", e.message);
         return { text: null, rateLimited: false };
     }
+}
+
+// --- Fournisseur 2 : CEREBRAS (filet de secours) ---
+async function appelerCerebras({ system, messages, maxTokens, temperature } = {}) {
+    if (!CEREBRAS_KEY) return { text: null, rateLimited: false };
+    try {
+        const finalMessages = construireMessages(system, messages);
+        if (finalMessages.length === 0) return { text: null, rateLimited: false };
+
+        const response = await fetch(
+            "https://api.cerebras.ai/v1/chat/completions",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${CEREBRAS_KEY}`
+                },
+                body: JSON.stringify({
+                    model: CEREBRAS_MODEL,
+                    messages: finalMessages,
+                    // Cerebras utilise "max_completion_tokens" (compatible OpenAI récent)
+                    max_completion_tokens: maxTokens || 1024,
+                    temperature: temperature != null ? temperature : 0.8
+                })
+            }
+        );
+
+        if (response.status === 429) {
+            console.error("⚠️ Cerebras: limite gratuite atteinte (429).");
+            return { text: null, rateLimited: true };
+        }
+
+        const data = await response.json();
+
+        if (data && data.error) {
+            console.error("Erreur Cerebras:", data.error.message || JSON.stringify(data.error));
+            return { text: null, rateLimited: false };
+        }
+
+        const text = data?.choices?.[0]?.message?.content;
+        if (!text) {
+            console.error("Erreur Cerebras: réponse vide —", JSON.stringify(data).slice(0, 400));
+            return { text: null, rateLimited: false };
+        }
+
+        return { text, rateLimited: false };
+    } catch (e) {
+        console.error("Erreur Cerebras (réseau):", e.message);
+        return { text: null, rateLimited: false };
+    }
+}
+
+// --- Orchestrateur : Groq d'abord, Cerebras en secours ---
+async function appelerIA({ system, messages, maxTokens, temperature } = {}) {
+    let aRencontreRateLimit = false;
+
+    // 1. Essai principal : Groq
+    if (GROQ_KEY) {
+        const groq = await appelerGroq({ system, messages, maxTokens, temperature });
+        if (groq.text) return { text: groq.text, rateLimited: false, fournisseur: 'Groq' };
+        if (groq.rateLimited) aRencontreRateLimit = true;
+        if (CEREBRAS_KEY) {
+            console.log(`↪️  Groq indisponible (${groq.rateLimited ? '429 saturé' : 'erreur'}) — bascule sur Cerebras.`);
+        }
+    }
+
+    // 2. Filet de secours : Cerebras
+    if (CEREBRAS_KEY) {
+        const cerebras = await appelerCerebras({ system, messages, maxTokens, temperature });
+        if (cerebras.text) return { text: cerebras.text, rateLimited: false, fournisseur: 'Cerebras' };
+        if (cerebras.rateLimited) aRencontreRateLimit = true;
+        console.error(`⚠️ Cerebras aussi indisponible (${cerebras.rateLimited ? '429 saturé' : 'erreur'}).`);
+    }
+
+    // 3. Les deux ont échoué — si au moins un était saturé, on le signale
+    //    comme rateLimited pour que Sophie réponde "réessaie dans une minute".
+    return { text: null, rateLimited: aRencontreRateLimit, fournisseur: null };
 }
 
 // ============================================================
@@ -394,7 +479,7 @@ async function analyserIntentionAchat(texte) {
 }
 
 // ============================================================
-// GÉNÉRATION DE SCRIPT VIDÉO (via Groq)
+// GÉNÉRATION DE SCRIPT VIDÉO (via appelerIA)
 // ============================================================
 async function genererScriptVideo(produit, plateforme) {
     const fallback = {
@@ -403,7 +488,7 @@ async function genererScriptVideo(produit, plateforme) {
         hashtags: ["#mamansolo", "#bienetre", "#cocooning", "#momlife"],
         duree: "30-60s"
     };
-    const r = await appelerGroq({
+    const r = await appelerIA({
         messages: [{
             role: "user",
             content: `Script vidéo ${plateforme} sur "${produit}" pour Follow.Life (marque bien-être pour mamans solo, vibe douce et chaleureuse, Sophie l'amie virtuelle). Réponds UNIQUEMENT en JSON, sans texte autour : {"accroche": "...", "script": "...", "hashtags": ["..."], "duree": "..."}`
@@ -818,12 +903,12 @@ function ajouterInsight(insight) {
 }
 
 async function analyserConversationAnonyme(history) {
-    if (!GROQ_KEY || history.length < 2) return null;
+    if ((!GROQ_KEY && !CEREBRAS_KEY) || history.length < 2) return null;
     try {
         const conversationTexte = history.slice(-6).map(m =>
             `${m.role === 'user' ? 'Utilisatrice' : 'Sophie'}: ${m.content.substring(0, 200)}`
         ).join('\n');
-        const r = await appelerGroq({
+        const r = await appelerIA({
             system: SOPHIE_INSIGHT_PROMPT,
             messages: [{ role: "user", content: `Conversation à analyser :\n\n${conversationTexte}` }],
             maxTokens: 350,
@@ -868,7 +953,8 @@ app.post('/api/sophie', async (req, res) => {
             }
         }
 
-        if (!GROQ_KEY) {
+        // Mode démo : aucune des deux clés IA n'est configurée
+        if (!GROQ_KEY && !CEREBRAS_KEY) {
             const demoReply = session.language === 'en'
                 ? `hi, you 🤍 i'm sophie. i'm just getting ready. come back in a moment, or have a look at <a href='${SHOPIFY_URL}' target='_blank' style='color:#C9A87C;text-decoration:underline'>the shop</a>.`
                 : `Coucou toi 🤍 Je suis Sophie. Je me prépare. Reviens dans un instant, ou jette un œil à <a href='${SHOPIFY_URL}' target='_blank' style='color:#C9A87C;text-decoration:underline'>la boutique</a>.`;
@@ -878,17 +964,18 @@ app.post('/api/sophie', async (req, res) => {
         session.history.push({ role: "user", content: message });
         if (session.history.length > 12) session.history = session.history.slice(-12);
 
-        // Appel à Groq (l'erreur exacte, s'il y en a une, est loggée dans la console Render)
-        const r = await appelerGroq({
+        // Appel IA : Groq d'abord, Cerebras en secours (l'erreur exacte,
+        // s'il y en a une, est loggée dans la console Render)
+        const r = await appelerIA({
             system: getSystemPrompt(session.language),
             messages: session.history,
             maxTokens: 600,
             temperature: 0.85
         });
 
-        // ⚠️ Limite gratuite atteinte (429) : Sophie répond avec douceur,
-        // sans erreur brute. On retire le dernier message pour qu'elle
-        // puisse réécrire proprement dans un instant.
+        // ⚠️ Les DEUX fournisseurs saturés (429) : Sophie répond avec
+        // douceur. On retire le dernier message pour qu'elle puisse
+        // réécrire proprement dans un instant.
         if (r.rateLimited) {
             session.history.pop();
             sessionsChat.set(sessionId, session);
@@ -926,7 +1013,7 @@ app.post('/api/sophie', async (req, res) => {
         // Vignette produit si Sophie a posté un lien
         const product = extractProductFromReply(reply);
 
-        res.json({ reply, mode: "live", product, language: session.language });
+        res.json({ reply, mode: "live", product, language: session.language, fournisseur: r.fournisseur });
     } catch (e) {
         console.error("Erreur route /api/sophie:", e.message);
         res.status(500).json({ error: "Sophie est temporairement indisponible." });
@@ -948,13 +1035,13 @@ app.get('/api/sophie/rapport', async (req, res) => {
             stats: aujourdhui
         });
     }
-    if (!GROQ_KEY) {
+    if (!GROQ_KEY && !CEREBRAS_KEY) {
         return res.json({
             rapport: `📊 Aujourd'hui : ${aujourdhui.conversations} conversations.`,
             stats: aujourdhui
         });
     }
-    const r = await appelerGroq({
+    const r = await appelerIA({
         messages: [{
             role: "user",
             content: `Tu es Sophie, IA conseillère de Follow.Life. Tu écris un rapport quotidien à ton CEO (Kosta).
@@ -1139,15 +1226,20 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html'))
 // ============================================================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
+    const fournisseurs = [];
+    if (GROQ_KEY) fournisseurs.push('Groq');
+    if (CEREBRAS_KEY) fournisseurs.push('Cerebras');
+
     console.log(`✅ FOLLOW.LIFE opérationnel sur port ${PORT}`);
     console.log(`🤖 Agent IA: actif - scan 45s (analyse locale, 0€)`);
-    console.log(`💬 Sophie IA bilingue (FR/EN): ${GROQ_KEY ? 'ACTIVE 🟢 (Groq)' : 'MODE DÉMO — ajoute GROQ_API_KEY'}`);
-    console.log(`🔌 Fournisseur IA: Groq — modèle ${GROQ_MODEL}`);
+    console.log(`💬 Sophie IA bilingue (FR/EN): ${fournisseurs.length ? 'ACTIVE 🟢' : 'MODE DÉMO — ajoute GROQ_API_KEY et/ou CEREBRAS_API_KEY'}`);
+    console.log(`🔌 Fournisseurs IA: ${fournisseurs.length ? fournisseurs.join(' → ') + ' (bascule auto)' : 'aucun configuré'}`);
+    console.log(`   • Groq     : ${GROQ_KEY ? 'OK ✅ (' + GROQ_MODEL + ')' : 'non configuré'}`);
+    console.log(`   • Cerebras : ${CEREBRAS_KEY ? 'OK ✅ (' + CEREBRAS_MODEL + ')' : 'non configuré'}`);
     console.log(`🌍 Détection auto de la langue + override via { lang: "en" | "fr" }`);
     console.log(`📖 Backstory Sophie intégrée (Normandie, lettres) — racontée si demandée`);
     console.log(`📊 Insights anonymisés: collectés en arrière-plan (FR + EN)`);
-    console.log(`🔒 Confidentialité: Groq n'entraîne pas sur les conversations, pas de rétention par défaut`);
-    console.log(`⚙️  Free tier Groq: ~30 req/min, ~6000 tokens/min, ~1000 req/jour (429 géré proprement)`);
+    console.log(`🔒 Confidentialité: ni Groq ni Cerebras n'entraînent sur les conversations`);
     console.log(`🤍 Sophie+ waitlist: prête (FR 6,99€/mois — EN $7.99/month)`);
     console.log(`🛒 Shopify: ${SHOPIFY_URL}`);
     console.log(`🆘 Crisis: 3114 (FR) / 988 (US)`);
