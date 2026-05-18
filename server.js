@@ -1,38 +1,47 @@
 // ============================================================
 // FOLLOW.LIFE — server.js
 // ============================================================
-// VERSION GROQ + CEREBRAS — Sophie tourne sur Llama 3.3 70B,
-// avec bascule automatique entre deux fournisseurs gratuits.
+// VERSION GROQ + CEREBRAS + MISTRAL — Sophie tourne sur Llama 3.3 70B
+// (Groq/Cerebras) et Mistral Small, avec bascule automatique entre
+// trois fournisseurs gratuits.
 //
 // COMMENT ÇA MARCHE :
 //
-// 1. 🔌 DEUX FOURNISSEURS, UN SEUL MODÈLE (Llama 3.3 70B).
+// 1. 🔌 TROIS FOURNISSEURS EN RELAIS.
 //    Tous les appels IA passent par appelerIA(), qui essaie :
-//      1) GROQ en priorité      (api.groq.com)
-//      2) CEREBRAS en secours   (api.cerebras.ai) — si Groq est
-//         saturé (429) ou indisponible.
-//    Résultat : si une offre gratuite est à sec, Sophie continue
-//    sur l'autre. Elle ne tombe quasiment jamais. Toujours 0€.
-//    -> Clé Groq     : https://console.groq.com   → variable GROQ_API_KEY
-//    -> Clé Cerebras : https://cloud.cerebras.ai   → variable CEREBRAS_API_KEY
-//    (Sophie marche déjà avec UNE seule des deux clés. Les deux = idéal.)
-//    -> Modèle : llama-3.3-70b-versatile (Groq) / llama-3.3-70b (Cerebras).
-//    -> Les deux APIs sont compatibles OpenAI.
+//      1) GROQ en priorité      (api.groq.com — Llama 3.3 70B)
+//      2) CEREBRAS en secours   (api.cerebras.ai — Llama 3.3 70B)
+//      3) MISTRAL en 2e secours (api.mistral.ai — Mistral Small)
+//    Si un quota gratuit est à sec, Sophie passe au suivant. Avec
+//    trois quotas en relais, elle ne tombe quasiment jamais. 0€.
+//    -> Clé Groq     : https://console.groq.com    → GROQ_API_KEY
+//    -> Clé Cerebras : https://cloud.cerebras.ai    → CEREBRAS_API_KEY
+//    -> Clé Mistral  : https://console.mistral.ai   → MISTRAL_API_KEY
+//    (Sophie marche déjà avec UNE seule des trois clés.)
+//    -> Les trois APIs sont compatibles OpenAI.
 //
-// 2. 🔒 CONFIDENTIALITÉ — OK POUR LE RGPD AVEC LES DEUX.
-//    Ni Groq ni Cerebras n'utilisent les conversations pour entraîner
-//    leurs modèles. Groq ne conserve pas les requêtes par défaut ;
-//    Cerebras ne conserve ni n'entraîne sur les inputs/outputs. La
-//    promesse de confidentialité de Sophie tient avec les deux.
-//    -> Pense quand même à mettre à jour la page confidentialité du
-//       site : elle doit mentionner Groq ET Cerebras.
+// 2. 🔒 CONFIDENTIALITÉ — IMPORTANT, À LIRE.
+//    - Groq    : n'entraîne pas sur les conversations, pas de
+//                rétention par défaut. RGPD OK.
+//    - Cerebras: ne conserve pas et n'entraîne pas sur les données.
+//                RGPD OK.
+//    - Mistral : ⚠️ le palier gratuit "Experiment" PEUT utiliser les
+//                requêtes API pour entraîner les modèles de Mistral —
+//                SAUF si tu te désinscris (opt-out). À FAIRE AVANT de
+//                déployer : console.mistral.ai → Admin → Privacy →
+//                désactiver le partage de données pour l'entraînement.
+//                Une fois l'opt-out fait : Mistral ne conserve les
+//                données que 30 j (anti-abus) puis les supprime, sans
+//                entraînement. RGPD OK. (Mistral est français / hébergé
+//                en UE / sous CNIL — un bon point pour la marque.)
+//    -> Pense à mettre à jour la page confidentialité du site : elle
+//       doit mentionner Groq, Cerebras ET Mistral.
 //
-// 3. ⚠️ LIMITES DES OFFRES GRATUITES (à connaître).
-//    Chaque fournisseur a ses propres limites gratuites (~30 req/min
-//    chacun). En les cumulant, Sophie a deux fois plus de marge.
-//    Si les DEUX saturent en même temps, Sophie répond avec douceur
-//    "réécris-moi dans une minute" (géré proprement, code HTTP 429).
-//    Pas de panne — juste une petite attente.
+// 3. ⚠️ LIMITES DES OFFRES GRATUITES.
+//    Chaque fournisseur a ses propres limites gratuites. En les
+//    cumulant (trois quotas), Sophie a beaucoup de marge. Si les TROIS
+//    saturent en même temps, Sophie répond avec douceur "réécris-moi
+//    dans une minute" (géré proprement, code HTTP 429). Pas de panne.
 //
 // 4. 💸 CORRECTIF FUITE DE CRÉDIT (déjà présent, conservé).
 //    analyserIntentionAchat() n'appelle aucune API : le scan prospects
@@ -60,9 +69,13 @@ const SHOPIFY_URL = "https://shop.followlife.net";
 const GROQ_KEY = process.env.GROQ_API_KEY || "";
 const GROQ_MODEL = "llama-3.3-70b-versatile"; // Llama 3.3 70B sur Groq
 
-// --- Fournisseur de secours : Cerebras ---
+// --- Fournisseur de secours n°1 : Cerebras ---
 const CEREBRAS_KEY = process.env.CEREBRAS_API_KEY || "";
 const CEREBRAS_MODEL = "llama-3.3-70b"; // même modèle Llama 3.3 70B, nom différent chez Cerebras
+
+// --- Fournisseur de secours n°2 : Mistral (français, EU/RGPD) ---
+const MISTRAL_KEY = process.env.MISTRAL_API_KEY || "";
+const MISTRAL_MODEL = "mistral-small-latest"; // modèle Mistral, excellent en français
 
 // ============================================================
 // ÉTAT GLOBAL
@@ -267,21 +280,22 @@ function detectLanguage(text) {
 }
 
 // ============================================================
-// 🔌 APPELS API IA — Groq (principal) + Cerebras (secours)
+// 🔌 APPELS API IA — Groq (principal) + Cerebras + Mistral (secours)
 // ============================================================
 // appelerIA() est le SEUL point d'entrée utilisé partout dans le code.
-// Il essaie Groq d'abord, puis Cerebras si Groq échoue (429 ou erreur).
+// Il essaie Groq d'abord, puis Cerebras, puis Mistral, en s'arrêtant
+// dès qu'un fournisseur répond.
 //
-// Les deux APIs sont compatibles OpenAI : system + messages dans un
+// Les trois APIs sont compatibles OpenAI : system + messages dans un
 // seul tableau "messages", le rôle "assistant" reste tel quel.
 //
 // Chaque helper renvoie TOUJOURS un objet :
 //   { text, rateLimited }
 //     - text        : texte de la réponse, ou null en cas d'échec.
-//     - rateLimited : true si l'API a renvoyé un 429 (offre gratuite
-//                     saturée).
+//     - rateLimited : true si l'API a renvoyé un 429 (quota gratuit
+//                     saturé).
 // appelerIA() ajoute en plus :
-//     - fournisseur : "Groq" | "Cerebras" | null (qui a répondu).
+//     - fournisseur : "Groq" | "Cerebras" | "Mistral" | null.
 //
 // En cas d'erreur, le détail exact est loggé dans la console Render.
 // ============================================================
@@ -325,7 +339,7 @@ async function appelerGroq({ system, messages, maxTokens, temperature } = {}) {
             }
         );
 
-        // 429 = limite de l'offre gratuite atteinte → on tentera Cerebras
+        // 429 = limite de l'offre gratuite atteinte → on tentera le suivant
         if (response.status === 429) {
             console.error("⚠️ Groq: limite gratuite atteinte (429).");
             return { text: null, rateLimited: true };
@@ -351,7 +365,7 @@ async function appelerGroq({ system, messages, maxTokens, temperature } = {}) {
     }
 }
 
-// --- Fournisseur 2 : CEREBRAS (filet de secours) ---
+// --- Fournisseur 2 : CEREBRAS (1er filet de secours) ---
 async function appelerCerebras({ system, messages, maxTokens, temperature } = {}) {
     if (!CEREBRAS_KEY) return { text: null, rateLimited: false };
     try {
@@ -401,7 +415,62 @@ async function appelerCerebras({ system, messages, maxTokens, temperature } = {}
     }
 }
 
-// --- Orchestrateur : Groq d'abord, Cerebras en secours ---
+// --- Fournisseur 3 : MISTRAL (2e filet de secours, français/EU) ---
+async function appelerMistral({ system, messages, maxTokens, temperature } = {}) {
+    if (!MISTRAL_KEY) return { text: null, rateLimited: false };
+    try {
+        const finalMessages = construireMessages(system, messages);
+        if (finalMessages.length === 0) return { text: null, rateLimited: false };
+
+        const response = await fetch(
+            "https://api.mistral.ai/v1/chat/completions",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "Authorization": `Bearer ${MISTRAL_KEY}`
+                },
+                body: JSON.stringify({
+                    model: MISTRAL_MODEL,
+                    messages: finalMessages,
+                    max_tokens: maxTokens || 1024,
+                    temperature: temperature != null ? temperature : 0.8
+                })
+            }
+        );
+
+        if (response.status === 429) {
+            console.error("⚠️ Mistral: limite gratuite atteinte (429).");
+            return { text: null, rateLimited: true };
+        }
+
+        const data = await response.json();
+
+        // Mistral renvoie ses erreurs soit dans data.error, soit dans data.message
+        if (data && data.error) {
+            console.error("Erreur Mistral:", data.error.message || JSON.stringify(data.error));
+            return { text: null, rateLimited: false };
+        }
+        if (data && data.message && !data.choices) {
+            console.error("Erreur Mistral:", typeof data.message === 'string' ? data.message : JSON.stringify(data.message));
+            return { text: null, rateLimited: false };
+        }
+
+        const text = data?.choices?.[0]?.message?.content;
+        if (!text) {
+            console.error("Erreur Mistral: réponse vide —", JSON.stringify(data).slice(0, 400));
+            return { text: null, rateLimited: false };
+        }
+
+        return { text, rateLimited: false };
+    } catch (e) {
+        console.error("Erreur Mistral (réseau):", e.message);
+        return { text: null, rateLimited: false };
+    }
+}
+
+// --- Orchestrateur : Groq → Cerebras → Mistral ---
 async function appelerIA({ system, messages, maxTokens, temperature } = {}) {
     let aRencontreRateLimit = false;
 
@@ -410,20 +479,30 @@ async function appelerIA({ system, messages, maxTokens, temperature } = {}) {
         const groq = await appelerGroq({ system, messages, maxTokens, temperature });
         if (groq.text) return { text: groq.text, rateLimited: false, fournisseur: 'Groq' };
         if (groq.rateLimited) aRencontreRateLimit = true;
-        if (CEREBRAS_KEY) {
-            console.log(`↪️  Groq indisponible (${groq.rateLimited ? '429 saturé' : 'erreur'}) — bascule sur Cerebras.`);
+        if (CEREBRAS_KEY || MISTRAL_KEY) {
+            console.log(`↪️  Groq indisponible (${groq.rateLimited ? '429 saturé' : 'erreur'}) — bascule sur le fournisseur suivant.`);
         }
     }
 
-    // 2. Filet de secours : Cerebras
+    // 2. Premier filet de secours : Cerebras
     if (CEREBRAS_KEY) {
         const cerebras = await appelerCerebras({ system, messages, maxTokens, temperature });
         if (cerebras.text) return { text: cerebras.text, rateLimited: false, fournisseur: 'Cerebras' };
         if (cerebras.rateLimited) aRencontreRateLimit = true;
-        console.error(`⚠️ Cerebras aussi indisponible (${cerebras.rateLimited ? '429 saturé' : 'erreur'}).`);
+        if (MISTRAL_KEY) {
+            console.log(`↪️  Cerebras indisponible (${cerebras.rateLimited ? '429 saturé' : 'erreur'}) — bascule sur Mistral.`);
+        }
     }
 
-    // 3. Les deux ont échoué — si au moins un était saturé, on le signale
+    // 3. Deuxième filet de secours : Mistral
+    if (MISTRAL_KEY) {
+        const mistral = await appelerMistral({ system, messages, maxTokens, temperature });
+        if (mistral.text) return { text: mistral.text, rateLimited: false, fournisseur: 'Mistral' };
+        if (mistral.rateLimited) aRencontreRateLimit = true;
+        console.error(`⚠️ Mistral aussi indisponible (${mistral.rateLimited ? '429 saturé' : 'erreur'}).`);
+    }
+
+    // 4. Les trois ont échoué — si au moins un était saturé, on le signale
     //    comme rateLimited pour que Sophie réponde "réessaie dans une minute".
     return { text: null, rateLimited: aRencontreRateLimit, fournisseur: null };
 }
@@ -903,7 +982,7 @@ function ajouterInsight(insight) {
 }
 
 async function analyserConversationAnonyme(history) {
-    if ((!GROQ_KEY && !CEREBRAS_KEY) || history.length < 2) return null;
+    if ((!GROQ_KEY && !CEREBRAS_KEY && !MISTRAL_KEY) || history.length < 2) return null;
     try {
         const conversationTexte = history.slice(-6).map(m =>
             `${m.role === 'user' ? 'Utilisatrice' : 'Sophie'}: ${m.content.substring(0, 200)}`
@@ -953,8 +1032,8 @@ app.post('/api/sophie', async (req, res) => {
             }
         }
 
-        // Mode démo : aucune des deux clés IA n'est configurée
-        if (!GROQ_KEY && !CEREBRAS_KEY) {
+        // Mode démo : aucune des trois clés IA n'est configurée
+        if (!GROQ_KEY && !CEREBRAS_KEY && !MISTRAL_KEY) {
             const demoReply = session.language === 'en'
                 ? `hi, you 🤍 i'm sophie. i'm just getting ready. come back in a moment, or have a look at <a href='${SHOPIFY_URL}' target='_blank' style='color:#C9A87C;text-decoration:underline'>the shop</a>.`
                 : `Coucou toi 🤍 Je suis Sophie. Je me prépare. Reviens dans un instant, ou jette un œil à <a href='${SHOPIFY_URL}' target='_blank' style='color:#C9A87C;text-decoration:underline'>la boutique</a>.`;
@@ -964,8 +1043,8 @@ app.post('/api/sophie', async (req, res) => {
         session.history.push({ role: "user", content: message });
         if (session.history.length > 12) session.history = session.history.slice(-12);
 
-        // Appel IA : Groq d'abord, Cerebras en secours (l'erreur exacte,
-        // s'il y en a une, est loggée dans la console Render)
+        // Appel IA : Groq → Cerebras → Mistral (l'erreur exacte, s'il y
+        // en a une, est loggée dans la console Render)
         const r = await appelerIA({
             system: getSystemPrompt(session.language),
             messages: session.history,
@@ -973,7 +1052,7 @@ app.post('/api/sophie', async (req, res) => {
             temperature: 0.85
         });
 
-        // ⚠️ Les DEUX fournisseurs saturés (429) : Sophie répond avec
+        // ⚠️ Les TROIS fournisseurs saturés (429) : Sophie répond avec
         // douceur. On retire le dernier message pour qu'elle puisse
         // réécrire proprement dans un instant.
         if (r.rateLimited) {
@@ -1035,7 +1114,7 @@ app.get('/api/sophie/rapport', async (req, res) => {
             stats: aujourdhui
         });
     }
-    if (!GROQ_KEY && !CEREBRAS_KEY) {
+    if (!GROQ_KEY && !CEREBRAS_KEY && !MISTRAL_KEY) {
         return res.json({
             rapport: `📊 Aujourd'hui : ${aujourdhui.conversations} conversations.`,
             stats: aujourdhui
@@ -1229,17 +1308,19 @@ app.listen(PORT, '0.0.0.0', () => {
     const fournisseurs = [];
     if (GROQ_KEY) fournisseurs.push('Groq');
     if (CEREBRAS_KEY) fournisseurs.push('Cerebras');
+    if (MISTRAL_KEY) fournisseurs.push('Mistral');
 
     console.log(`✅ FOLLOW.LIFE opérationnel sur port ${PORT}`);
     console.log(`🤖 Agent IA: actif - scan 45s (analyse locale, 0€)`);
-    console.log(`💬 Sophie IA bilingue (FR/EN): ${fournisseurs.length ? 'ACTIVE 🟢' : 'MODE DÉMO — ajoute GROQ_API_KEY et/ou CEREBRAS_API_KEY'}`);
+    console.log(`💬 Sophie IA bilingue (FR/EN): ${fournisseurs.length ? 'ACTIVE 🟢' : 'MODE DÉMO — ajoute au moins une clé IA'}`);
     console.log(`🔌 Fournisseurs IA: ${fournisseurs.length ? fournisseurs.join(' → ') + ' (bascule auto)' : 'aucun configuré'}`);
     console.log(`   • Groq     : ${GROQ_KEY ? 'OK ✅ (' + GROQ_MODEL + ')' : 'non configuré'}`);
     console.log(`   • Cerebras : ${CEREBRAS_KEY ? 'OK ✅ (' + CEREBRAS_MODEL + ')' : 'non configuré'}`);
+    console.log(`   • Mistral  : ${MISTRAL_KEY ? 'OK ✅ (' + MISTRAL_MODEL + ')' : 'non configuré'}`);
     console.log(`🌍 Détection auto de la langue + override via { lang: "en" | "fr" }`);
     console.log(`📖 Backstory Sophie intégrée (Normandie, lettres) — racontée si demandée`);
     console.log(`📊 Insights anonymisés: collectés en arrière-plan (FR + EN)`);
-    console.log(`🔒 Confidentialité: ni Groq ni Cerebras n'entraînent sur les conversations`);
+    console.log(`🔒 Confidentialité: Groq/Cerebras n'entraînent pas ; Mistral OK si opt-out fait`);
     console.log(`🤍 Sophie+ waitlist: prête (FR 6,99€/mois — EN $7.99/month)`);
     console.log(`🛒 Shopify: ${SHOPIFY_URL}`);
     console.log(`🆘 Crisis: 3114 (FR) / 988 (US)`);
