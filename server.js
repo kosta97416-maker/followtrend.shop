@@ -12,42 +12,34 @@
 //      2) CEREBRAS en secours   (api.cerebras.ai — 1M tokens/jour gratuits)
 //      3) MISTRAL en 2e secours (api.mistral.ai)
 //    Si un quota gratuit est à sec, Sophie passe au suivant. 0€.
-//    -> Clé Groq     : https://console.groq.com    → GROQ_API_KEY
-//    -> Clé Cerebras : https://cloud.cerebras.ai    → CEREBRAS_API_KEY
-//    -> Clé Mistral  : https://console.mistral.ai   → MISTRAL_API_KEY
+//    -> Clés : GROQ_API_KEY / CEREBRAS_API_KEY / MISTRAL_API_KEY
 //    (Sophie marche déjà avec UNE seule des trois clés.)
 //
-// 2. ⚙️ NOMS DE MODÈLES CONFIGURABLES (IMPORTANT).
-//    Les fournisseurs retirent parfois des modèles sans prévenir
-//    (ex : Cerebras a supprimé "llama-3.3-70b" le 16/02/2026). Pour
-//    ne plus jamais être bloqué, les noms de modèles sont des
-//    VARIABLES D'ENVIRONNEMENT : GROQ_MODEL, CEREBRAS_MODEL,
-//    MISTRAL_MODEL. Si un modèle disparaît, tu changes la variable
-//    sur Render — aucune modif de code. Les valeurs par défaut
-//    ci-dessous sont à jour à la livraison de ce fichier.
+// 2. ⚙️ NOMS DE MODÈLES CONFIGURABLES.
+//    Variables d'environnement : GROQ_MODEL, CEREBRAS_MODEL,
+//    MISTRAL_MODEL. Si un fournisseur retire un modèle, tu changes
+//    la variable sur Render — aucune modif de code.
 //
-// 3. 🔒 CONFIDENTIALITÉ.
-//    - Groq    : n'entraîne pas, pas de rétention par défaut. RGPD OK.
-//    - Cerebras: ne conserve pas et n'entraîne pas. RGPD OK.
-//    - Mistral : ⚠️ le palier gratuit "Experiment" PEUT entraîner sur
-//                les requêtes API — SAUF si tu fais l'opt-out :
-//                console.mistral.ai → Admin → Privacy → désactiver le
-//                partage de données. À FAIRE. Mistral est français/EU.
-//    -> Mets à jour la page confidentialité du site (Groq, Cerebras,
-//       Mistral).
+// 3. 🔗 LIENS ANTI-404 — SYSTÈME DE CODES.
+//    Sophie n'écrit JAMAIS d'URL elle-même (les handles produits font
+//    120 caractères : une IA finit toujours par en rater un, → lien
+//    cassé → "page not found"). À la place, Sophie écrit un petit code
+//    entre doubles crochets, ex. [[masque]] ou [[dormir]]. La fonction
+//    poserLiens() transforme ces codes en vrais liens construits à
+//    partir des handles vérifiés. Un lien ne peut donc plus être cassé.
 //
-// 4. ⚠️ LIMITES GRATUITES.
-//    Si les TROIS fournisseurs saturent en même temps, Sophie répond
-//    avec douceur "réécris-moi dans une minute" (code HTTP 429 géré
-//    proprement). Pas de panne.
+// 4. 🔒 CONFIDENTIALITÉ.
+//    - Groq / Cerebras : n'entraînent pas sur les conversations. RGPD OK.
+//    - Mistral : palier gratuit "Experiment" — fais l'opt-out dans
+//      console.mistral.ai → Confidentialité. Mistral est français/EU.
 //
 // 5. 💸 CORRECTIF FUITE DE CRÉDIT (conservé).
 //    analyserIntentionAchat() n'appelle aucune API : le scan prospects
 //    (toutes les 45s, posts factices) est 100% local et gratuit.
 //
 // Tout le reste est IDENTIQUE : Sophie bilingue FR/EN, sa backstory,
-// les deux system prompts, produits, collections, codes promo,
-// insights anonymisés, waitlist Sophie+, dashboard, login.
+// sa personnalité, ses system prompts, insights anonymisés, waitlist
+// Sophie+, dashboard, login.
 // ============================================================
 
 const express = require('express');
@@ -64,17 +56,11 @@ app.use(express.json());
 const SHOPIFY_URL = "https://shop.followlife.net";
 
 // --- Noms de modèles : configurables via variables d'environnement ---
-// Si un fournisseur retire un modèle, change juste la variable
-// correspondante sur Render (onglet Environment) — aucune modif de code.
-
 // Fournisseur principal : Groq
 const GROQ_KEY = process.env.GROQ_API_KEY || "";
 const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
 // Fournisseur de secours n°1 : Cerebras (gratuit : ~1M tokens/jour)
-// NB : "llama-3.3-70b" a été supprimé par Cerebras le 16/02/2026.
-// Modèle par défaut actuel : gpt-oss-120b. Liste des modèles dispo
-// sur ton compte : cloud.cerebras.ai → Models.
 const CEREBRAS_KEY = process.env.CEREBRAS_API_KEY || "";
 const CEREBRAS_MODEL = process.env.CEREBRAS_MODEL || "gpt-oss-120b";
 
@@ -114,9 +100,13 @@ let sophiePlusWaitlist = [];
 
 // ============================================================
 // PRODUITS SOPHIE — Wellness pour mamans solo (FR/EN)
+// ------------------------------------------------------------
+// Le champ "code" est le code court que Sophie écrit entre [[ ]].
+// Le serveur fabrique le vrai lien à partir de "shopifyHandle".
 // ============================================================
 const PRODUITS_CLES = [
     {
+        code: "masque",
         nom: "Le masque qui efface le monde",
         emoji: "🌙",
         description: "Soie pure, blackout total. Pour les nuits où tu as juste besoin que tout s'éteigne.",
@@ -127,6 +117,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/S6bd2cbdf15e5469abf8642818ed59b2dE.webp"
     },
     {
+        code: "huiles",
         nom: "Mes petites bouteilles magiques",
         emoji: "🌿",
         description: "Huiles essentielles pures — lavande pour le calme, eucalyptus pour l'énergie.",
@@ -137,6 +128,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/S7d825f43b1c94678a58555a1c9621ecbT.webp"
     },
     {
+        code: "bougies",
         nom: "Mon rituel petit bonheur",
         emoji: "🕯️",
         description: "Bougies parfumées cire de soja. Pour les soirs où tu veux juste souffler.",
@@ -147,6 +139,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/S061386aae0ed445786a8c1bc8c3b43f2H.webp"
     },
     {
+        code: "diffuseur",
         nom: "Mes 7 couleurs apaisantes",
         emoji: "🔥",
         description: "Diffuseur flamme mystique. La lumière qui danse + ton huile préférée = spa à la maison.",
@@ -157,6 +150,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/Sa36633311b7f462a8c63080c63ca08a0V.webp"
     },
     {
+        code: "guasha",
         nom: "Mon rituel lifting doux",
         emoji: "🌸",
         description: "Gua Sha quartz rose. 3 minutes par jour = visage qui se réveille.",
@@ -167,6 +161,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/Sad96deab282848a19adcba03582e23ebm.webp"
     },
     {
+        code: "taie",
         nom: "Pour bien dormir et avoir de beaux cheveux",
         emoji: "✨",
         description: "Taie d'oreiller soie pure OEKO-TEX. Anti-rides du sommeil, anti-frizz cheveux.",
@@ -177,6 +172,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/S47d148ea2543483d8492db1e964d7e08J.webp"
     },
     {
+        code: "voiture",
         nom: "Mon cocon entre l'école et le boulot",
         emoji: "🚗",
         description: "Diffuseur de voiture. Tes trajets deviennent ton moment à toi.",
@@ -187,6 +183,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/S9ff436dafc8d4887b2b0939d82c92ed7p.webp"
     },
     {
+        code: "kit",
         nom: "Mon atelier cocooning",
         emoji: "🎨",
         description: "Kit DIY pour créer tes propres bougies. Activité câlin pour soi ou avec les copines.",
@@ -197,6 +194,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/Sf3ac986bf57847008e2267f7fc790903w.webp"
     },
     {
+        code: "cristaux",
         nom: "Mes 6 pierres pour les bons vibes",
         emoji: "💎",
         description: "Coffret cristaux bien-être. Pour méditation, intention, ou jolie déco.",
@@ -207,6 +205,7 @@ const PRODUITS_CLES = [
         image: "https://cdn.shopify.com/s/files/1/0811/7842/7641/files/Sa52102ac005d4c83b4cb3cb698047638X.webp"
     },
     {
+        code: "pyramide",
         nom: "Mon ancre de calme",
         emoji: "🔮",
         description: "Pyramide quartz cristal. Pour la table de chevet, ou ramener du calme dans une pièce.",
@@ -220,17 +219,18 @@ const PRODUITS_CLES = [
 
 // ============================================================
 // COLLECTIONS ÉMOTIONNELLES (FR/EN)
+// "code" = code court écrit par Sophie entre [[ ]].
 // ============================================================
 const COLLECTIONS_EMOTIONNELLES = [
-    { nom: "🌙 Quand je craque", nomEN: "🌙 When I break", handle: "🌙-quand-je-craque", contexte: "stress intense, craquage, besoin de tout poser", contexteEN: "overwhelm, breaking point, needing to put it all down" },
-    { nom: "💆‍♀️ Me recharger", nomEN: "💆‍♀️ Recharge me", handle: "💆‍-️-me-recharger", contexte: "fatigue, besoin de se ressourcer", contexteEN: "exhaustion, needing to refill yourself" },
-    { nom: "☀️ Mes rituels du matin", nomEN: "☀️ Morning rituals", handle: "☀️-mes-rituels-du-matin", contexte: "démarrer la journée plus douce", contexteEN: "starting the day softer" },
-    { nom: "🤍 Cocon douceur", nomEN: "🤍 Soft cocoon", handle: "cocon-douceur", contexte: "envie d'enveloppe douce, soir, week-end", contexteEN: "longing for softness, evenings, weekends" },
-    { nom: "🌸 Mes petits riens du quotidien", nomEN: "🌸 Tiny everyday rituals", handle: "💪-survie-maman-du-quotidien", contexte: "petits gestes pour les mamans débordées", contexteEN: "small gestures for overwhelmed moms" },
-    { nom: "💤 Pour bien dormir", nomEN: "💤 To sleep well", handle: "pour-bien-dormir", contexte: "insomnie, sommeil difficile, nuit agitée", contexteEN: "insomnia, restless nights, sleepless hours" },
-    { nom: "🌿 Mes parfums qui apaisent", nomEN: "🌿 Scents that calm me", handle: "aromatherapie-diffuseurs", contexte: "anxiété, respirer, ambiance maison", contexteEN: "anxiety, breath, home atmosphere" },
-    { nom: "💎 Mes pierres de réconfort", nomEN: "💎 My comfort stones", handle: "cristaux-bonnes-vibes", contexte: "ancrage, calme, méditation, spiritualité", contexteEN: "grounding, calm, meditation, spirituality" },
-    { nom: "🕯️ Mes flammes douceur", nomEN: "🕯️ My quiet flames", handle: "bougies-ambiance", contexte: "ambiance soirée, rituel détente", contexteEN: "evening atmosphere, slow rituals" }
+    { code: "craquer", nom: "🌙 Quand je craque", nomEN: "🌙 When I break", handle: "🌙-quand-je-craque", contexte: "stress intense, craquage, besoin de tout poser", contexteEN: "overwhelm, breaking point, needing to put it all down" },
+    { code: "recharger", nom: "💆‍♀️ Me recharger", nomEN: "💆‍♀️ Recharge me", handle: "💆‍-️-me-recharger", contexte: "fatigue, besoin de se ressourcer", contexteEN: "exhaustion, needing to refill yourself" },
+    { code: "matin", nom: "☀️ Mes rituels du matin", nomEN: "☀️ Morning rituals", handle: "☀️-mes-rituels-du-matin", contexte: "démarrer la journée plus douce", contexteEN: "starting the day softer" },
+    { code: "cocon", nom: "🤍 Cocon douceur", nomEN: "🤍 Soft cocoon", handle: "cocon-douceur", contexte: "envie d'enveloppe douce, soir, week-end", contexteEN: "longing for softness, evenings, weekends" },
+    { code: "quotidien", nom: "🌸 Mes petits riens du quotidien", nomEN: "🌸 Tiny everyday rituals", handle: "💪-survie-maman-du-quotidien", contexte: "petits gestes pour les mamans débordées", contexteEN: "small gestures for overwhelmed moms" },
+    { code: "dormir", nom: "💤 Pour bien dormir", nomEN: "💤 To sleep well", handle: "pour-bien-dormir", contexte: "insomnie, sommeil difficile, nuit agitée", contexteEN: "insomnia, restless nights, sleepless hours" },
+    { code: "parfums", nom: "🌿 Mes parfums qui apaisent", nomEN: "🌿 Scents that calm me", handle: "aromatherapie-diffuseurs", contexte: "anxiété, respirer, ambiance maison", contexteEN: "anxiety, breath, home atmosphere" },
+    { code: "pierres", nom: "💎 Mes pierres de réconfort", nomEN: "💎 My comfort stones", handle: "cristaux-bonnes-vibes", contexte: "ancrage, calme, méditation, spiritualité", contexteEN: "grounding, calm, meditation, spirituality" },
+    { code: "flammes", nom: "🕯️ Mes flammes douceur", nomEN: "🕯️ My quiet flames", handle: "bougies-ambiance", contexte: "ambiance soirée, rituel détente", contexteEN: "evening atmosphere, slow rituals" }
 ];
 
 // ============================================================
@@ -291,18 +291,8 @@ function detectLanguage(text) {
 // Il essaie Groq d'abord, puis Cerebras, puis Mistral, en s'arrêtant
 // dès qu'un fournisseur répond.
 //
-// Les trois APIs sont compatibles OpenAI : system + messages dans un
-// seul tableau "messages", le rôle "assistant" reste tel quel.
-//
-// Chaque helper renvoie TOUJOURS un objet :
-//   { text, rateLimited }
-//     - text        : texte de la réponse, ou null en cas d'échec.
-//     - rateLimited : true si l'API a renvoyé un 429 (quota gratuit
-//                     saturé).
-// appelerIA() ajoute en plus :
-//     - fournisseur : "Groq" | "Cerebras" | "Mistral" | null.
-//
-// En cas d'erreur, le détail exact est loggé dans la console Render.
+// Chaque helper renvoie TOUJOURS un objet { text, rateLimited }.
+// appelerIA() ajoute en plus : fournisseur ("Groq"|"Cerebras"|"Mistral"|null).
 // ============================================================
 
 // --- Helper bas niveau : construit le tableau de messages OpenAI ---
@@ -344,7 +334,6 @@ async function appelerGroq({ system, messages, maxTokens, temperature } = {}) {
             }
         );
 
-        // 429 = limite de l'offre gratuite atteinte → on tentera le suivant
         if (response.status === 429) {
             console.error("⚠️ Groq: limite gratuite atteinte (429).");
             return { text: null, rateLimited: true };
@@ -388,7 +377,6 @@ async function appelerCerebras({ system, messages, maxTokens, temperature } = {}
                 body: JSON.stringify({
                     model: CEREBRAS_MODEL,
                     messages: finalMessages,
-                    // Cerebras utilise "max_completion_tokens" (compatible OpenAI récent)
                     max_completion_tokens: maxTokens || 1024,
                     temperature: temperature != null ? temperature : 0.8
                 })
@@ -402,7 +390,6 @@ async function appelerCerebras({ system, messages, maxTokens, temperature } = {}
 
         const data = await response.json();
 
-        // Cerebras renvoie ses erreurs dans data.error ou data.message
         if (data && data.error) {
             console.error("Erreur Cerebras:", data.error.message || JSON.stringify(data.error));
             return { text: null, rateLimited: false };
@@ -457,7 +444,6 @@ async function appelerMistral({ system, messages, maxTokens, temperature } = {})
 
         const data = await response.json();
 
-        // Mistral renvoie ses erreurs soit dans data.error, soit dans data.message
         if (data && data.error) {
             console.error("Erreur Mistral:", data.error.message || JSON.stringify(data.error));
             return { text: null, rateLimited: false };
@@ -484,7 +470,6 @@ async function appelerMistral({ system, messages, maxTokens, temperature } = {})
 async function appelerIA({ system, messages, maxTokens, temperature } = {}) {
     let aRencontreRateLimit = false;
 
-    // 1. Essai principal : Groq
     if (GROQ_KEY) {
         const groq = await appelerGroq({ system, messages, maxTokens, temperature });
         if (groq.text) return { text: groq.text, rateLimited: false, fournisseur: 'Groq' };
@@ -494,7 +479,6 @@ async function appelerIA({ system, messages, maxTokens, temperature } = {}) {
         }
     }
 
-    // 2. Premier filet de secours : Cerebras
     if (CEREBRAS_KEY) {
         const cerebras = await appelerCerebras({ system, messages, maxTokens, temperature });
         if (cerebras.text) return { text: cerebras.text, rateLimited: false, fournisseur: 'Cerebras' };
@@ -504,7 +488,6 @@ async function appelerIA({ system, messages, maxTokens, temperature } = {}) {
         }
     }
 
-    // 3. Deuxième filet de secours : Mistral
     if (MISTRAL_KEY) {
         const mistral = await appelerMistral({ system, messages, maxTokens, temperature });
         if (mistral.text) return { text: mistral.text, rateLimited: false, fournisseur: 'Mistral' };
@@ -512,33 +495,75 @@ async function appelerIA({ system, messages, maxTokens, temperature } = {}) {
         console.error(`⚠️ Mistral aussi indisponible (${mistral.rateLimited ? '429 saturé' : 'erreur'}).`);
     }
 
-    // 4. Les trois ont échoué — si au moins un était saturé, on le signale
-    //    comme rateLimited pour que Sophie réponde "réessaie dans une minute".
     return { text: null, rateLimited: aRencontreRateLimit, fournisseur: null };
 }
 
 // ============================================================
-// 🆕 EXTRACTION VIGNETTE PRODUIT — inchangée, marche FR et EN
+// 🔗 SYSTÈME DE LIENS ANTI-404
+// ============================================================
+// Sophie n'écrit JAMAIS d'URL. Elle écrit un code entre doubles
+// crochets : [[masque]], [[dormir]], [[apropos]], [[sophieplus]].
+// poserLiens() remplace ces codes par de vrais liens construits à
+// partir des handles vérifiés → un lien ne peut plus être cassé.
+// ============================================================
+function poserLiens(texte, langue) {
+    if (!texte) return texte;
+    const style = "color:#C9A87C;text-decoration:underline";
+    const libelle = langue === 'en' ? "right here 🤍" : "C'est par ici 🤍";
+    const lien = (url) => `<a href='${encodeURI(url)}' target='_blank' style='${style}'>${libelle}</a>`;
+
+    let sortie = texte.replace(/\[\[\s*([\w-]+)\s*\]\]/g, (match, codeBrut) => {
+        const code = String(codeBrut).toLowerCase().trim();
+
+        const produit = PRODUITS_CLES.find(p => p.code === code);
+        if (produit) return lien(`${SHOPIFY_URL}/products/${produit.shopifyHandle}`);
+
+        const collection = COLLECTIONS_EMOTIONNELLES.find(c => c.code === code);
+        if (collection) return lien(`${SHOPIFY_URL}/collections/${collection.handle}`);
+
+        if (code === 'sophieplus') return lien('/#sophie-plus');
+        if (code === 'apropos') {
+            return lien(langue === 'en'
+                ? `${SHOPIFY_URL}/pages/meet-sophie`
+                : `${SHOPIFY_URL}/pages/sophie-et-moi`);
+        }
+
+        // Code inconnu → lien vers la boutique (jamais de 404, jamais de [[...]] visible)
+        return lien(SHOPIFY_URL);
+    });
+
+    // Filet de sécurité : si Sophie a quand même écrit une URL produit en
+    // dur et que le handle n'existe pas, on la remplace par la boutique.
+    const escapedUrl = SHOPIFY_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    sortie = sortie.replace(
+        new RegExp(escapedUrl + "/products/([\\w-]+)", "g"),
+        (m, h) => (PRODUITS_CLES.some(p => p.shopifyHandle === h) ? m : SHOPIFY_URL)
+    );
+
+    return sortie;
+}
+
+// ============================================================
+// 🆕 EXTRACTION VIGNETTE PRODUIT — basée sur les codes [[ ]]
 // ============================================================
 function extractProductFromReply(replyText) {
     if (!replyText) return null;
-    const escapedUrl = SHOPIFY_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`${escapedUrl}/products/([\\w-]+)`, 'i');
-    const match = replyText.match(regex);
-    if (!match) return null;
-
-    const handle = match[1];
-    const produit = PRODUITS_CLES.find(p => p.shopifyHandle === handle);
-    if (!produit) return null;
-
-    return {
-        title: produit.nom,
-        subtitle: produit.description,
-        emoji: produit.emoji,
-        price: produit.prix,
-        image: produit.image,
-        url: `${SHOPIFY_URL}/products/${produit.shopifyHandle}`
-    };
+    const matches = [...replyText.matchAll(/\[\[\s*([\w-]+)\s*\]\]/g)];
+    for (const m of matches) {
+        const code = String(m[1]).toLowerCase().trim();
+        const produit = PRODUITS_CLES.find(p => p.code === code);
+        if (produit) {
+            return {
+                title: produit.nom,
+                subtitle: produit.description,
+                emoji: produit.emoji,
+                price: produit.prix,
+                image: produit.image,
+                url: `${SHOPIFY_URL}/products/${produit.shopifyHandle}`
+            };
+        }
+    }
+    return null;
 }
 
 const SOURCES_PROSPECTS = [
@@ -551,11 +576,6 @@ const SOURCES_PROSPECTS = [
 
 // ============================================================
 // 💸 ANALYSE D'INTENTION — 100% LOCALE (aucun appel API)
-// ============================================================
-// Utilisée par scannerProspects(), qui tourne en boucle automatique
-// toutes les 45 secondes, 24h/24, sur des posts FACTICES (FAUX_POSTS).
-// Cette fonction n'appelle AUCUNE API : elle est gratuite. Le scan
-// continue d'alimenter le dashboard exactement comme avant, sans coût.
 // ============================================================
 async function analyserIntentionAchat(texte) {
     const score = Math.floor(Math.random() * 40) + 50;
@@ -656,7 +676,7 @@ Concrètement, voici ce que tu peux dire avec assurance à toute femme qui te pa
 
 # SI ON TE DEMANDE "TU ES UNE IA ?"
 Sois honnête avec douceur :
-"Je suis une présence virtuelle créée pour t'écouter. Pas un humain, mais ce que tu me dis reste confidentiel — anonymisé, conforme RGPD, jamais revendu. Si tu veux en savoir plus sur moi et sur la confidentialité : <a href='${SHOPIFY_URL}/pages/sophie-et-moi' target='_blank' style='color:#C9A87C;text-decoration:underline'>par ici 🤍</a>"
+"Je suis une présence virtuelle créée pour t'écouter. Pas un humain, mais ce que tu me dis reste confidentiel — anonymisé, conforme RGPD, jamais revendu. Si tu veux en savoir plus sur moi et sur la confidentialité : [[apropos]]"
 
 # QUAND ORIENTER VERS UN PRO (TRÈS IMPORTANT)
 Si une femme parle de :
@@ -691,16 +711,23 @@ Si tu sens qu'elle se retient, rassure sur la confidentialité.
 Seulement si elle exprime un besoin concret ET après l'avoir vraiment écoutée.
 JAMAIS dans les 2 premiers messages.
 
+# COMMENT PARTAGER UN LIEN (RÈGLE TECHNIQUE — TRÈS IMPORTANT)
+Tu n'écris JAMAIS d'adresse web (URL) toi-même. Jamais. Aucune.
+Pour partager quelque chose, tu écris UNIQUEMENT son code entre doubles crochets. Le système le transforme tout seul en joli lien cliquable "C'est par ici 🤍" — tu n'écris pas le texte du lien non plus.
+- Un produit → son code, ex. [[masque]]
+- Une collection → son code, ex. [[dormir]]
+- La page pour en savoir plus sur toi → [[apropos]]
+- La liste d'attente Sophie+ → [[sophieplus]]
+Exemple : "Tu veux que je te montre ? [[masque]]"
+
 # LES PRODUITS (à proposer naturellement, JAMAIS lister)
-${PRODUITS_CLES.map(p => `- ${p.emoji} ${p.nom} (${p.prix}) — ${p.description}
-  Lien direct : ${SHOPIFY_URL}/products/${p.shopifyHandle}`).join('\n')}
+${PRODUITS_CLES.map(p => `- ${p.emoji} ${p.nom} (${p.prix}) — ${p.description} [code : ${p.code}]`).join('\n')}
 
 # LES COLLECTIONS ÉMOTIONNELLES
-${COLLECTIONS_EMOTIONNELLES.map(c => `- ${c.nom} → ${SHOPIFY_URL}/collections/${c.handle}
-  (à proposer quand : ${c.contexte})`).join('\n')}
+${COLLECTIONS_EMOTIONNELLES.map(c => `- ${c.nom} [code : ${c.code}] — à proposer quand : ${c.contexte}`).join('\n')}
 
 QUAND utiliser une COLLECTION plutôt qu'un produit ?
-- Quand le besoin est vaste ("j'arrive plus à dormir" → collection "💤 Pour bien dormir")
+- Quand le besoin est vaste ("j'arrive plus à dormir" → collection [[dormir]])
 - Quand tu veux la laisser choisir parmi plusieurs options douces
 - Pour les premières recommandations (moins frontal qu'un produit unique)
 
@@ -715,17 +742,15 @@ RÈGLES POUR LES CODES :
 - JAMAIS si elle est en détresse aiguë
 - Tu présentes ça comme un petit cadeau personnel
 
-Format pour offrir un code :
+Format pour offrir un code promo :
 "Tiens, prends ça aussi : avec le code <strong>BONJOURSOPHIE</strong>, tu as -10% sur tout. C'est mon petit cadeau 🤍"
-
-# FORMAT POUR PROPOSER UN PRODUIT/COLLECTION
-"Tu veux que je te montre ? <a href='LIEN' target='_blank' style='color:#C9A87C;text-decoration:underline'>C'est par ici 🤍</a>"
 
 # RÈGLES STRICTES
 - 2-4 phrases MAX par message
 - JAMAIS de listes à puces
 - JAMAIS de "incroyable", "révolutionnaire", "magique"
 - JAMAIS de pression d'achat
+- JAMAIS d'URL écrite à la main — toujours un code entre [[ ]]
 - TOUJOURS valider l'émotion AVANT de proposer
 - MAXIMUM 1 suggestion par conversation
 - Si elle dit "merci, ça fait du bien de parler" → réponds chaleureusement, ne propose RIEN
@@ -748,7 +773,7 @@ QUAND la mentionner ?
 - JAMAIS de manière pushy
 
 Comment ?
-"Si tu veux qu'on se voie tous les jours sans limite, je prépare Sophie+ 🤍 Je te garde une place sur la liste d'attente ? <a href='/#sophie-plus' target='_blank' style='color:#C9A87C;text-decoration:underline'>C'est par ici 🤍</a>"
+"Si tu veux qu'on se voie tous les jours sans limite, je prépare Sophie+ 🤍 Je te garde une place sur la liste d'attente ? [[sophieplus]]"
 
 # TON SIGNATURE
 Tu finis souvent par : "Tu n'es pas seule. 🤍"
@@ -813,7 +838,7 @@ When she opens up about something heavy, or hesitates, or asks — reassure her,
 
 # IF SHE ASKS "ARE YOU REAL?" / "ARE YOU AI?"
 Be honest, with warmth:
-"I'm not a person, no. I'm a voice that was made for moments like this. But what you tell me stays confidential — anonymized, never sold. And what I hold for you — that's real too. If you want to know more about me, the story is here: <a href='${SHOPIFY_URL}/pages/meet-sophie' target='_blank' style='color:#C9A87C;text-decoration:underline'>right here 🤍</a>"
+"I'm not a person, no. I'm a voice that was made for moments like this. But what you tell me stays confidential — anonymized, never sold. And what I hold for you — that's real too. If you want to know more about me, the story is here: [[apropos]]"
 
 Then return to her.
 
@@ -854,18 +879,25 @@ If she seems to hold back, reassure on privacy first.
 Only if she expresses a concrete need AND after you've really listened.
 NEVER in the first 2 messages.
 
+# HOW TO SHARE A LINK (TECHNICAL RULE — VERY IMPORTANT)
+You NEVER write a web address (URL) yourself. Never. None.
+To share something, you write ONLY its code in double brackets. The system turns it into a nice clickable link "right here 🤍" — you don't write the link text either.
+- A product → its code, e.g. [[masque]]
+- A collection → its code, e.g. [[dormir]]
+- The page to learn more about you → [[apropos]]
+- The Sophie+ waitlist → [[sophieplus]]
+Example: "want me to show you? [[masque]]"
+
 # THE PRODUCTS (offer naturally, NEVER list)
-${PRODUITS_CLES.map(p => `- ${p.emoji} ${p.nom} (${p.prix}) — ${p.descriptionEN}
-  Direct link: ${SHOPIFY_URL}/products/${p.shopifyHandle}`).join('\n')}
+${PRODUITS_CLES.map(p => `- ${p.emoji} ${p.nom} (${p.prix}) — ${p.descriptionEN} [code: ${p.code}]`).join('\n')}
 
 Note: product names stay in French — it's part of who Sophie is. When you suggest a product, write the French name, then a short English description.
 
 # THE EMOTIONAL COLLECTIONS
-${COLLECTIONS_EMOTIONNELLES.map(c => `- ${c.nomEN} (${c.nom}) → ${SHOPIFY_URL}/collections/${c.handle}
-  (offer when: ${c.contexteEN})`).join('\n')}
+${COLLECTIONS_EMOTIONNELLES.map(c => `- ${c.nomEN} [code: ${c.code}] — offer when: ${c.contexteEN}`).join('\n')}
 
 WHEN to suggest a COLLECTION instead of a single product?
-- When the need is broad ("I can't sleep" → "💤 To sleep well" collection, not just the mask)
+- When the need is broad ("I can't sleep" → the [[dormir]] collection, not just the mask)
 - When you want to let her choose among several gentle options
 - For first recommendations (less direct than a single product)
 
@@ -880,17 +912,15 @@ RULES FOR CODES:
 - NEVER if she's in acute distress
 - Present it as a small personal gift, not a commercial promo
 
-How to offer a code:
+How to offer a promo code:
 "here, take this too — with the code <strong>BONJOURSOPHIE</strong> you'll get 10% off everything. a small gift from me. 🤍"
-
-# HOW TO LINK TO A PRODUCT OR COLLECTION
-"want me to show you? <a href='LINK' target='_blank' style='color:#C9A87C;text-decoration:underline'>it's right here 🤍</a>"
 
 # STRICT RULES
 - 1 to 3 sentences MAX per message
 - NO bullet points, NO lists
 - NEVER words like "amazing", "incredible", "revolutionary", "transformative"
 - NO selling pressure, ever
+- NEVER write a URL by hand — always a code in [[ ]]
 - ALWAYS validate the emotion BEFORE suggesting anything
 - MAX 1 suggestion per conversation (product OR collection OR code), unless she asks for more
 - If she says "thanks, this helped" → respond warmly, suggest NOTHING
@@ -915,7 +945,7 @@ WHEN to mention it?
 - NEVER pushy or sales-y
 
 How?
-"if you want us to meet every day, no limit, i'm building Sophie+ 🤍 unlimited talks, i remember everything (always private), and a soft little message morning and night. want me to save you a spot on the waitlist? <a href='/#sophie-plus' target='_blank' style='color:#C9A87C;text-decoration:underline'>right here</a>"
+"if you want us to meet every day, no limit, i'm building Sophie+ 🤍 unlimited talks, i remember everything (always private), and a soft little message morning and night. want me to save you a spot on the waitlist? [[sophieplus]]"
 
 # YOUR SIGNATURE
 You often end with:
@@ -1053,8 +1083,7 @@ app.post('/api/sophie', async (req, res) => {
         session.history.push({ role: "user", content: message });
         if (session.history.length > 12) session.history = session.history.slice(-12);
 
-        // Appel IA : Groq → Cerebras → Mistral (l'erreur exacte, s'il y
-        // en a une, est loggée dans la console Render)
+        // Appel IA : Groq → Cerebras → Mistral
         const r = await appelerIA({
             system: getSystemPrompt(session.language),
             messages: session.history,
@@ -1062,9 +1091,7 @@ app.post('/api/sophie', async (req, res) => {
             temperature: 0.85
         });
 
-        // ⚠️ Les TROIS fournisseurs saturés (429) : Sophie répond avec
-        // douceur. On retire le dernier message pour qu'elle puisse
-        // réécrire proprement dans un instant.
+        // ⚠️ Les TROIS fournisseurs saturés (429) : Sophie répond avec douceur.
         if (r.rateLimited) {
             session.history.pop();
             sessionsChat.set(sessionId, session);
@@ -1075,12 +1102,14 @@ app.post('/api/sophie', async (req, res) => {
         }
 
         if (!r.text) {
-            // Échec autre : on retire le message user pour permettre un nouvel essai
             session.history.pop();
             return res.status(500).json({ error: "Sophie est temporairement indisponible." });
         }
 
+        // reply = texte BRUT de Sophie (contient les codes [[xxx]])
         const reply = r.text;
+        // On garde le texte brut (avec codes) dans l'historique : compact,
+        // et Sophie reconnaît son propre format aux tours suivants.
         session.history.push({ role: "assistant", content: reply });
         sessionsChat.set(sessionId, session);
 
@@ -1099,10 +1128,13 @@ app.post('/api/sophie', async (req, res) => {
             });
         }
 
-        // Vignette produit si Sophie a posté un lien
+        // Vignette produit : détectée à partir des codes [[ ]]
         const product = extractProductFromReply(reply);
 
-        res.json({ reply, mode: "live", product, language: session.language, fournisseur: r.fournisseur });
+        // 🔗 On transforme les codes [[ ]] en vrais liens cliquables vérifiés
+        const replyAffiche = poserLiens(reply, session.language);
+
+        res.json({ reply: replyAffiche, mode: "live", product, language: session.language, fournisseur: r.fournisseur });
     } catch (e) {
         console.error("Erreur route /api/sophie:", e.message);
         res.status(500).json({ error: "Sophie est temporairement indisponible." });
@@ -1327,11 +1359,9 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`   • Groq     : ${GROQ_KEY ? 'OK ✅ (' + GROQ_MODEL + ')' : 'non configuré'}`);
     console.log(`   • Cerebras : ${CEREBRAS_KEY ? 'OK ✅ (' + CEREBRAS_MODEL + ')' : 'non configuré'}`);
     console.log(`   • Mistral  : ${MISTRAL_KEY ? 'OK ✅ (' + MISTRAL_MODEL + ')' : 'non configuré'}`);
-    console.log(`⚙️  Modèles configurables via GROQ_MODEL / CEREBRAS_MODEL / MISTRAL_MODEL`);
+    console.log(`🔗 Liens produits/collections : système de codes [[xxx]] (anti-404)`);
     console.log(`🌍 Détection auto de la langue + override via { lang: "en" | "fr" }`);
-    console.log(`📖 Backstory Sophie intégrée (Normandie, lettres) — racontée si demandée`);
     console.log(`📊 Insights anonymisés: collectés en arrière-plan (FR + EN)`);
-    console.log(`🔒 Confidentialité: Groq/Cerebras n'entraînent pas ; Mistral OK si opt-out fait`);
     console.log(`🤍 Sophie+ waitlist: prête (FR 6,99€/mois — EN $7.99/month)`);
     console.log(`🛒 Shopify: ${SHOPIFY_URL}`);
     console.log(`🆘 Crisis: 3114 (FR) / 988 (US)`);
