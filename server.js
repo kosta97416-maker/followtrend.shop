@@ -21,6 +21,8 @@
 //   • CAPTURE SILENCIEUSE des demandes de livres ("j'aimerais un livre sur X")
 //     → alimente le dashboard CEO pour orienter les futurs livres de l'auteure
 //     → JAMAIS révélée à l'utilisatrice (règle absolue)
+//   • 🆕 LE CERCLE : inscription email persistante (Resend Audience) +
+//     email de bienvenue automatique signé Sophie Lumière (bilingue, 0€)
 //
 // CE QUI EST RETIRÉ :
 //   • Produits Shopify wellness (masques, bougies, huiles…)
@@ -62,6 +64,18 @@ const CEREBRAS_MODEL = process.env.CEREBRAS_MODEL || "gpt-oss-120b";
 
 const MISTRAL_KEY = process.env.MISTRAL_API_KEY || "";
 const MISTRAL_MODEL = process.env.MISTRAL_MODEL || "mistral-small-latest";
+
+// --- 🆕 Resend (emails transactionnels — mail de bienvenue du Cercle) ---
+// Free tier Resend : 3000 emails/mois, 100/jour — 0€.
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+// Expéditeur : DOIT utiliser ton domaine vérifié sur Resend (ex: sophie@followlife.net)
+const RESEND_FROM = process.env.RESEND_FROM || "Sophie Lumière <sophie@followlife.net>";
+// Optionnel mais FORTEMENT recommandé : id d'une Audience Resend = stockage
+// PERSISTANT des inscrits (sinon la liste vit seulement en mémoire et est
+// perdue à chaque redéploiement Render).
+const RESEND_AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || "";
+// URL publique du site (pour les liens dans l'email de bienvenue)
+const SITE_URL = process.env.SITE_URL || "https://followtrend.shop";
 
 // ============================================================
 // ÉTAT GLOBAL
@@ -1167,6 +1181,90 @@ async function genererScriptVideo(theme, plateforme) {
 }
 
 // ============================================================
+// 💌 RESEND — contact persistant + email de bienvenue du Cercle
+// ------------------------------------------------------------
+// 2 actions à l'inscription (toutes deux gratuites, free tier Resend) :
+//   1. (si RESEND_AUDIENCE_ID défini) ajout du contact à l'audience Resend
+//      → STOCKAGE PERSISTANT (survit aux redéploiements) + base pour la
+//        lettre de lecture mensuelle
+//   2. envoi d'un email de bienvenue signé Sophie Lumière (bilingue)
+//
+// ⚠️ RÈGLE AMAZON : AUCUN lien affilié Amazon dans l'email. On renvoie vers
+// le site (la bibliothèque), là où vivent les liens affiliés. Zéro risque
+// pour le compte Associates.
+// ============================================================
+async function ajouterContactResend(email) {
+    if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) return;
+    try {
+        const r = await fetch(`https://api.resend.com/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_API_KEY}` },
+            body: JSON.stringify({ email, unsubscribed: false })
+        });
+        if (!r.ok) {
+            const t = await r.text();
+            console.error("Resend contact KO:", r.status, t.substring(0, 200));
+        }
+    } catch (e) {
+        console.error("Resend contact (réseau):", e.message);
+    }
+}
+
+function emailBienvenueHTML(lang) {
+    const fr = lang === 'fr';
+    const lien = SITE_URL.replace(/\/$/, '') + '/#bookshelf';
+    const titre = fr ? "Bienvenue dans le cercle 🤍" : "Welcome to the circle 🤍";
+    const corps = fr
+        ? `Coucou toi,<br><br>
+C'est Sophie. Te voilà dans le cercle 🤍<br><br>
+Ici, pas de spam — juste moi. Je te préviendrai en avant-première quand je sors un nouveau livre, et une fois par mois je t'enverrai une petite lettre de lecture : ce que je lis, ce qui m'a brisée, ce que je te conseille.<br><br>
+En attendant, viens voir les livres que je défendrais avec ma vie :`
+        : `Hi you,<br><br>
+It's Sophie. You're in the circle now 🤍<br><br>
+No spam here — just me. I'll let you know first when I release a new book, and once a month I'll send you a little reading letter: what I'm reading, what wrecked me, what I'd hand you.<br><br>
+In the meantime, come see the books I'd defend with my life:`;
+    const cta = fr ? "Voir la bibliothèque de Sophie 🤍" : "See Sophie's bookshelf 🤍";
+    const ps = fr
+        ? "Si un jour tu cherches un livre précis, écris-moi sur le site — je suis là."
+        : "If you're ever looking for a specific book, write to me on the site — I'm here.";
+    return `<!DOCTYPE html><html><body style="margin:0;background:#1a1410;font-family:Georgia,serif;color:#F5EDE0;padding:32px">
+<div style="max-width:520px;margin:0 auto;background:#251d18;border:1px solid rgba(201,168,124,0.25);border-radius:16px;padding:32px">
+<div style="font-size:22px;color:#C9A87C;font-style:italic;margin-bottom:20px">Sophie Lumière</div>
+<div style="font-size:20px;margin-bottom:16px">${titre}</div>
+<div style="font-size:15px;line-height:1.7;color:#DDC9B0">${corps}</div>
+<div style="text-align:center;margin:28px 0">
+<a href="${lien}" style="background:#C9A87C;color:#1a1410;text-decoration:none;padding:14px 26px;border-radius:100px;font-weight:bold;font-size:14px">${cta}</a>
+</div>
+<div style="font-size:13px;line-height:1.6;color:#847b6f;font-style:italic">${ps}</div>
+<div style="font-size:11px;color:#847b6f;margin-top:24px;border-top:1px solid rgba(201,168,124,0.15);padding-top:16px">Sophie Lumière · Follow.Life — 🤍</div>
+</div></body></html>`;
+}
+
+async function envoyerEmailBienvenue(email, lang) {
+    if (!RESEND_API_KEY) return;
+    const fr = lang === 'fr';
+    const subject = fr ? "Bienvenue dans le cercle 🤍 — Sophie" : "Welcome to the circle 🤍 — Sophie";
+    try {
+        const r = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_API_KEY}` },
+            body: JSON.stringify({
+                from: RESEND_FROM,
+                to: email,
+                subject,
+                html: emailBienvenueHTML(lang)
+            })
+        });
+        if (!r.ok) {
+            const t = await r.text();
+            console.error("Resend email KO:", r.status, t.substring(0, 200));
+        }
+    } catch (e) {
+        console.error("Resend email (réseau):", e.message);
+    }
+}
+
+// ============================================================
 // ROUTE PRINCIPALE — /api/sophie
 // ============================================================
 app.post('/api/sophie', async (req, res) => {
@@ -1317,21 +1415,36 @@ app.get('/api/sophie/book-requests', (req, res) => {
 });
 
 // ============================================================
-// SOPHIE+ WAITLIST
+// LE CERCLE — inscription email (ex-"Sophie+ waitlist")
+// ------------------------------------------------------------
+// Endpoint conservé (/api/sophie-plus/waitlist) pour rester compatible
+// avec le front. À l'inscription :
+//   • dédoublonnage + log + compteur
+//   • ajout du contact à l'audience Resend (persistant) — si configuré
+//   • envoi de l'email de bienvenue (Resend) — si configuré
+// Les appels Resend sont "fire-and-forget" pour ne pas ralentir la réponse.
 // ============================================================
 app.post('/api/sophie-plus/waitlist', (req, res) => {
-    const { email } = req.body;
+    const { email, lang } = req.body;
     if (!email || !email.includes('@')) {
         return res.status(400).json({ ok: false, error: "Email invalide" });
     }
+    const langue = (lang === 'fr') ? 'fr' : 'en';
+
     if (sophiePlusWaitlist.find(e => e.email === email)) {
         return res.json({ ok: true, message: "Déjà sur la liste" });
     }
-    const entry = { email, date: new Date().toISOString() };
+
+    const entry = { email, lang: langue, date: new Date().toISOString() };
     sophiePlusWaitlist.push(entry);
     stats.emailsCaptures++;
-    console.log(`[WAITLIST] 🤍 ${email} (total: ${sophiePlusWaitlist.length})`);
-    agentLogs.unshift(`[${new Date().toLocaleTimeString('fr-FR')}] 🤍 Sophie+ : ${email}`);
+    console.log(`[CERCLE] 🤍 ${email} (total mémoire: ${sophiePlusWaitlist.length})`);
+    agentLogs.unshift(`[${new Date().toLocaleTimeString('fr-FR')}] 🤍 Cercle : ${email}`);
+
+    // Persistance (Resend Audience) + email de bienvenue — sans bloquer la réponse
+    ajouterContactResend(email);
+    envoyerEmailBienvenue(email, langue);
+
     res.json({ ok: true, total: sophiePlusWaitlist.length });
 });
 
@@ -1432,6 +1545,8 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`💰 Amazon Associates FR : ${AMAZON_TAG_FR ? '✅ ' + AMAZON_TAG_FR : '⚠️ AMAZON_TAG_FR non configuré'}`);
     console.log(`📖 Livre Sophie Lumière : FR=${SOPHIE_BOOK_ASIN_FR} | US=${SOPHIE_BOOK_ASIN_US}`);
     console.log(`🔇 Capture silencieuse demandes de livres : ACTIVE (jamais révélée aux lectrices)`);
-    console.log(`🤍 Sophie+ waitlist : opérationnelle`);
+    console.log(`🤍 Cercle (inscription email) : opérationnel`);
+    console.log(`💌 Resend (mail de bienvenue) : ${RESEND_API_KEY ? '✅ configuré (from: ' + RESEND_FROM + ')' : '⚠️ RESEND_API_KEY absent — pas de mail de bienvenue'}`);
+    console.log(`   • Audience persistante : ${RESEND_AUDIENCE_ID ? '✅ ' + RESEND_AUDIENCE_ID : '⚠️ RESEND_AUDIENCE_ID absent — contacts en MÉMOIRE seulement (perdus au redéploiement)'}`);
     console.log(`🆘 Crisis : 3114 (FR) / 988 (US)`);
 });
