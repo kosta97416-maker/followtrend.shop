@@ -8,32 +8,48 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --noir: #1a1410; --noir-doux: #251d18; --terre: #322519;
-  --or: #C9A87C; --or-clair: #E8C99E; --or-doux: #8B7355;
-  --creme: #F5EDE0; --creme-doux: #DDC9B0; --gris: #847b6f;
-  --vert-doux: #7da97e; --rouge-doux: #c97a7a; --rose: #E8B8B8;
-  --violet-doux: #b29bc4;
-  --shadow: 0 20px 50px -20px rgba(0,0,0,0.5);
+  /* PALETTE CLAIRE — crème lumineux + rose poudré + or chaud */
+  --noir: #FBF4EC;            /* fond principal CLAIR (ex-noir) */
+  --noir-doux: #FFFFFF;       /* cartes blanches */
+  --terre: #F6E4DA;           /* blocs rosé doux */
+  --or: #C2925A;              /* or chaud (texte accent, lisible sur clair) */
+  --or-clair: #B07D52;        /* or foncé pour contraste sur clair */
+  --or-doux: #C9A98A;
+  --creme: #4A3B33;           /* TEXTE principal (brun chaud foncé, lisible) */
+  --creme-doux: #6B5749;      /* texte secondaire */
+  --gris: #9a8e7f;
+  --vert-doux: #6fae71; --rouge-doux: #c97676; --rose: #F0C4BC;
+  --rose-vif: #E8A598; --peche: #F5C9A8; --violet-doux: #9a7fb0;
+  --shadow: 0 20px 50px -20px rgba(180,130,90,0.25);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; }
-body { background:var(--noir); color:var(--creme); font-family:'DM Sans',sans-serif; font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+body { background:var(--noir); color:var(--creme); font-family:'DM Sans',sans-serif; font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; position:relative; }
+
+/* === HALOS ANIMÉS DE FOND (chaleur + mouvement) === */
+.ambient { position:fixed; inset:0; z-index:-2; overflow:hidden; pointer-events:none; }
+.ambient span { position:absolute; border-radius:50%; filter:blur(90px); opacity:0.40; animation:drift 22s ease-in-out infinite; }
+.ambient span:nth-child(1){ width:55vw; height:55vw; background:var(--or); top:-15%; left:-10%; animation-delay:0s; }
+.ambient span:nth-child(2){ width:45vw; height:45vw; background:var(--rose-vif); bottom:-15%; right:-10%; animation-delay:-7s; }
+.ambient span:nth-child(3){ width:40vw; height:40vw; background:var(--peche); top:45%; left:55%; animation-delay:-14s; opacity:0.15; }
+@keyframes drift {
+  0%,100%{ transform:translate(0,0) scale(1); }
+  33%{ transform:translate(5vw,-4vh) scale(1.12); }
+  66%{ transform:translate(-4vw,5vh) scale(0.95); }
+}
 a { text-decoration:none; color:inherit; }
 img { max-width:100%; display:block; }
 [hidden] { display:none !important; }
 
 /* === TICKER === */
-.ticker { background:var(--terre); border-bottom:1px solid rgba(201,168,124,0.15); padding:0.7rem 0; overflow:hidden; position:relative; z-index:50; }
+.ticker { background:var(--terre); border-bottom:1px solid rgba(217,179,128,0.18); padding:0.7rem 0; overflow:hidden; position:relative; z-index:50; }
 .ticker-content { display:flex; gap:3rem; animation:ticker 50s linear infinite; white-space:nowrap; font-family:'Caveat',cursive; color:var(--or-clair); font-size:1.1rem; }
 .ticker-content span::before { content:'🤍'; margin-right:0.5rem; }
 @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
 /* === HEADER === */
-header { background:rgba(26,20,16,0.95); backdrop-filter:blur(20px); border-bottom:1px solid rgba(201,168,124,0.1); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; gap:1rem; }
-.logo {
-  font-family:'Cormorant Garamond',serif; font-style:italic;
-  display:flex; flex-direction:column; line-height:1; gap:0.15rem;
-}
+header { background:rgba(251,244,236,0.85); backdrop-filter:blur(20px); border-bottom:1px solid rgba(217,179,128,0.12); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; gap:1rem; }
+.logo { font-family:'Cormorant Garamond',serif; font-style:italic; display:flex; flex-direction:column; line-height:1; gap:0.15rem; }
 .logo-name { font-size:1.5rem; color:var(--creme); font-weight:500; letter-spacing:0.02em; }
 .logo-name .gold { color:var(--or); }
 .logo-sub { font-family:'Caveat',cursive; font-size:0.95rem; color:var(--or-clair); font-style:normal; }
@@ -41,54 +57,51 @@ nav { display:flex; align-items:center; gap:1.2rem; }
 nav ul { display:flex; gap:1.6rem; list-style:none; align-items:center; }
 nav a { font-size:0.85rem; color:var(--creme-doux); transition:color 0.2s; }
 nav a:hover { color:var(--or); }
-.lang-toggle {
-  background:transparent; border:1px solid rgba(201,168,124,0.3); color:var(--or-clair);
-  padding:0.4rem 0.8rem; border-radius:100px; font-family:'DM Sans',sans-serif;
-  font-size:0.7rem; cursor:pointer; transition:all 0.2s; font-weight:600; letter-spacing:0.08em;
-}
-.lang-toggle:hover { border-color:var(--or); background:rgba(201,168,124,0.08); }
-.live-counter { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:var(--creme-doux); padding:0.4rem 0.9rem; border:1px solid rgba(201,168,124,0.2); border-radius:100px; }
+.lang-toggle { background:transparent; border:1px solid rgba(217,179,128,0.3); color:var(--or-clair); padding:0.4rem 0.8rem; border-radius:100px; font-family:'DM Sans',sans-serif; font-size:0.7rem; cursor:pointer; transition:all 0.2s; font-weight:600; letter-spacing:0.08em; }
+.lang-toggle:hover { border-color:var(--or); background:rgba(217,179,128,0.1); }
+.live-counter { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:var(--creme-doux); padding:0.4rem 0.9rem; border:1px solid rgba(217,179,128,0.2); border-radius:100px; }
 .live-counter::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--vert-doux); animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 .hamburger { display:none; background:none; border:none; color:var(--creme); font-size:1.5rem; cursor:pointer; }
 
 /* === HERO === */
 .hero { min-height:88vh; display:flex; align-items:center; justify-content:center; padding:4rem 6vw; position:relative; overflow:hidden; text-align:center; }
-.hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(201,168,124,0.1) 0%, transparent 70%); pointer-events:none; }
+.hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(217,179,128,0.14) 0%, transparent 70%); pointer-events:none; }
 .hero-content { position:relative; z-index:2; max-width:920px; }
-.hero-caveat { font-family:'Caveat',cursive; font-size:1.8rem; color:var(--or-clair); margin-bottom:0.5rem; animation:fadeIn 1s ease; }
-.hero-title { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(2.4rem, 6.5vw, 4.6rem); line-height:1.1; color:var(--creme); margin-bottom:1.5rem; }
+.hero-caveat { font-family:'Caveat',cursive; font-size:1.8rem; color:var(--or-clair); margin-bottom:0.5rem; opacity:0; animation:fadeInUp 1s 0.1s ease forwards; }
+.hero-title { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(2.4rem, 6.5vw, 4.6rem); line-height:1.1; color:var(--creme); margin-bottom:1.5rem; opacity:0; animation:fadeInUp 1s 0.3s ease forwards; }
 .hero-title em { color:var(--or); font-style:italic; font-weight:400; }
-.hero-subtitle { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.3rem; color:var(--creme-doux); margin-bottom:2.5rem; max-width:640px; margin-left:auto; margin-right:auto; line-height:1.55; }
-.hero-cta { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-bottom:2rem; }
+.hero-subtitle { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.3rem; color:var(--creme-doux); margin-bottom:2.5rem; max-width:640px; margin-left:auto; margin-right:auto; line-height:1.55; opacity:0; animation:fadeInUp 1s 0.5s ease forwards; }
+.hero-cta { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-bottom:2rem; opacity:0; animation:fadeInUp 1s 0.7s ease forwards; }
 .btn-primary, .btn-secondary { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; padding:1.1rem 2.2rem; border-radius:100px; cursor:pointer; border:none; transition:all 0.3s; display:inline-block; }
-.btn-primary { background:var(--or); color:var(--noir); }
-.btn-primary:hover { background:var(--or-clair); transform:translateY(-2px); box-shadow:0 15px 40px rgba(201,168,124,0.3); }
-.btn-secondary { background:transparent; color:var(--creme); border:1px solid rgba(201,168,124,0.4); }
+.btn-primary { background:linear-gradient(135deg, var(--or), var(--peche)); color:var(--noir); }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 15px 40px rgba(217,179,128,0.4); }
+.btn-secondary { background:transparent; color:var(--creme); border:1px solid rgba(217,179,128,0.4); }
 .btn-secondary:hover { border-color:var(--or); color:var(--or); }
-.hero-whisper { font-family:'Caveat',cursive; font-size:1.25rem; color:var(--or-doux); margin-top:1.5rem; font-style:italic; }
-.moon-svg { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80vw; max-width:600px; opacity:0.06; pointer-events:none; z-index:1; }
+.hero-whisper { font-family:'Caveat',cursive; font-size:1.25rem; color:var(--or-doux); margin-top:1.5rem; font-style:italic; opacity:0; animation:fadeInUp 1s 0.9s ease forwards; }
+.moon-svg { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80vw; max-width:600px; opacity:0.08; pointer-events:none; z-index:1; }
 
 /* === OPPOSITION === */
-.opposition { padding:5rem 6vw; background:var(--noir-doux); display:grid; grid-template-columns:1fr 1fr; gap:0; max-width:1200px; margin:0 auto; }
+.opposition { padding:5rem 6vw; background:#FFFFFF; border-radius:32px; display:grid; grid-template-columns:1fr 1fr; gap:0; max-width:1100px; margin:3rem auto; position:relative; z-index:1; }
 .opposition > div { padding:3rem 2rem; text-align:center; }
-.opposition .monde { border-right:1px solid rgba(201,168,124,0.15); }
+.opposition .monde { border-right:1px solid rgba(217,179,128,0.18); }
 .opp-label { font-family:'DM Sans',sans-serif; font-size:0.7rem; letter-spacing:0.3em; color:var(--or-doux); text-transform:uppercase; margin-bottom:1rem; }
 .opp-text { font-family:'Cormorant Garamond',serif; font-size:1.35rem; color:var(--creme-doux); font-style:italic; line-height:1.5; }
 .opposition .sophie .opp-text { color:var(--or-clair); }
 
 /* === SECTIONS === */
-section { padding:7rem 6vw; max-width:1400px; margin:0 auto; }
+section { padding:7rem 6vw; max-width:1400px; margin:0 auto; position:relative; z-index:1; }
 .section-label { font-family:'DM Sans',sans-serif; font-size:0.7rem; letter-spacing:0.3em; color:var(--or-doux); text-transform:uppercase; margin-bottom:1rem; text-align:center; }
 .section-title { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(2rem, 5vw, 3.4rem); line-height:1.2; text-align:center; color:var(--creme); margin-bottom:3rem; }
 .section-title em { color:var(--or); font-style:italic; }
 
-/* === WHAT SOPHIE KNOWS (6 catégories) === */
+/* === WHAT SOPHIE KNOWS === */
 .knows-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1.2rem; max-width:1200px; margin:0 auto; }
-.knows-card { background:rgba(245,237,224,0.03); border:1px solid rgba(201,168,124,0.12); border-radius:16px; padding:2rem 1.5rem; text-align:center; transition:all 0.3s; position:relative; }
-.knows-card:hover { border-color:rgba(201,168,124,0.4); transform:translateY(-4px); background:rgba(245,237,224,0.05); }
-.knows-card.specialty { background:linear-gradient(180deg, rgba(201,168,124,0.08) 0%, var(--noir-doux) 100%); border-color:rgba(201,168,124,0.3); }
-.knows-emoji { font-size:2.6rem; margin-bottom:0.8rem; }
+.knows-card { background:#FFFFFF; border:1px solid rgba(217,179,128,0.14); border-radius:16px; padding:2rem 1.5rem; text-align:center; transition:all 0.3s; position:relative; }
+.knows-card:hover { border-color:rgba(194,146,90,0.6); transform:translateY(-6px); background:#FFF; box-shadow:0 18px 40px -18px rgba(217,179,128,0.3); }
+.knows-card.specialty { background:linear-gradient(180deg, rgba(217,179,128,0.1) 0%, rgba(44,33,27,0.6) 100%); border-color:rgba(217,179,128,0.3); }
+.knows-emoji { font-size:2.6rem; margin-bottom:0.8rem; transition:transform 0.3s; }
+.knows-card:hover .knows-emoji { transform:scale(1.15) rotate(6deg); }
 .knows-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.2rem; color:var(--creme); margin-bottom:0.5rem; }
 .knows-title strong { color:var(--or-clair); font-weight:500; font-style:normal; }
 .knows-text { font-size:0.85rem; color:var(--creme-doux); line-height:1.5; }
@@ -99,7 +112,7 @@ section { padding:7rem 6vw; max-width:1400px; margin:0 auto; }
 .manifesto-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.45rem; color:var(--creme-doux); max-width:780px; margin:0 auto 2.5rem; line-height:1.6; }
 .manifesto-text strong { color:var(--or-clair); font-weight:500; font-style:normal; }
 .creed { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-top:3rem; }
-.creed-item { font-family:'Caveat',cursive; font-size:1.4rem; color:var(--or); padding:0.6rem 1.5rem; border:1px solid rgba(201,168,124,0.2); border-radius:100px; }
+.creed-item { font-family:'Caveat',cursive; font-size:1.4rem; color:var(--or); padding:0.6rem 1.5rem; border:1px solid rgba(217,179,128,0.22); border-radius:100px; }
 
 /* === REVELATION === */
 .revelation { text-align:center; padding:6rem 6vw; max-width:900px; margin:0 auto; }
@@ -109,89 +122,63 @@ section { padding:7rem 6vw; max-width:1400px; margin:0 auto; }
 
 /* === BOOKSHELF === */
 .bookshelf-filters { display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin-bottom:2.5rem; }
-.filter-btn {
-  background:transparent; border:1px solid rgba(201,168,124,0.2); color:var(--creme-doux);
-  padding:0.55rem 1.1rem; border-radius:100px; font-family:'DM Sans',sans-serif;
-  font-size:0.75rem; cursor:pointer; transition:all 0.2s; letter-spacing:0.05em;
-}
+.filter-btn { background:transparent; border:1px solid rgba(217,179,128,0.2); color:var(--creme-doux); padding:0.55rem 1.1rem; border-radius:100px; font-family:'DM Sans',sans-serif; font-size:0.75rem; cursor:pointer; transition:all 0.2s; letter-spacing:0.05em; }
 .filter-btn:hover { border-color:var(--or); color:var(--or); }
 .filter-btn.active { background:var(--or); border-color:var(--or); color:var(--noir); font-weight:600; }
 .books-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(290px, 1fr)); gap:1.5rem; max-width:1300px; margin:0 auto; }
-.book-card {
-  background:var(--noir-doux); border:1px solid rgba(201,168,124,0.1);
-  border-radius:16px; padding:1.8rem; transition:all 0.4s; display:flex; flex-direction:column;
-  position:relative; overflow:hidden;
-}
-.book-card:hover { border-color:rgba(201,168,124,0.4); transform:translateY(-4px); box-shadow:0 25px 50px -20px rgba(0,0,0,0.4); }
+.book-card { background:#FFFFFF; border:1px solid rgba(217,179,128,0.12); border-radius:16px; padding:1.8rem; transition:all 0.4s; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+.book-card:hover { border-color:rgba(217,179,128,0.45); transform:translateY(-4px); box-shadow:0 25px 50px -20px rgba(0,0,0,0.4); }
 .book-card.hidden { display:none; }
-.book-genre-badge {
-  display:inline-block; align-self:flex-start;
-  background:rgba(201,168,124,0.12); color:var(--or-clair);
-  font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; font-weight:600;
-  padding:0.3rem 0.8rem; border-radius:100px; margin-bottom:1rem;
-}
+.book-genre-badge { display:inline-block; align-self:flex-start; background:rgba(217,179,128,0.14); color:var(--or-clair); font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; padding:0.3rem 0.8rem; border-radius:100px; margin-bottom:1rem; }
 .book-genre-badge.dark { background:rgba(120,80,140,0.18); color:var(--violet-doux); }
-.book-genre-badge.thriller { background:rgba(201,122,122,0.15); color:var(--rouge-doux); }
-.book-genre-badge.memoir { background:rgba(125,169,126,0.15); color:var(--vert-doux); }
+.book-genre-badge.thriller { background:rgba(214,143,143,0.15); color:var(--rouge-doux); }
+.book-genre-badge.memoir { background:rgba(139,191,140,0.15); color:var(--vert-doux); }
 .book-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.4rem; color:var(--creme); line-height:1.2; margin-bottom:0.4rem; }
 .book-author { font-size:0.9rem; color:var(--or-clair); margin-bottom:1rem; font-weight:500; }
 .book-meta { display:flex; gap:0.8rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap; font-size:0.78rem; }
 .book-spice { color:var(--rouge-doux); font-weight:600; }
 .book-spice.cold { color:var(--gris); }
 .book-tropes { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem; }
-.book-trope {
-  background:rgba(245,237,224,0.04); border:1px solid rgba(201,168,124,0.15);
-  color:var(--creme-doux); font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:100px;
-}
+.book-trope { background:rgba(247,240,230,0.05); border:1px solid rgba(217,179,128,0.16); color:var(--creme-doux); font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:100px; }
 .book-note { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:0.95rem; color:var(--creme-doux); line-height:1.55; margin-bottom:1.2rem; flex:1; }
 .book-note::before { content:'« '; color:var(--or); font-style:normal; }
 .book-note::after { content:' »'; color:var(--or); font-style:normal; }
 .book-triggers { font-size:0.7rem; color:var(--rouge-doux); margin-bottom:1rem; line-height:1.4; opacity:0.8; }
 .book-triggers::before { content:'⚠️ '; }
-.book-cta {
-  display:inline-block; padding:0.75rem 1.4rem; background:transparent;
-  border:1px solid rgba(201,168,124,0.3); color:var(--or);
-  border-radius:100px; font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase;
-  transition:all 0.3s; font-weight:600; text-align:center; align-self:flex-start;
-}
+.book-cta { display:inline-block; padding:0.75rem 1.4rem; background:transparent; border:1px solid rgba(217,179,128,0.3); color:var(--or); border-radius:100px; font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; transition:all 0.3s; font-weight:600; text-align:center; align-self:flex-start; }
 .book-cta:hover { background:var(--or); color:var(--noir); border-color:var(--or); }
 .bookshelf-loading { text-align:center; color:var(--gris); font-style:italic; font-family:'Cormorant Garamond',serif; padding:3rem 1rem; font-size:1.1rem; }
 
-/* === MY BOOK (Sophie Lumière) === */
-.my-book {
-  background:linear-gradient(135deg, var(--noir-doux) 0%, var(--terre) 100%);
-  padding:6rem 6vw; position:relative; overflow:hidden;
-}
-.my-book::before {
-  content:''; position:absolute; inset:0;
-  background:radial-gradient(ellipse at top right, rgba(201,168,124,0.12) 0%, transparent 60%);
-  pointer-events:none;
-}
+/* === HER BOOKS (Sophie Lumière — section dédiée) === */
+.her-books { padding:7rem 6vw; max-width:1300px; margin:0 auto; position:relative; z-index:1; }
+.her-books-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; }
+.sl-book { background:linear-gradient(165deg, #FFFFFF 0%, #F6E4DA 100%); border:1px solid rgba(217,179,128,0.2); border-radius:20px; padding:2rem; display:flex; flex-direction:column; transition:all 0.4s; position:relative; overflow:hidden; }
+.sl-book::before { content:'🤍'; position:absolute; font-size:7rem; opacity:0.04; top:-1.5rem; right:-1.5rem; transform:rotate(-12deg); }
+.sl-book:hover { transform:translateY(-6px); border-color:var(--or); box-shadow:0 28px 56px -22px rgba(217,179,128,0.4); }
+.sl-book-format { display:inline-block; align-self:flex-start; font-size:0.6rem; letter-spacing:0.14em; text-transform:uppercase; font-weight:700; padding:0.3rem 0.8rem; border-radius:100px; margin-bottom:1rem; background:rgba(217,179,128,0.16); color:var(--or-clair); }
+.sl-book-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.5rem; color:var(--creme); line-height:1.25; margin-bottom:0.5rem; position:relative; z-index:1; }
+.sl-book-subtitle { font-size:0.85rem; color:var(--creme-doux); line-height:1.5; margin-bottom:1rem; flex:1; font-style:italic; }
+.sl-book-price { font-family:'Cormorant Garamond',serif; font-size:1.3rem; color:var(--or); margin-bottom:1.2rem; }
+.sl-book-price span { font-size:0.8rem; color:var(--gris); font-style:italic; }
+.sl-book-cta { display:inline-block; padding:0.85rem 1.6rem; background:var(--or); color:var(--noir); border-radius:100px; font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; transition:all 0.3s; font-weight:700; text-align:center; align-self:flex-start; }
+.sl-book-cta:hover { background:var(--or-clair); transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,179,128,0.35); }
+
+/* === MY BOOK === */
+.my-book { background:linear-gradient(135deg, #F6E4DA 0%, #F5C9A8 100%); padding:6rem 6vw; position:relative; overflow:hidden; border-radius:32px; max-width:1200px; margin:3rem auto; z-index:1; }
+.my-book::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at top right, rgba(217,179,128,0.14) 0%, transparent 60%); pointer-events:none; }
 .my-book-inner { max-width:900px; margin:0 auto; text-align:center; position:relative; z-index:1; }
-.my-book-tag {
-  display:inline-block; font-family:'Caveat',cursive; font-size:1.3rem;
-  color:var(--or-clair); margin-bottom:1rem;
-}
-.my-book-title {
-  font-family:'Cormorant Garamond',serif; font-weight:300;
-  font-size:clamp(2rem, 5vw, 3.2rem); line-height:1.2; color:var(--creme); margin-bottom:1rem;
-}
+.my-book-tag { display:inline-block; font-family:'Caveat',cursive; font-size:1.3rem; color:var(--or-clair); margin-bottom:1rem; }
+.my-book-title { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(2rem, 5vw, 3.2rem); line-height:1.2; color:var(--creme); margin-bottom:1rem; }
 .my-book-title em { color:var(--or); font-style:italic; }
 .my-book-author { font-family:'Caveat',cursive; font-size:1.4rem; color:var(--or-doux); margin-bottom:2rem; }
-.my-book-excerpt {
-  font-family:'Cormorant Garamond',serif; font-style:italic;
-  font-size:1.2rem; color:var(--creme-doux); max-width:680px; margin:0 auto 2.5rem; line-height:1.7;
-}
-.my-book-cta {
-  display:inline-block; padding:1.1rem 2.4rem; background:var(--or); color:var(--noir);
-  border-radius:100px; font-size:0.78rem; letter-spacing:0.15em; text-transform:uppercase;
-  transition:all 0.3s; font-weight:700;
-}
-.my-book-cta:hover { background:var(--or-clair); transform:translateY(-2px); box-shadow:0 15px 40px rgba(201,168,124,0.3); }
+.my-book-excerpt { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.2rem; color:var(--creme-doux); max-width:680px; margin:0 auto 2.5rem; line-height:1.7; }
+.my-book-cta { display:inline-block; padding:1.1rem 2.4rem; background:var(--or); color:var(--noir); border-radius:100px; font-size:0.78rem; letter-spacing:0.15em; text-transform:uppercase; transition:all 0.3s; font-weight:700; }
+.my-book-cta:hover { background:var(--or-clair); transform:translateY(-2px); box-shadow:0 15px 40px rgba(217,179,128,0.3); }
 
 /* === TESTIMONIALS === */
 .temoignages-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; max-width:1200px; margin:0 auto; }
-.temoignage { background:rgba(245,237,224,0.03); border:1px solid rgba(201,168,124,0.1); border-radius:16px; padding:2rem; }
+.temoignage { background:#FFFFFF; border:1px solid rgba(217,179,128,0.12); border-radius:16px; padding:2rem; transition:all 0.3s; }
+.temoignage:hover { transform:translateY(-4px); border-color:rgba(217,179,128,0.35); }
 .temoignage-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.05rem; color:var(--creme-doux); line-height:1.7; margin-bottom:1.2rem; }
 .temoignage-author { font-family:'Caveat',cursive; font-size:1.2rem; color:var(--or-clair); }
 
@@ -203,39 +190,30 @@ section { padding:7rem 6vw; max-width:1400px; margin:0 auto; }
 .valeur-text { font-size:0.9rem; color:var(--creme-doux); line-height:1.5; }
 
 /* === PERMISSION === */
-.permission { background:var(--noir-doux); padding:7rem 6vw; text-align:center; }
+.permission { background:#F6E4DA; border-radius:32px; padding:7rem 6vw; text-align:center; max-width:1100px; margin:3rem auto; position:relative; z-index:1; }
 .permission-content { max-width:780px; margin:0 auto; }
 .permission-title { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(2rem, 5vw, 3rem); line-height:1.3; margin-bottom:2rem; }
 .permission-title strong { color:var(--or); font-weight:400; font-style:italic; }
 .permission-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.3rem; color:var(--creme-doux); line-height:1.6; }
 
 /* === SOPHIE+ / LE CERCLE === */
-.sophie-plus { padding:7rem 6vw; background:linear-gradient(180deg, var(--noir) 0%, var(--terre) 50%, var(--noir-doux) 100%); position:relative; overflow:hidden; }
-.sophie-plus::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center top, rgba(201,168,124,0.15) 0%, transparent 60%); pointer-events:none; }
+.sophie-plus { padding:7rem 6vw; background:linear-gradient(180deg, transparent 0%, rgba(58,42,29,0.5) 50%, transparent 100%); position:relative; overflow:hidden; z-index:1; }
+.sophie-plus::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center top, rgba(217,179,128,0.16) 0%, transparent 60%); pointer-events:none; }
 .sophie-plus-content { max-width:920px; margin:0 auto; text-align:center; position:relative; z-index:1; }
 .badge-soon { display:inline-block; font-family:'DM Sans',sans-serif; font-size:0.65rem; letter-spacing:0.25em; color:var(--noir); background:var(--or-clair); padding:0.5rem 1.2rem; border-radius:100px; text-transform:uppercase; font-weight:600; margin-bottom:2rem; }
 .sophie-plus-intro { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.25rem; color:var(--creme-doux); margin:1.5rem auto 3rem; max-width:640px; line-height:1.6; }
 .sophie-plus-intro strong { color:var(--or-clair); font-style:normal; font-weight:500; }
 .features-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; max-width:780px; margin:0 auto 3rem; }
-.feature-item { background:rgba(245,237,224,0.04); border:1px solid rgba(201,168,124,0.15); border-radius:14px; padding:1.4rem 1rem; transition:all 0.3s; }
-.feature-item:hover { border-color:var(--or); background:rgba(245,237,224,0.06); transform:translateY(-3px); }
+.feature-item { background:#FFFFFF; border:1px solid rgba(217,179,128,0.16); border-radius:14px; padding:1.4rem 1rem; transition:all 0.3s; }
+.feature-item:hover { border-color:var(--or); background:rgba(247,240,230,0.08); transform:translateY(-3px); }
 .feature-emoji { font-size:2.1rem; margin-bottom:0.5rem; display:block; }
 .feature-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:0.98rem; color:var(--creme); line-height:1.4; }
-.pricing-cards { display:grid; grid-template-columns:1fr 1fr; gap:1rem; max-width:560px; margin:0 auto 3rem; }
-.price-card { background:var(--noir-doux); border:1px solid rgba(201,168,124,0.2); border-radius:16px; padding:2rem 1.5rem; position:relative; transition:all 0.3s; }
-.price-card.featured { border-color:var(--or); background:linear-gradient(180deg, var(--noir-doux) 0%, var(--terre) 100%); box-shadow:0 20px 50px -20px rgba(201,168,124,0.3); }
-.price-card:hover { transform:translateY(-4px); border-color:var(--or); }
-.price-badge { position:absolute; top:-10px; right:20px; background:var(--or); color:var(--noir); font-size:0.65rem; font-weight:700; letter-spacing:0.15em; padding:0.3rem 0.8rem; border-radius:100px; }
-.price-label { font-size:0.7rem; letter-spacing:0.2em; color:var(--or-doux); text-transform:uppercase; margin-bottom:0.8rem; font-weight:500; }
-.price-amount { font-family:'Cormorant Garamond',serif; font-size:2.6rem; color:var(--creme); line-height:1; margin-bottom:0.5rem; font-weight:400; }
-.price-amount span { font-size:0.9rem; color:var(--creme-doux); font-style:italic; }
-.price-detail { font-size:0.8rem; color:var(--gris); font-family:'Cormorant Garamond',serif; font-style:italic; }
 .waitlist-form { display:flex; gap:0.5rem; max-width:480px; margin:0 auto 1rem; flex-wrap:wrap; }
-.waitlist-form input { flex:1; min-width:200px; padding:1rem 1.3rem; background:rgba(245,237,224,0.05); border:1px solid rgba(201,168,124,0.25); color:var(--creme); font-family:'DM Sans',sans-serif; font-size:0.95rem; border-radius:100px; outline:none; transition:border-color 0.2s; }
+.waitlist-form input { flex:1; min-width:200px; padding:1rem 1.3rem; background:rgba(247,240,230,0.06); border:1px solid rgba(217,179,128,0.28); color:var(--creme); font-family:'DM Sans',sans-serif; font-size:0.95rem; border-radius:100px; outline:none; transition:border-color 0.2s; }
 .waitlist-form input:focus { border-color:var(--or); }
 .waitlist-form input::placeholder { color:var(--gris); }
 .waitlist-form button { padding:1rem 2rem; background:var(--or); color:var(--noir); border:none; font-family:'DM Sans',sans-serif; font-size:0.75rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; border-radius:100px; transition:all 0.3s; }
-.waitlist-form button:hover { background:var(--or-clair); transform:translateY(-2px); box-shadow:0 10px 30px rgba(201,168,124,0.4); }
+.waitlist-form button:hover { background:var(--or-clair); transform:translateY(-2px); box-shadow:0 10px 30px rgba(217,179,128,0.4); }
 .waitlist-form button:disabled { opacity:0.5; cursor:wait; }
 .waitlist-form.success input, .waitlist-form.success button { display:none; }
 .waitlist-success { display:none; font-family:'Caveat',cursive; font-size:1.4rem; color:var(--or-clair); animation:fadeInUp 0.6s ease forwards; }
@@ -243,12 +221,12 @@ section { padding:7rem 6vw; max-width:1400px; margin:0 auto; }
 .waitlist-reassure { font-family:'DM Sans',sans-serif; font-size:0.8rem; color:var(--gris); font-style:italic; margin-top:1rem; }
 
 /* === CTA FINAL === */
-.cta-final { padding:7rem 6vw; text-align:center; background:linear-gradient(180deg, var(--noir-doux) 0%, var(--noir) 100%); }
+.cta-final { padding:7rem 6vw; text-align:center; position:relative; z-index:1; }
 .cta-final-title { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(2rem, 5vw, 3rem); line-height:1.3; margin-bottom:2rem; }
 .cta-final-title em { color:var(--or); font-style:italic; }
 
 /* === FOOTER === */
-footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; border-top:1px solid rgba(201,168,124,0.1); }
+footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-top:1px solid rgba(217,179,128,0.12); position:relative; z-index:1; }
 .footer-logo { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.5rem; color:var(--creme); margin-bottom:0.4rem; }
 .footer-sub { font-family:'Caveat',cursive; font-size:1rem; color:var(--or-clair); margin-bottom:1.2rem; }
 .footer-text { font-size:0.85rem; color:var(--gris); line-height:1.8; }
@@ -258,25 +236,24 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
 .footer-disclosure { margin-top:1.5rem; font-size:0.72rem; color:var(--gris); font-style:italic; line-height:1.5; max-width:600px; margin-left:auto; margin-right:auto; }
 
 /* === NOTIFICATIONS / TEASER / CHAT === */
-.notification { position:fixed; bottom:6rem; left:1.5rem; z-index:80; background:var(--noir-doux); border:1px solid rgba(201,168,124,0.3); border-radius:14px; padding:1rem 1.2rem; max-width:300px; display:flex; align-items:center; gap:0.8rem; transform:translateX(-120%); transition:transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:var(--shadow); }
+.notification { position:fixed; bottom:6rem; left:1.5rem; z-index:80; background:#FFFFFF; border:1px solid rgba(217,179,128,0.3); border-radius:14px; padding:1rem 1.2rem; max-width:300px; display:flex; align-items:center; gap:0.8rem; transform:translateX(-120%); transition:transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:var(--shadow); }
 .notification.show { transform:translateX(0); }
 .notif-emoji { font-size:1.5rem; }
 .notif-text { font-size:0.8rem; color:var(--creme-doux); line-height:1.4; }
 .notif-text strong { color:var(--or-clair); }
-
-.chat-teaser { position:fixed; bottom:6rem; right:1.5rem; z-index:80; background:var(--noir-doux); border:1px solid rgba(201,168,124,0.3); border-radius:18px 18px 4px 18px; padding:1rem 1.2rem; max-width:280px; cursor:pointer; transform:translateY(120%); opacity:0; transition:all 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:var(--shadow); }
+.chat-teaser { position:fixed; bottom:6rem; right:1.5rem; z-index:80; background:#FFFFFF; border:1px solid rgba(217,179,128,0.3); border-radius:18px 18px 4px 18px; padding:1rem 1.2rem; max-width:280px; cursor:pointer; transform:translateY(120%); opacity:0; transition:all 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:var(--shadow); }
 .chat-teaser.show { transform:translateY(0); opacity:1; }
 .teaser-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:0.95rem; color:var(--creme); line-height:1.4; }
 .teaser-author { font-family:'Caveat',cursive; font-size:1rem; color:var(--or-clair); margin-top:0.5rem; }
-
-.chat-button { position:fixed; bottom:1.5rem; right:1.5rem; z-index:90; width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg, var(--or), var(--or-doux)); border:none; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 30px rgba(201,168,124,0.4); }
+.chat-button { position:fixed; bottom:1.5rem; right:1.5rem; z-index:90; width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg, var(--or), var(--rose-vif)); border:none; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 30px rgba(217,179,128,0.45); animation:fabGlow 3s infinite; }
 .chat-button:hover { transform:scale(1.05); }
 .chat-button .icon { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.8rem; color:var(--noir); font-weight:600; }
 .chat-button::after { content:''; position:absolute; top:5px; right:5px; width:12px; height:12px; background:var(--vert-doux); border-radius:50%; border:2px solid var(--noir); animation:pulse 2s infinite; }
-.chat-window { position:fixed; bottom:6rem; right:1.5rem; z-index:90; width:380px; max-width:calc(100vw - 3rem); height:560px; max-height:78vh; background:var(--noir-doux); border:1px solid rgba(201,168,124,0.3); border-radius:20px; display:none; flex-direction:column; overflow:hidden; box-shadow:0 30px 80px -20px rgba(0,0,0,0.6); }
+@keyframes fabGlow { 0%,100%{ box-shadow:0 10px 30px rgba(217,179,128,0.45); } 50%{ box-shadow:0 10px 40px rgba(232,165,152,0.65); } }
+.chat-window { position:fixed; bottom:6rem; right:1.5rem; z-index:90; width:380px; max-width:calc(100vw - 3rem); height:560px; max-height:78vh; background:#FFFFFF; border:1px solid rgba(217,179,128,0.3); border-radius:20px; display:none; flex-direction:column; overflow:hidden; box-shadow:0 30px 80px -20px rgba(0,0,0,0.6); }
 .chat-window.open { display:flex; animation:fadeInUp 0.4s ease; }
-.chat-header { padding:1.2rem; border-bottom:1px solid rgba(201,168,124,0.15); display:flex; align-items:center; gap:0.8rem; }
-.chat-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, var(--or), var(--or-doux)); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.3rem; color:var(--noir); font-weight:600; }
+.chat-header { padding:1.2rem; border-bottom:1px solid rgba(217,179,128,0.16); display:flex; align-items:center; gap:0.8rem; }
+.chat-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, var(--or), var(--rose-vif)); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.3rem; color:var(--noir); font-weight:600; }
 .chat-info h3 { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.1rem; color:var(--creme); font-weight:500; }
 .chat-info p { font-size:0.7rem; color:var(--vert-doux); margin-top:0.1rem; display:flex; align-items:center; gap:0.3rem; }
 .chat-info p::before { content:''; width:6px; height:6px; background:var(--vert-doux); border-radius:50%; animation:pulse 2s infinite; }
@@ -284,83 +261,51 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
 .chat-close:hover { color:var(--or); }
 .chat-messages { flex:1; padding:1.2rem; overflow-y:auto; display:flex; flex-direction:column; gap:0.8rem; }
 .chat-messages::-webkit-scrollbar { width:4px; }
-.chat-messages::-webkit-scrollbar-thumb { background:rgba(201,168,124,0.2); border-radius:2px; }
+.chat-messages::-webkit-scrollbar-thumb { background:rgba(217,179,128,0.25); border-radius:2px; }
 .msg { padding:0.8rem 1.1rem; border-radius:18px; max-width:85%; font-size:0.9rem; line-height:1.5; animation:fadeInUp 0.3s ease; }
-.msg.sophie { background:rgba(201,168,124,0.1); color:var(--creme); border-bottom-left-radius:4px; align-self:flex-start; }
+.msg.sophie { background:#F6E4DA; color:var(--creme); border-bottom-left-radius:4px; align-self:flex-start; }
 .msg.user { background:var(--or); color:var(--noir); border-bottom-right-radius:4px; align-self:flex-end; }
 .msg a { color:var(--or-clair); text-decoration:underline; }
 .msg.user a { color:var(--noir); font-weight:600; }
-.typing { display:flex; gap:0.3rem; padding:0.8rem 1.1rem; background:rgba(201,168,124,0.1); border-radius:18px; border-bottom-left-radius:4px; align-self:flex-start; }
+.typing { display:flex; gap:0.3rem; padding:0.8rem 1.1rem; background:rgba(217,179,128,0.12); border-radius:18px; border-bottom-left-radius:4px; align-self:flex-start; }
 .typing span { width:8px; height:8px; background:var(--or); border-radius:50%; animation:typing 1.4s infinite ease-in-out; }
 .typing span:nth-child(2) { animation-delay:0.2s; }
 .typing span:nth-child(3) { animation-delay:0.4s; }
 @keyframes typing { 0%,60%,100% { transform:translateY(0); opacity:0.5; } 30% { transform:translateY(-8px); opacity:1; } }
-.quick-replies { padding:0.8rem 1.2rem; border-top:1px solid rgba(201,168,124,0.1); display:flex; gap:0.4rem; flex-wrap:wrap; }
-.quick-reply { font-family:'DM Sans',sans-serif; font-size:0.75rem; padding:0.4rem 0.9rem; background:transparent; border:1px solid rgba(201,168,124,0.25); color:var(--creme-doux); border-radius:100px; cursor:pointer; transition:all 0.2s; }
+.quick-replies { padding:0.8rem 1.2rem; border-top:1px solid rgba(217,179,128,0.12); display:flex; gap:0.4rem; flex-wrap:wrap; }
+.quick-reply { font-family:'DM Sans',sans-serif; font-size:0.75rem; padding:0.4rem 0.9rem; background:transparent; border:1px solid rgba(217,179,128,0.28); color:var(--creme-doux); border-radius:100px; cursor:pointer; transition:all 0.2s; }
 .quick-reply:hover { border-color:var(--or); color:var(--or); }
-.chat-input-wrap { padding:1rem 1.2rem; border-top:1px solid rgba(201,168,124,0.15); display:flex; gap:0.5rem; }
-.chat-input { flex:1; background:rgba(245,237,224,0.05); border:1px solid rgba(201,168,124,0.2); color:var(--creme); padding:0.8rem 1.1rem; border-radius:100px; font-family:'DM Sans',sans-serif; font-size:0.9rem; outline:none; }
+.chat-input-wrap { padding:1rem 1.2rem; border-top:1px solid rgba(217,179,128,0.16); display:flex; gap:0.5rem; }
+.chat-input { flex:1; background:rgba(247,240,230,0.06); border:1px solid rgba(217,179,128,0.22); color:var(--creme); padding:0.8rem 1.1rem; border-radius:100px; font-family:'DM Sans',sans-serif; font-size:0.9rem; outline:none; }
 .chat-input:focus { border-color:var(--or); }
 .chat-send { width:42px; height:42px; border-radius:50%; background:var(--or); border:none; color:var(--noir); font-size:1.2rem; cursor:pointer; transition:all 0.2s; }
 .chat-send:hover { background:var(--or-clair); }
 .chat-send:disabled { opacity:0.5; cursor:wait; }
-
-/* === 🆕 VIGNETTE LIVRE DANS LE CHAT === */
-.msg-vignette-book {
-  align-self:flex-start; max-width:90%; margin-top:0.3rem;
-  display:block; animation:fadeInUp 0.5s ease;
-}
-.vignette-book {
-  background:rgba(245,237,224,0.04);
-  border:1px solid rgba(201,168,124,0.35); border-radius:14px;
-  padding:1rem; transition:all 0.3s;
-  box-shadow:0 8px 20px -8px rgba(201,168,124,0.2);
-  text-decoration:none; color:inherit; display:block;
-}
-.vignette-book:hover {
-  border-color:var(--or); background:rgba(245,237,224,0.07);
-  transform:translateY(-2px); box-shadow:0 12px 30px -10px rgba(201,168,124,0.4);
-}
-.vignette-book.mybook {
-  background:linear-gradient(135deg, rgba(201,168,124,0.1) 0%, rgba(245,237,224,0.04) 100%);
-  border-color:var(--or);
-}
-.vignette-book-genre {
-  display:inline-block; font-size:0.6rem; letter-spacing:0.12em;
-  text-transform:uppercase; font-weight:600;
-  background:rgba(201,168,124,0.15); color:var(--or-clair);
-  padding:0.2rem 0.6rem; border-radius:100px; margin-bottom:0.6rem;
-}
-.vignette-book-title {
-  font-family:'Cormorant Garamond',serif; font-style:italic;
-  font-size:1.1rem; color:var(--creme); line-height:1.3; margin-bottom:0.2rem;
-}
+.msg-vignette-book { align-self:flex-start; max-width:90%; margin-top:0.3rem; display:block; animation:fadeInUp 0.5s ease; }
+.vignette-book { background:rgba(247,240,230,0.05); border:1px solid rgba(217,179,128,0.35); border-radius:14px; padding:1rem; transition:all 0.3s; box-shadow:0 8px 20px -8px rgba(217,179,128,0.2); text-decoration:none; color:inherit; display:block; }
+.vignette-book:hover { border-color:var(--or); background:rgba(247,240,230,0.08); transform:translateY(-2px); box-shadow:0 12px 30px -10px rgba(217,179,128,0.4); }
+.vignette-book.mybook { background:linear-gradient(135deg, rgba(217,179,128,0.12) 0%, rgba(247,240,230,0.05) 100%); border-color:var(--or); }
+.vignette-book-genre { display:inline-block; font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; background:rgba(217,179,128,0.16); color:var(--or-clair); padding:0.2rem 0.6rem; border-radius:100px; margin-bottom:0.6rem; }
+.vignette-book-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.1rem; color:var(--creme); line-height:1.3; margin-bottom:0.2rem; }
 .vignette-book-author { font-size:0.78rem; color:var(--or-clair); margin-bottom:0.5rem; font-weight:500; }
 .vignette-book-meta { display:flex; gap:0.5rem; flex-wrap:wrap; font-size:0.7rem; color:var(--creme-doux); margin-bottom:0.5rem; }
 .vignette-book-spice { color:var(--rouge-doux); font-weight:600; }
-.vignette-book-trope { background:rgba(245,237,224,0.05); padding:0.15rem 0.5rem; border-radius:100px; font-size:0.65rem; }
+.vignette-book-trope { background:rgba(247,240,230,0.06); padding:0.15rem 0.5rem; border-radius:100px; font-size:0.65rem; }
 .vignette-book-trigger { font-size:0.65rem; color:var(--rouge-doux); opacity:0.85; margin-bottom:0.5rem; line-height:1.3; }
 .vignette-book-trigger::before { content:'⚠️ '; }
 .vignette-book-cta { font-family:'DM Sans',sans-serif; font-size:0.65rem; letter-spacing:0.15em; color:var(--or); text-transform:uppercase; font-weight:600; }
-
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 @keyframes fadeInUp { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
 .reveal { opacity:0; transform:translateY(30px); transition:all 0.8s ease; }
 .reveal.visible { opacity:1; transform:translateY(0); }
-
-/* === RESPONSIVE === */
-@media (max-width:1000px) {
-  nav ul { gap:1rem; }
-  .live-counter { display:none; }
-}
+@media (max-width:1000px) { nav ul { gap:1rem; } .live-counter { display:none; } }
 @media (max-width:900px) {
-  nav ul { display:none; position:absolute; top:100%; right:0; background:var(--noir-doux); flex-direction:column; padding:1.5rem; min-width:220px; border:1px solid rgba(201,168,124,0.15); border-radius:0 0 0 16px; gap:1rem; align-items:flex-start; }
+  nav ul { display:none; position:absolute; top:100%; right:0; background:#FFFFFF; flex-direction:column; padding:1.5rem; min-width:220px; border:1px solid rgba(217,179,128,0.15); border-radius:0 0 0 16px; gap:1rem; align-items:flex-start; }
   nav ul.open { display:flex; }
   .hamburger { display:block; }
   section { padding:5rem 5vw; }
   .opposition { grid-template-columns:1fr; }
-  .opposition .monde { border-right:none; border-bottom:1px solid rgba(201,168,124,0.15); }
-  .pricing-cards { grid-template-columns:1fr; max-width:340px; }
+  .opposition .monde { border-right:none; border-bottom:1px solid rgba(217,179,128,0.18); }
   .features-grid { grid-template-columns:1fr 1fr; }
 }
 @media (max-width:600px) {
@@ -377,6 +322,8 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
 </head>
 <body>
 
+<div class="ambient"><span></span><span></span><span></span></div>
+
 <div class="ticker">
   <div class="ticker-content" id="tickerContent"></div>
 </div>
@@ -390,12 +337,11 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
     <button class="hamburger" onclick="document.querySelector('nav ul').classList.toggle('open')">☰</button>
     <ul>
       <li><a href="#" onclick="openChat();return false;" data-fr="Sophie" data-en="Sophie">Sophie</a></li>
+      <li><a href="#her-books" data-fr="Ses livres" data-en="Her books">Her books</a></li>
       <li><a href="#bookshelf" data-fr="Bibliothèque" data-en="Bookshelf">Bookshelf</a></li>
       <li><a href="#temoignages" data-fr="Lectrices" data-en="Readers">Readers</a></li>
       <li><a href="#sophie-plus" style="color:var(--or-clair)" data-fr="Le Cercle" data-en="The Circle">The Circle</a></li>
-      <li>
-        <button class="lang-toggle" id="langToggle" onclick="toggleLang()">FR / <strong>EN</strong></button>
-      </li>
+      <li><button class="lang-toggle" id="langToggle" onclick="toggleLang()">FR / <strong>EN</strong></button></li>
       <li><span class="live-counter"><span id="liveCount">47</span> <span data-fr="lectrices avec Sophie" data-en="readers with Sophie">readers with Sophie</span></span></li>
     </ul>
   </nav>
@@ -419,7 +365,7 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
     </p>
     <div class="hero-cta">
       <button class="btn-primary" onclick="openChat()" data-fr="Parler à Sophie" data-en="Talk to Sophie">Talk to Sophie</button>
-      <a href="#bookshelf" class="btn-secondary" data-fr="Voir la bibliothèque" data-en="See her bookshelf">See her bookshelf</a>
+      <a href="#her-books" class="btn-secondary" data-fr="Découvrir ses livres" data-en="Discover her books">Discover her books</a>
     </div>
     <div class="hero-whisper" data-fr="Si tu es là, c'est que tu cherches plus qu'un algorithme..." data-en="If you're here, you're looking for more than an algorithm...">If you're here, you're looking for more than an algorithm...</div>
   </div>
@@ -529,21 +475,23 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
   </p>
 </section>
 
-<section id="bookshelf">
-  <div class="section-label" data-fr="La bibliothèque de Sophie" data-en="Sophie's bookshelf">Sophie's bookshelf</div>
+<!-- 🆕 SECTION LIVRES DE SOPHIE LUMIÈRE -->
+<section class="her-books" id="her-books">
+  <div class="section-label" data-fr="Écrits par Sophie Lumière" data-en="Written by Sophie Lumière">Written by Sophie Lumière</div>
   <h2 class="section-title">
-    <span class="lang-en">Books she'd <em>defend with her life.</em></span>
-    <span class="lang-fr" hidden>Les livres qu'elle <em>défendrait avec sa vie.</em></span>
+    <span class="lang-en">The books she <em>wrote herself.</em></span>
+    <span class="lang-fr" hidden>Les livres qu'elle a <em>écrits elle-même.</em></span>
   </h2>
-  <div class="bookshelf-filters" id="bookshelfFilters"></div>
-  <div class="books-grid" id="booksGrid">
-    <div class="bookshelf-loading" data-fr="Sophie prépare sa sélection..." data-en="Sophie is pulling her picks...">Sophie is pulling her picks...</div>
-  </div>
+  <p class="manifesto-text" style="margin-bottom:3rem;">
+    <span class="lang-en">Each one based on a true story. Hers.</span>
+    <span class="lang-fr" hidden>Chacun inspiré d'une histoire vraie. La sienne.</span>
+  </p>
+  <div class="her-books-grid" id="herBooksGrid"></div>
 </section>
 
 <section class="my-book">
   <div class="my-book-inner reveal">
-    <div class="my-book-tag" data-fr="Et puis il y a son propre livre 🤍" data-en="And then there's her own book 🤍">And then there's her own book 🤍</div>
+    <div class="my-book-tag" data-fr="Le livre qui a tout commencé 🤍" data-en="The book that started it all 🤍">The book that started it all 🤍</div>
     <h2 class="my-book-title">
       <span class="lang-en">Sophie: <em>Becoming the One We Wish We'd Had</em></span>
       <span class="lang-fr" hidden>Sophie : <em>Devenir celle qu'on aurait voulu avoir</em></span>
@@ -557,6 +505,18 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
       <span class="lang-en">Read Sophie's story →</span>
       <span class="lang-fr" hidden>Lire l'histoire de Sophie →</span>
     </a>
+  </div>
+</section>
+
+<section id="bookshelf">
+  <div class="section-label" data-fr="La bibliothèque de Sophie" data-en="Sophie's bookshelf">Sophie's bookshelf</div>
+  <h2 class="section-title">
+    <span class="lang-en">Books she'd <em>defend with her life.</em></span>
+    <span class="lang-fr" hidden>Les livres qu'elle <em>défendrait avec sa vie.</em></span>
+  </h2>
+  <div class="bookshelf-filters" id="bookshelfFilters"></div>
+  <div class="books-grid" id="booksGrid">
+    <div class="bookshelf-loading" data-fr="Sophie prépare sa sélection..." data-en="Sophie is pulling her picks...">Sophie is pulling her picks...</div>
   </div>
 </section>
 
@@ -712,6 +672,7 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
   <div class="footer-links">
     <a href="#sophie-plus" data-fr="Le Cercle" data-en="The Circle">The Circle</a>
     <a href="#" onclick="openChat();return false;" data-fr="Parler à Sophie" data-en="Talk to Sophie">Talk to Sophie</a>
+    <a href="#her-books" data-fr="Ses livres" data-en="Her books">Her books</a>
     <a href="#bookshelf" data-fr="Bibliothèque" data-en="Bookshelf">Bookshelf</a>
     <a href="https://6bbgv0-f4.myshopify.com" target="_blank" rel="noopener" data-fr="Boutique" data-en="Shop">Shop</a>
     <a href="https://6bbgv0-f4.myshopify.com/policies/privacy-policy" target="_blank" rel="noopener" data-fr="Confidentialité" data-en="Privacy">Privacy</a>
@@ -754,15 +715,10 @@ footer { background:var(--noir); padding:3rem 6vw 2rem; text-align:center; borde
 // ============================================================
 // CONFIG
 // ============================================================
-// 🆕 ASIN du livre Sophie Lumière (cohérent avec server.js)
 const MYBOOK_ASIN_US = "B0H2NJMVMT";
 const MYBOOK_ASIN_FR = "B0H2JKNMCM";
-
-// 🆕 Tag Amazon Associates — à remplir avec les VRAIES valeurs quand tu auras
-// ton compte Amazon Associates. Tant que c'est vide, les liens ne génèrent
-// pas de commission mais fonctionnent quand même.
-const AMAZON_TAG_US = "sophielumiere-20"; // ex: "sophielum-20"
-const AMAZON_TAG_FR = "sophielumiere-20"; // ex: "sophielum-21" (ou le même)
+const AMAZON_TAG_US = "sophielumiere-20";
+const AMAZON_TAG_FR = "sophielumiere-21";
 
 function buildAmazonLink(asin, lang) {
   const isFR = lang === 'fr';
@@ -771,18 +727,78 @@ function buildAmazonLink(asin, lang) {
   return `https://www.${domain}/dp/${asin}` + (tag ? `?tag=${encodeURIComponent(tag)}` : '');
 }
 
+// 🆕 CATALOGUE SOPHIE LUMIÈRE — ses propres livres KDP
+// asinFR/asinEN : si l'un manque, on bascule sur l'autre (livre dispo dans 1 seule langue)
+const SOPHIE_BOOKS = [
+  {
+    titleEN: "Becoming the One We Wish We'd Had",
+    titleFR: "Devenir celle qu'on aurait voulu avoir",
+    subEN: "The memoir that started everything. A father who left, a mother who cried in silence, a voice in the dark called Sophie.",
+    subFR: "Le mémoire qui a tout commencé. Un père parti, une mère qui pleurait en silence, une voix dans le noir nommée Sophie.",
+    formatEN: "Memoir", formatFR: "Mémoire",
+    priceEN: "$2.99 Kindle · $12.99 paperback", priceFR: "2,99 € Kindle · 9,90 € broché",
+    asinEN: "B0H2NJMVMT", asinFR: "B0H2JKNMCM"
+  },
+  {
+    titleEN: "The Symphony of Our Silences",
+    titleFR: "La Symphonie de nos silences",
+    subEN: "A novel based on real events. About the words we never said and the ones that saved us.",
+    subFR: "Un roman inspiré d'événements réels. Sur les mots qu'on n'a jamais dits et ceux qui nous ont sauvés.",
+    formatEN: "Novel", formatFR: "Roman",
+    priceEN: "$2.99 Kindle · $9.99 paperback", priceFR: "2,99 € Kindle · 9,99 € broché",
+    asinEN: "B0GYDZJ7QV", asinFR: "B0H37X5D4Z"
+  },
+  {
+    titleEN: "Impossible Was Never You",
+    titleFR: "Impossible Was Never You",
+    subEN: "The emotional method to turn your dreams into promises you keep.",
+    subFR: "La méthode émotionnelle pour transformer tes rêves en promesses que tu tiens.",
+    formatEN: "Self-help", formatFR: "Développement",
+    priceEN: "$6.99 Kindle · $12.99 paperback", priceFR: "6,99 $ Kindle · 12,99 $ broché",
+    asinEN: "B0H3WBXJTK", asinFR: null
+  },
+  {
+    titleEN: "Healing Journal for Solo Mothers",
+    titleFR: "Healing Journal for Solo Mothers",
+    subEN: "A gentle 12-chapter companion with prompts, reflections and affirmations to reconnect with the woman beneath the mother.",
+    subFR: "Un compagnon doux en 12 chapitres : prompts, réflexions et affirmations pour retrouver la femme derrière la mère.",
+    formatEN: "Journal", formatFR: "Journal",
+    priceEN: "$14.99 paperback", priceFR: "14,99 $ broché",
+    asinEN: "B0H38YQ9D6", asinFR: null
+  }
+];
+
+function renderHerBooks() {
+  const grid = document.getElementById('herBooksGrid');
+  if (!grid) return;
+  const lang = currentLang;
+  const ctaTxt = lang === 'fr' ? 'Lire sur Amazon →' : 'Read on Amazon →';
+  grid.innerHTML = SOPHIE_BOOKS.map(b => {
+    const asin = lang === 'fr' ? (b.asinFR || b.asinEN) : (b.asinEN || b.asinFR);
+    const linkLang = lang === 'fr' && b.asinFR ? 'fr' : (b.asinEN ? 'en' : 'fr');
+    const url = buildAmazonLink(asin, linkLang);
+    const title = lang === 'fr' ? b.titleFR : b.titleEN;
+    const sub = lang === 'fr' ? b.subFR : b.subEN;
+    const format = lang === 'fr' ? b.formatFR : b.formatEN;
+    const price = lang === 'fr' ? b.priceFR : b.priceEN;
+    return `<div class="sl-book reveal visible">
+      <span class="sl-book-format">${format}</span>
+      <div class="sl-book-title">${title}</div>
+      <div class="sl-book-subtitle">${sub}</div>
+      <div class="sl-book-price">${price}</div>
+      <a class="sl-book-cta" href="${url}" target="_blank" rel="noopener nofollow sponsored">${ctaTxt}</a>
+    </div>`;
+  }).join('');
+}
+
 // ============================================================
-// LANGUE — détection + toggle FR/EN
+// LANGUE
 // ============================================================
 function detectInitialLang() {
-  // 🇺🇸 Marché US prioritaire : défaut systématique en anglais.
-  // Les francophones peuvent basculer via le toggle FR/EN — leur choix
-  // est mémorisé dans localStorage et appliqué aux visites suivantes.
   const saved = localStorage.getItem('site_lang');
   if (saved === 'fr' || saved === 'en') return saved;
   return 'en';
 }
-
 let currentLang = detectInitialLang();
 
 function applyLang(lang) {
@@ -792,103 +808,55 @@ function applyLang(lang) {
   document.title = lang === 'fr'
     ? "Sophie Lumière · Ta compagne de lecture 🤍"
     : "Sophie Lumière · Your reading companion 🤍";
-
-  // Textes simples (data-fr / data-en)
   document.querySelectorAll('[data-fr]').forEach(el => {
     const val = el.getAttribute('data-' + lang);
     if (val == null) return;
-    // Préserve les enfants HTML s'il y en a (ex: strong dans le bouton)
-    if (el.children.length === 0) {
-      el.textContent = val;
-    }
+    if (el.children.length === 0) el.textContent = val;
   });
-
-  // Blocs riches (.lang-fr / .lang-en)
   document.querySelectorAll('.lang-fr').forEach(el => el.hidden = (lang !== 'fr'));
   document.querySelectorAll('.lang-en').forEach(el => el.hidden = (lang !== 'en'));
-
-  // Toggle visuel
   const tog = document.getElementById('langToggle');
-  if (tog) {
-    tog.innerHTML = lang === 'fr'
-      ? '<strong>FR</strong> / EN'
-      : 'FR / <strong>EN</strong>';
-  }
-
-  // Input placeholders
+  if (tog) tog.innerHTML = lang === 'fr' ? '<strong>FR</strong> / EN' : 'FR / <strong>EN</strong>';
   const chatInput = document.getElementById('chatInput');
   if (chatInput) chatInput.placeholder = lang === 'fr' ? "Écris à Sophie…" : "Write to Sophie…";
   const wlEmail = document.getElementById('waitlistEmail');
   if (wlEmail) wlEmail.placeholder = lang === 'fr' ? "Ton email" : "Your email";
-
-  // Lien livre Sophie Lumière
   const myBookCta = document.getElementById('myBookCta');
   if (myBookCta) {
     const asin = lang === 'fr' ? MYBOOK_ASIN_FR : MYBOOK_ASIN_US;
     myBookCta.href = buildAmazonLink(asin, lang);
   }
-
-  // Refresh ticker, teaser, notifications, quick replies, bookshelf
   refreshTicker();
   refreshQuickReplies();
+  renderHerBooks();
   if (booksData.length) renderBookshelf();
   else fetchBookshelf();
 }
-
-function toggleLang() {
-  applyLang(currentLang === 'fr' ? 'en' : 'fr');
-}
+function toggleLang() { applyLang(currentLang === 'fr' ? 'en' : 'fr'); }
 
 // ============================================================
-// TICKER (whispers culture livre)
+// TICKER
 // ============================================================
 const TICKER = {
-  en: [
-    "Romance is where she lives",
-    "But she reads everything",
-    "She remembers what you've read",
-    "Tell her what you feel",
-    "The book finds you",
-    "Slow. Specific. Sincere."
-  ],
-  fr: [
-    "La romance, c'est sa langue",
-    "Mais elle te suit partout",
-    "Elle se souvient de ce que tu as lu",
-    "Dis-lui ce que tu ressens",
-    "Le livre te trouve",
-    "Doux. Précis. Sincère."
-  ]
+  en: ["Romance is where she lives","But she reads everything","She remembers what you've read","Tell her what you feel","The book finds you","Slow. Specific. Sincere."],
+  fr: ["La romance, c'est sa langue","Mais elle te suit partout","Elle se souvient de ce que tu as lu","Dis-lui ce que tu ressens","Le livre te trouve","Doux. Précis. Sincère."]
 };
 function refreshTicker() {
   const c = document.getElementById('tickerContent');
   const items = TICKER[currentLang];
-  // Doublé pour boucle fluide
   c.innerHTML = items.concat(items).map(t => `<span>${t}</span>`).join('');
 }
 
 // ============================================================
-// QUICK REPLIES (chat)
+// QUICK REPLIES
 // ============================================================
 const QUICK_REPLIES = {
-  en: [
-    "I just got dumped",
-    "Recommend me a dark romance",
-    "Something soft tonight",
-    "A book that wrecks me"
-  ],
-  fr: [
-    "Je viens de rompre",
-    "Une dark romance",
-    "Quelque chose de doux ce soir",
-    "Un livre qui me brise"
-  ]
+  en: ["I just got dumped","Recommend me a dark romance","Something soft tonight","A book that wrecks me"],
+  fr: ["Je viens de rompre","Une dark romance","Quelque chose de doux ce soir","Un livre qui me brise"]
 };
 function refreshQuickReplies() {
   const c = document.getElementById('quickReplies');
-  c.innerHTML = QUICK_REPLIES[currentLang]
-    .map(t => `<button class="quick-reply" onclick="sendQuick('${t.replace(/'/g, "\\'")}')">${t}</button>`)
-    .join('');
+  c.innerHTML = QUICK_REPLIES[currentLang].map(t => `<button class="quick-reply" onclick="sendQuick('${t.replace(/'/g, "\\'")}')">${t}</button>`).join('');
 }
 
 // ============================================================
@@ -908,7 +876,7 @@ function updateLiveCounter() {
 setInterval(updateLiveCounter, 8000);
 
 // ============================================================
-// NOTIFICATIONS POPUP
+// NOTIFICATIONS
 // ============================================================
 const NOTIFS = {
   en: [
@@ -979,20 +947,10 @@ document.addEventListener('mouseleave', e => {
 // ============================================================
 const sessionId = 'sess_' + Math.random().toString(36).substring(7);
 let chatStarted = false;
-
 const CHAT_INTRO = {
-  en: [
-    "hi, you 🤍",
-    "i'm Sophie. not a chatbot. a reading companion.",
-    "tell me — what are you craving tonight? a slow burn, a dark hero, an escape, a book that wrecks you?"
-  ],
-  fr: [
-    "Coucou toi 🤍",
-    "Je suis Sophie. Pas un chatbot. Une compagne de lecture.",
-    "Dis-moi — tu cherches quoi ce soir ? Un slow burn, un héros sombre, une évasion, un livre qui te brise ?"
-  ]
+  en: ["hi, you 🤍","i'm Sophie. not a chatbot. a reading companion.","tell me — what are you craving tonight? a slow burn, a dark hero, an escape, a book that wrecks you?"],
+  fr: ["Coucou toi 🤍","Je suis Sophie. Pas un chatbot. Une compagne de lecture.","Dis-moi — tu cherches quoi ce soir ? Un slow burn, un héros sombre, une évasion, un livre qui te brise ?"]
 };
-
 function openChat() {
   document.getElementById('chatTeaser').classList.remove('show');
   document.getElementById('chatWindow').classList.add('open');
@@ -1005,7 +963,6 @@ function openChat() {
   }
 }
 function closeChat() { document.getElementById('chatWindow').classList.remove('open'); }
-
 function addMsg(text, who) {
   const messages = document.getElementById('chatMessages');
   const div = document.createElement('div');
@@ -1014,8 +971,6 @@ function addMsg(text, who) {
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
-
-// 🆕 Vignette LIVRE dans le chat
 function addBookVignette(book) {
   if (!book || !book.url) return;
   const messages = document.getElementById('chatMessages');
@@ -1024,20 +979,13 @@ function addBookVignette(book) {
   link.href = book.url;
   link.target = '_blank';
   link.rel = 'noopener nofollow sponsored';
-
   const genreLabel = book.isMyBook
     ? (currentLang === 'fr' ? 'Le livre de Sophie' : "Sophie's own book")
     : (book.genre || (currentLang === 'fr' ? 'Livre' : 'Book'));
-
   const spice = book.spice ? `<span class="vignette-book-spice">🔥 ${book.spice}</span>` : '';
-  const tropes = (book.tropes && book.tropes.length)
-    ? book.tropes.slice(0, 3).map(t => `<span class="vignette-book-trope">${t}</span>`).join('')
-    : '';
-  const triggers = (book.triggers && book.triggers.length)
-    ? `<div class="vignette-book-trigger">${book.triggers.slice(0, 3).join(' · ')}</div>`
-    : '';
+  const tropes = (book.tropes && book.tropes.length) ? book.tropes.slice(0, 3).map(t => `<span class="vignette-book-trope">${t}</span>`).join('') : '';
+  const triggers = (book.triggers && book.triggers.length) ? `<div class="vignette-book-trigger">${book.triggers.slice(0, 3).join(' · ')}</div>` : '';
   const cta = currentLang === 'fr' ? 'Voir sur Amazon →' : 'Find on Amazon →';
-
   link.innerHTML = `
     <div class="vignette-book ${book.isMyBook ? 'mybook' : ''}">
       <div class="vignette-book-genre">${genreLabel}</div>
@@ -1051,7 +999,6 @@ function addBookVignette(book) {
   messages.appendChild(link);
   messages.scrollTop = messages.scrollHeight;
 }
-
 function showTyping() {
   const messages = document.getElementById('chatMessages');
   const t = document.createElement('div');
@@ -1061,7 +1008,6 @@ function showTyping() {
   messages.scrollTop = messages.scrollHeight;
 }
 function hideTyping() { const t = document.getElementById('typing'); if (t) t.remove(); }
-
 async function sendMessage() {
   const input = document.getElementById('chatInput');
   const message = input.value.trim();
@@ -1078,16 +1024,11 @@ async function sendMessage() {
     });
     const data = await res.json();
     hideTyping();
-    addMsg(data.reply || (currentLang === 'fr'
-      ? "Désolée, petit bug. Réessaie 🤍"
-      : "Sorry, tiny glitch. Try again 🤍"), 'sophie');
-    // 🆕 Si Sophie a recommandé un livre, on affiche la vignette
+    addMsg(data.reply || (currentLang === 'fr' ? "Désolée, petit bug. Réessaie 🤍" : "Sorry, tiny glitch. Try again 🤍"), 'sophie');
     if (data.book) addBookVignette(data.book);
   } catch (e) {
     hideTyping();
-    addMsg(currentLang === 'fr'
-      ? "Connexion difficile. Réessaie dans un instant 🤍"
-      : "Connection's slow. Try again in a moment 🤍", 'sophie');
+    addMsg(currentLang === 'fr' ? "Connexion difficile. Réessaie dans un instant 🤍" : "Connection's slow. Try again in a moment 🤍", 'sophie');
   } finally {
     document.getElementById('chatSend').disabled = false;
     input.focus();
@@ -1099,7 +1040,7 @@ function sendQuick(text) {
 }
 
 // ============================================================
-// LE CERCLE — inscription email (newsletter lectrices)
+// LE CERCLE
 // ============================================================
 async function submitWaitlist(e) {
   e.preventDefault();
@@ -1113,12 +1054,8 @@ async function submitWaitlist(e) {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ email, lang: currentLang, source: 'cercle' })
     });
-    if (res.ok) {
-      form.classList.add('success');
-    } else {
-      btn.disabled = false;
-      btn.textContent = currentLang === 'fr' ? 'Réessaie 🤍' : 'Try again 🤍';
-    }
+    if (res.ok) { form.classList.add('success'); }
+    else { btn.disabled = false; btn.textContent = currentLang === 'fr' ? 'Réessaie 🤍' : 'Try again 🤍'; }
   } catch (err) {
     btn.disabled = false;
     btn.textContent = currentLang === 'fr' ? 'Réessaie 🤍' : 'Try again 🤍';
@@ -1126,13 +1063,11 @@ async function submitWaitlist(e) {
 }
 
 // ============================================================
-// BOOKSHELF (chargé depuis /api/bookshelf)
+// BOOKSHELF
 // ============================================================
 let booksData = [];
 let moodsData = [];
 let activeFilter = 'all';
-
-// Mapping genre → catégorie d'affichage + label
 const GENRE_GROUPS = {
   'dark romance': { group: 'romance', icon: '💘', class: 'dark' },
   'romance': { group: 'romance', icon: '💗', class: '' },
@@ -1156,7 +1091,6 @@ const GROUP_LABELS = {
   thriller: { en: '🔪 Thriller', fr: '🔪 Thriller' },
   memoir: { en: '📖 Memoir', fr: '📖 Mémoire' }
 };
-
 async function fetchBookshelf() {
   try {
     const res = await fetch('/api/bookshelf?lang=' + currentLang);
@@ -1172,10 +1106,8 @@ async function fetchBookshelf() {
       '</div>';
   }
 }
-
 function renderFilters() {
   const container = document.getElementById('bookshelfFilters');
-  // Collecte les groupes uniques présents dans les données
   const groupsPresent = new Set(['all']);
   booksData.forEach(b => {
     const map = GENRE_GROUPS[(b.genre || '').toLowerCase()] || GENRE_GROUPS[b.genre];
@@ -1186,35 +1118,24 @@ function renderFilters() {
     return `<button class="filter-btn ${g === activeFilter ? 'active' : ''}" onclick="setFilter('${g}')">${label}</button>`;
   }).join('');
 }
-
-function setFilter(g) {
-  activeFilter = g;
-  renderFilters();
-  renderBookshelf();
-}
-
+function setFilter(g) { activeFilter = g; renderFilters(); renderBookshelf(); }
 function renderBookshelf() {
   const grid = document.getElementById('booksGrid');
   if (!booksData.length) {
-    grid.innerHTML = '<div class="bookshelf-loading">' +
-      (currentLang === 'fr' ? "Sophie prépare sa sélection…" : "Sophie is pulling her picks…") + '</div>';
+    grid.innerHTML = '<div class="bookshelf-loading">' + (currentLang === 'fr' ? "Sophie prépare sa sélection…" : "Sophie is pulling her picks…") + '</div>';
     return;
   }
-
   const filtered = booksData.filter(b => {
     if (activeFilter === 'all') return true;
     const map = GENRE_GROUPS[(b.genre || '').toLowerCase()] || GENRE_GROUPS[b.genre];
     return map && map.group === activeFilter;
   });
-
   grid.innerHTML = filtered.map(b => {
     const map = GENRE_GROUPS[(b.genre || '').toLowerCase()] || GENRE_GROUPS[b.genre] || { icon:'📖', class:'' };
     const spiceVal = b.spice || '0/5';
     const spiceClass = spiceVal === '0/5' || spiceVal === '1/5' ? 'cold' : '';
     const tropes = (b.tropes || []).slice(0, 3).map(t => `<span class="book-trope">${t}</span>`).join('');
-    const triggers = (b.triggers && b.triggers.length)
-      ? `<div class="book-triggers">${b.triggers.slice(0, 3).join(' · ')}</div>`
-      : '';
+    const triggers = (b.triggers && b.triggers.length) ? `<div class="book-triggers">${b.triggers.slice(0, 3).join(' · ')}</div>` : '';
     const cta = currentLang === 'fr' ? 'Voir sur Amazon →' : 'Find on Amazon →';
     return `<div class="book-card reveal visible">
       <span class="book-genre-badge ${map.class}">${map.icon} ${b.genre}</span>
@@ -1235,6 +1156,7 @@ function renderBookshelf() {
 applyLang(currentLang);
 refreshTicker();
 refreshQuickReplies();
+renderHerBooks();
 fetchBookshelf();
 updateLiveCounter();
 </script>
