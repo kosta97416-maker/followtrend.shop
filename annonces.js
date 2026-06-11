@@ -110,7 +110,9 @@ module.exports = function (app, agentLogs) {
         try {
             const result = await pool.query(
                 `SELECT id, titre, auteur, etat, prix, ville, contact, site, created_at
-                 FROM annonces WHERE statut = 'active'
+                 FROM annonces
+                 WHERE statut = 'active'
+                   AND created_at > NOW() - INTERVAL '30 days'
                  ORDER BY created_at DESC LIMIT 200`
             );
             res.json({ annonces: result.rows });
