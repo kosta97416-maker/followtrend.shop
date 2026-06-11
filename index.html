@@ -294,6 +294,37 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
 .vignette-book-trigger { font-size:0.65rem; color:var(--rouge-doux); opacity:0.85; margin-bottom:0.5rem; line-height:1.3; }
 .vignette-book-trigger::before { content:'⚠️ '; }
 .vignette-book-cta { font-family:'DM Sans',sans-serif; font-size:0.65rem; letter-spacing:0.15em; color:var(--or); text-transform:uppercase; font-weight:600; }
+
+/* ============================================================ */
+/* 📕 STYLES ÉCHANGE DE LIVRES                                   */
+/* ============================================================ */
+.echange { padding:7rem 6vw; max-width:1300px; margin:0 auto; position:relative; z-index:1; }
+.annonce-form-wrap { max-width:560px; margin:0 auto 3.5rem; background:#FFFFFF; border:1px solid rgba(217,179,128,0.22); border-radius:20px; padding:2.2rem; box-shadow:0 18px 40px -22px rgba(180,130,90,0.25); }
+.annonce-form { display:flex; flex-direction:column; gap:1.1rem; }
+.annonce-field { display:flex; flex-direction:column; gap:0.4rem; }
+.annonce-field label { font-family:'DM Sans',sans-serif; font-size:0.78rem; letter-spacing:0.04em; color:var(--creme-doux); font-weight:600; }
+.annonce-field input, .annonce-field select { padding:0.85rem 1.1rem; background:rgba(247,240,230,0.5); border:1px solid rgba(217,179,128,0.3); color:var(--creme); font-family:'DM Sans',sans-serif; font-size:0.95rem; border-radius:12px; outline:none; transition:border-color 0.2s; }
+.annonce-field input:focus, .annonce-field select:focus { border-color:var(--or); }
+.annonce-field input::placeholder { color:var(--gris); }
+.annonce-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.annonce-form .btn-primary { margin-top:0.5rem; width:100%; border:none; }
+.annonce-reassure { font-family:'DM Sans',sans-serif; font-size:0.78rem; color:var(--gris); font-style:italic; text-align:center; margin-top:0.3rem; }
+.annonce-success { max-width:560px; margin:0 auto 3.5rem; text-align:center; font-family:'Caveat',cursive; font-size:1.4rem; color:var(--or-clair); background:#F6E4DA; border-radius:16px; padding:1.5rem; }
+.annonces-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; }
+.annonce-card { background:#FFFFFF; border:1px solid rgba(217,179,128,0.14); border-radius:16px; padding:1.6rem; transition:all 0.3s; display:flex; flex-direction:column; }
+.annonce-card:hover { transform:translateY(-4px); border-color:rgba(217,179,128,0.4); box-shadow:0 20px 44px -22px rgba(180,130,90,0.3); }
+.annonce-etat { display:inline-block; align-self:flex-start; background:rgba(217,179,128,0.14); color:var(--or-clair); font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; padding:0.3rem 0.8rem; border-radius:100px; margin-bottom:0.9rem; }
+.annonce-titre { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.35rem; color:var(--creme); line-height:1.25; margin-bottom:0.3rem; }
+.annonce-auteur { font-size:0.85rem; color:var(--or-clair); margin-bottom:0.9rem; font-weight:500; }
+.annonce-prix { font-family:'Cormorant Garamond',serif; font-size:1.2rem; color:var(--or); margin-bottom:0.6rem; }
+.annonce-ville { font-size:0.78rem; color:var(--creme-doux); margin-bottom:0.9rem; }
+.annonce-ville::before { content:'📍 '; }
+.annonce-contact { font-size:0.85rem; color:var(--creme-doux); line-height:1.5; padding-top:0.9rem; border-top:1px solid rgba(217,179,128,0.16); margin-top:auto; }
+.annonce-contact strong { color:var(--creme); display:block; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.3rem; }
+.annonce-site { display:inline-block; margin-top:0.7rem; font-family:'DM Sans',sans-serif; font-size:0.72rem; letter-spacing:0.12em; color:var(--or); text-transform:uppercase; font-weight:600; }
+.annonce-site::after { content:' →'; }
+.annonce-date { font-size:0.68rem; color:var(--gris); margin-top:0.8rem; font-style:italic; }
+
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 @keyframes fadeInUp { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
 .reveal { opacity:0; transform:translateY(30px); transition:all 0.8s ease; }
@@ -317,6 +348,7 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
   .chat-window { right:0.75rem; bottom:5.5rem; width:calc(100vw - 1.5rem); }
   .notification { left:0.75rem; right:0.75rem; max-width:none; }
   .chat-teaser { right:0.75rem; max-width:calc(100vw - 6rem); }
+  .annonce-row { grid-template-columns:1fr; }
 }
 </style>
 </head>
@@ -339,6 +371,7 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
       <li><a href="#" onclick="openChat();return false;" data-fr="Sophie" data-en="Sophie">Sophie</a></li>
       <li><a href="#her-books" data-fr="Ses livres" data-en="Her books">Her books</a></li>
       <li><a href="#bookshelf" data-fr="Bibliothèque" data-en="Bookshelf">Bookshelf</a></li>
+      <li><a href="#echange" onclick="goToAnnonce();return false;" data-fr="Annonce" data-en="Listing">Listing</a></li>
       <li><a href="#temoignages" data-fr="Lectrices" data-en="Readers">Readers</a></li>
       <li><a href="#sophie-plus" style="color:var(--or-clair)" data-fr="Le Cercle" data-en="The Circle">The Circle</a></li>
       <li><button class="lang-toggle" id="langToggle" onclick="toggleLang()">FR / <strong>EN</strong></button></li>
@@ -475,7 +508,6 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
   </p>
 </section>
 
-<!-- 🆕 SECTION LIVRES DE SOPHIE LUMIÈRE -->
 <section class="her-books" id="her-books">
   <div class="section-label" data-fr="Écrits par Sophie Lumière" data-en="Written by Sophie Lumière">Written by Sophie Lumière</div>
   <h2 class="section-title">
@@ -517,6 +549,76 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
   <div class="bookshelf-filters" id="bookshelfFilters"></div>
   <div class="books-grid" id="booksGrid">
     <div class="bookshelf-loading" data-fr="Sophie prépare sa sélection..." data-en="Sophie is pulling her picks...">Sophie is pulling her picks...</div>
+  </div>
+</section>
+
+<section class="echange" id="echange">
+  <div class="section-label" data-fr="Entre lectrices" data-en="Between readers">Between readers</div>
+  <h2 class="section-title">
+    <span class="lang-en">Give your books a <em>second life.</em></span>
+    <span class="lang-fr" hidden>Offre une <em>seconde vie</em> à tes livres.</span>
+  </h2>
+  <p class="manifesto-text" style="margin-bottom:2.5rem;">
+    <span class="lang-en">Sell, swap or give the books you've loved. Post your listing, share it around you — and let another reader find it. 🤍</span>
+    <span class="lang-fr" hidden>Vends, échange ou donne les livres que tu as aimés. Dépose ton annonce, partage-la autour de toi — et laisse une autre lectrice la trouver. 🤍</span>
+  </p>
+
+  <div style="text-align:center; margin-bottom:3rem;">
+    <button class="btn-primary" id="openAnnonceBtn" onclick="toggleAnnonceForm()" data-fr="Déposer une annonce 🤍" data-en="Post a listing 🤍">Post a listing 🤍</button>
+  </div>
+
+  <div class="annonce-form-wrap" id="annonceFormWrap" hidden>
+    <form class="annonce-form" id="annonceForm" onsubmit="submitAnnonce(event)">
+      <div class="annonce-field">
+        <label data-fr="Titre du livre *" data-en="Book title *">Book title *</label>
+        <input type="text" id="an_titre" maxlength="200" required>
+      </div>
+      <div class="annonce-field">
+        <label data-fr="Auteur" data-en="Author">Author</label>
+        <input type="text" id="an_auteur" maxlength="150">
+      </div>
+      <div class="annonce-row">
+        <div class="annonce-field">
+          <label data-fr="État" data-en="Condition">Condition</label>
+          <select id="an_etat">
+            <option value="" data-fr="— choisir —" data-en="— choose —">— choose —</option>
+            <option value="neuf" data-fr="Neuf" data-en="New">New</option>
+            <option value="très bon" data-fr="Très bon" data-en="Very good">Very good</option>
+            <option value="bon" data-fr="Bon" data-en="Good">Good</option>
+            <option value="usé" data-fr="Usé" data-en="Worn">Worn</option>
+          </select>
+        </div>
+        <div class="annonce-field">
+          <label data-fr="Prix ou don/échange" data-en="Price or gift/swap">Price or gift/swap</label>
+          <input type="text" id="an_prix" maxlength="60" placeholder="ex: 5€ / Don / Échange">
+        </div>
+      </div>
+      <div class="annonce-field">
+        <label data-fr="Ville / région (optionnel)" data-en="City / region (optional)">City / region (optional)</label>
+        <input type="text" id="an_ville" maxlength="120">
+      </div>
+      <div class="annonce-field">
+        <label data-fr="Comment te contacter *" data-en="How to reach you *">How to reach you *</label>
+        <input type="text" id="an_contact" maxlength="300" required placeholder="ex: email, Insta, MP sur Vinted…">
+      </div>
+      <div class="annonce-field">
+        <label data-fr="Ta boutique / ton site (optionnel)" data-en="Your shop / site (optional)">Your shop / site (optional)</label>
+        <input type="text" id="an_site" maxlength="300" placeholder="ex: maboutique.com">
+      </div>
+      <button type="submit" class="btn-primary" id="an_submit" data-fr="Publier mon annonce" data-en="Publish my listing">Publish my listing</button>
+      <p class="annonce-reassure">
+        <span class="lang-en">Free. Your listing appears below right away. You arrange everything directly with the buyer.</span>
+        <span class="lang-fr" hidden>Gratuit. Ton annonce apparaît ci-dessous tout de suite. Tu arranges tout en direct avec l'acheteur.</span>
+      </p>
+    </form>
+    <div class="annonce-success" id="annonceSuccess" hidden>
+      <span class="lang-en">Your listing is live 🤍 Share it around you so a reader finds it.</span>
+      <span class="lang-fr" hidden>Ton annonce est en ligne 🤍 Partage-la autour de toi pour qu'une lectrice la trouve.</span>
+    </div>
+  </div>
+
+  <div class="annonces-grid" id="annoncesGrid">
+    <div class="bookshelf-loading" data-fr="Chargement des annonces…" data-en="Loading listings…">Loading listings…</div>
   </div>
 </section>
 
@@ -727,8 +829,6 @@ function buildAmazonLink(asin, lang) {
   return `https://www.${domain}/dp/${asin}` + (tag ? `?tag=${encodeURIComponent(tag)}` : '');
 }
 
-// 🆕 CATALOGUE SOPHIE LUMIÈRE — ses propres livres KDP
-// asinFR/asinEN : si l'un manque, on bascule sur l'autre (livre dispo dans 1 seule langue)
 const SOPHIE_BOOKS = [
   {
     titleEN: "Becoming the One We Wish We'd Had",
@@ -1151,6 +1251,134 @@ function renderBookshelf() {
 }
 
 // ============================================================
+// 📕 ÉCHANGE DE LIVRES
+// ============================================================
+function goToAnnonce() {
+  // Ferme le menu mobile si ouvert
+  const navUl = document.querySelector('nav ul');
+  if (navUl) navUl.classList.remove('open');
+  // Va à la section échange
+  const section = document.getElementById('echange');
+  if (section) section.scrollIntoView({ behavior: 'smooth' });
+  // Ouvre le formulaire de dépôt s'il est fermé
+  const wrap = document.getElementById('annonceFormWrap');
+  if (wrap && wrap.hidden) {
+    setTimeout(() => toggleAnnonceForm(), 400);
+  }
+}
+
+function toggleAnnonceForm() {
+  const wrap = document.getElementById('annonceFormWrap');
+  const btn = document.getElementById('openAnnonceBtn');
+  if (!wrap) return;
+  const willShow = wrap.hidden;
+  wrap.hidden = !willShow;
+  if (btn) {
+    if (willShow) {
+      btn.textContent = currentLang === 'fr' ? 'Fermer le formulaire' : 'Close the form';
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      btn.textContent = currentLang === 'fr' ? 'Déposer une annonce 🤍' : 'Post a listing 🤍';
+    }
+  }
+}
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function submitAnnonce(e) {
+  e.preventDefault();
+  const btn = document.getElementById('an_submit');
+  btn.disabled = true;
+  btn.textContent = currentLang === 'fr' ? 'Publication…' : 'Publishing…';
+  const payload = {
+    titre: document.getElementById('an_titre').value,
+    auteur: document.getElementById('an_auteur').value,
+    etat: document.getElementById('an_etat').value,
+    prix: document.getElementById('an_prix').value,
+    ville: document.getElementById('an_ville').value,
+    contact: document.getElementById('an_contact').value,
+    site: document.getElementById('an_site').value
+  };
+  try {
+    const res = await fetch('/api/annonces', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      document.getElementById('annonceForm').reset();
+      document.getElementById('annonceForm').hidden = true;
+      document.getElementById('annonceSuccess').hidden = false;
+      fetchAnnonces();
+      setTimeout(() => {
+        document.getElementById('annonceSuccess').hidden = true;
+        document.getElementById('annonceForm').hidden = false;
+        document.getElementById('annonceFormWrap').hidden = true;
+        const b = document.getElementById('openAnnonceBtn');
+        if (b) b.textContent = currentLang === 'fr' ? 'Déposer une annonce 🤍' : 'Post a listing 🤍';
+      }, 4000);
+    } else {
+      btn.disabled = false;
+      btn.textContent = currentLang === 'fr' ? 'Réessaie' : 'Try again';
+      alert(data.error || (currentLang === 'fr' ? "Erreur, réessaie." : "Error, try again."));
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = currentLang === 'fr' ? 'Réessaie' : 'Try again';
+  }
+}
+
+async function fetchAnnonces() {
+  const grid = document.getElementById('annoncesGrid');
+  if (!grid) return;
+  try {
+    const res = await fetch('/api/annonces');
+    const data = await res.json();
+    const annonces = data.annonces || [];
+    if (!annonces.length) {
+      grid.innerHTML = '<div class="bookshelf-loading">' +
+        (currentLang === 'fr'
+          ? "Aucune annonce pour l'instant. Sois la première à en déposer une 🤍"
+          : "No listings yet. Be the first to post one 🤍") +
+        '</div>';
+      return;
+    }
+    grid.innerHTML = annonces.map(a => {
+      const etat = a.etat ? `<span class="annonce-etat">${escapeHtml(a.etat)}</span>` : '';
+      const auteur = a.auteur ? `<div class="annonce-auteur">${escapeHtml(a.auteur)}</div>` : '';
+      const prix = a.prix ? `<div class="annonce-prix">${escapeHtml(a.prix)}</div>` : '';
+      const ville = a.ville ? `<div class="annonce-ville">${escapeHtml(a.ville)}</div>` : '';
+      const site = a.site ? `<a class="annonce-site" href="${escapeHtml(a.site)}" target="_blank" rel="noopener nofollow">${currentLang === 'fr' ? 'Voir sa boutique' : 'See their shop'}</a>` : '';
+      const contactLabel = currentLang === 'fr' ? 'Contact' : 'Contact';
+      const d = a.created_at ? new Date(a.created_at).toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US') : '';
+      return `<div class="annonce-card">
+        ${etat}
+        <div class="annonce-titre">${escapeHtml(a.titre)}</div>
+        ${auteur}
+        ${prix}
+        ${ville}
+        <div class="annonce-contact">
+          <strong>${contactLabel}</strong>
+          ${escapeHtml(a.contact)}
+          ${site}
+        </div>
+        <div class="annonce-date">${d}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    grid.innerHTML = '<div class="bookshelf-loading">' +
+      (currentLang === 'fr' ? "Impossible de charger les annonces." : "Couldn't load listings.") +
+      '</div>';
+  }
+}
+
+// ============================================================
 // INIT
 // ============================================================
 applyLang(currentLang);
@@ -1158,6 +1386,7 @@ refreshTicker();
 refreshQuickReplies();
 renderHerBooks();
 fetchBookshelf();
+fetchAnnonces();
 updateLiveCounter();
 </script>
 </body>
