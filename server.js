@@ -1541,6 +1541,7 @@ app.get('/api/bookshelf', (req, res) => {
 // ============================================================
 // PAGES STATIQUES + LOGIN DASHBOARD
 // ============================================================
+require('./annonces')(app, agentLogs);
 app.use(express.static(__dirname));
 
 const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || "Survie2026";
