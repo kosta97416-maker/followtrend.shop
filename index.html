@@ -628,8 +628,8 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
       </label>
       <button type="submit" class="btn-primary" id="an_submit" data-fr="Publier mon annonce" data-en="Publish my listing">Publish my listing</button>
       <p class="annonce-reassure">
-        <span class="lang-en">Free. Your listing appears below right away. You arrange everything directly with the buyer.</span>
-        <span class="lang-fr" hidden>Gratuit. Ton annonce apparaît ci-dessous tout de suite. Tu arranges tout en direct avec l'acheteur.</span>
+        <span class="lang-en">Free. Your listing appears below right away. Share the site so buyers can find it — you arrange everything directly with them.</span>
+        <span class="lang-fr" hidden>Gratuit. Ton annonce apparaît ci-dessous tout de suite. Partage le site pour qu'on la trouve — tu arranges tout en direct avec l'acheteuse.</span>
       </p>
     </form>
     <div class="annonce-success" id="annonceSuccess" hidden>
@@ -1346,50 +1346,64 @@ function shareAnnonce(reseau) {
   }
 }
 
-async function submitAnnonce(e) {
-  e.preventDefault();
-  const btn = document.getElementById('an_submit');
-  btn.disabled = true;
-  btn.textContent = currentLang === 'fr' ? 'Publication…' : 'Publishing…';
-  const payload = {
-    titre: document.getElementById('an_titre').value,
-    auteur: document.getElementById('an_auteur').value,
-    etat: document.getElementById('an_etat').value,
-    prix: document.getElementById('an_prix').value,
-    ville: document.getElementById('an_ville').value,
-    contact: document.getElementById('an_contact').value,
-    site: document.getElementById('an_site').value
-  };
+var ANNONCES_KEY = 'sophie_annonces_v1';
+
+function lireAnnonces() {
   try {
-    const res = await fetch('/api/annonces', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (res.ok && data.ok) {
-      document.getElementById('annonceForm').reset();
-      document.getElementById('annonceForm').hidden = true;
-      document.getElementById('annonceSuccess').hidden = false;
-      fetchAnnonces();
-    } else {
-      btn.disabled = false;
-      btn.textContent = currentLang === 'fr' ? 'Réessaie' : 'Try again';
-      alert(data.error || (currentLang === 'fr' ? "Erreur, réessaie." : "Error, try again."));
-    }
-  } catch (err) {
-    btn.disabled = false;
-    btn.textContent = currentLang === 'fr' ? 'Réessaie' : 'Try again';
-  }
+    var raw = localStorage.getItem(ANNONCES_KEY);
+    var arr = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(arr)) arr = [];
+    // Filtre 30 jours
+    var limite = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    arr = arr.filter(function (a) { return a && a.ts && a.ts > limite; });
+    return arr;
+  } catch (e) { return []; }
 }
 
-async function fetchAnnonces() {
+function ecrireAnnonces(arr) {
+  try { localStorage.setItem(ANNONCES_KEY, JSON.stringify(arr)); } catch (e) {}
+}
+
+function submitAnnonce(e) {
+  e.preventDefault();
+  var btn = document.getElementById('an_submit');
+  btn.disabled = true;
+  btn.textContent = currentLang === 'fr' ? 'Publication…' : 'Publishing…';
+
+  var titre = (document.getElementById('an_titre').value || '').trim();
+  var contact = (document.getElementById('an_contact').value || '').trim();
+  if (!titre || !contact) {
+    btn.disabled = false;
+    btn.textContent = currentLang === 'fr' ? 'Réessaie' : 'Try again';
+    return;
+  }
+
+  var annonce = {
+    ts: Date.now(),
+    titre: titre,
+    auteur: (document.getElementById('an_auteur').value || '').trim(),
+    etat: document.getElementById('an_etat').value || '',
+    prix: (document.getElementById('an_prix').value || '').trim(),
+    ville: (document.getElementById('an_ville').value || '').trim(),
+    contact: contact,
+    site: (document.getElementById('an_site').value || '').trim()
+  };
+
+  var arr = lireAnnonces();
+  arr.unshift(annonce);
+  ecrireAnnonces(arr);
+
+  document.getElementById('annonceForm').reset();
+  document.getElementById('annonceForm').hidden = true;
+  document.getElementById('annonceSuccess').hidden = false;
+  fetchAnnonces();
+}
+
+function fetchAnnonces() {
   const grid = document.getElementById('annoncesGrid');
   if (!grid) return;
   try {
-    const res = await fetch('/api/annonces');
-    const data = await res.json();
-    const annonces = data.annonces || [];
+    const annonces = lireAnnonces();
     if (!annonces.length) {
       grid.innerHTML = '<div class="bookshelf-loading">' +
         (currentLang === 'fr'
@@ -1405,7 +1419,7 @@ async function fetchAnnonces() {
       const ville = a.ville ? `<div class="annonce-ville">${escapeHtml(a.ville)}</div>` : '';
       const site = a.site ? `<a class="annonce-site" href="${escapeHtml(a.site)}" target="_blank" rel="noopener nofollow">${currentLang === 'fr' ? 'Voir sa boutique' : 'See their shop'}</a>` : '';
       const contactLabel = currentLang === 'fr' ? 'Contact' : 'Contact';
-      const d = a.created_at ? new Date(a.created_at).toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US') : '';
+      const d = a.ts ? new Date(a.ts).toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US') : '';
       return `<div class="annonce-card">
         ${etat}
         <div class="annonce-titre">${escapeHtml(a.titre)}</div>
