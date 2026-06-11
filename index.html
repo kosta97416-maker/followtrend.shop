@@ -309,6 +309,16 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
 .annonce-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
 .annonce-form .btn-primary { margin-top:0.5rem; width:100%; border:none; }
 .annonce-reassure { font-family:'DM Sans',sans-serif; font-size:0.78rem; color:var(--gris); font-style:italic; text-align:center; margin-top:0.3rem; }
+.annonce-note-expire { font-family:'DM Sans',sans-serif; font-size:0.82rem; color:var(--gris); text-align:center; margin:-1.5rem auto 2.5rem; max-width:520px; }
+.annonce-engage { display:flex; align-items:flex-start; gap:0.6rem; font-family:'DM Sans',sans-serif; font-size:0.84rem; color:var(--creme); line-height:1.45; cursor:pointer; margin:0.4rem 0 0.2rem; text-align:left; }
+.annonce-engage input { margin-top:0.2rem; width:18px; height:18px; accent-color:var(--or); flex-shrink:0; cursor:pointer; }
+.annonce-success-msg { font-family:'Cormorant Garamond',serif; font-size:1.15rem; color:var(--or-clair); line-height:1.5; margin-bottom:1.2rem; }
+.annonce-share { display:flex; flex-wrap:wrap; gap:0.7rem; justify-content:center; }
+.share-btn { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; padding:0.7rem 1.3rem; border-radius:100px; border:none; cursor:pointer; transition:transform 0.15s ease, opacity 0.15s ease; color:#fff; }
+.share-btn:hover { transform:translateY(-2px); opacity:0.92; }
+.share-wa { background:#25D366; }
+.share-fb { background:#1877F2; }
+.share-copy { background:var(--or); color:var(--noir); }
 .annonce-success { max-width:560px; margin:0 auto 3.5rem; text-align:center; font-family:'Caveat',cursive; font-size:1.4rem; color:var(--or-clair); background:#F6E4DA; border-radius:16px; padding:1.5rem; }
 .annonces-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem; }
 .annonce-card { background:#FFFFFF; border:1px solid rgba(217,179,128,0.14); border-radius:16px; padding:1.6rem; transition:all 0.3s; display:flex; flex-direction:column; }
@@ -562,6 +572,10 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
     <span class="lang-en">Sell, swap or give the books you've loved. Post your listing, share it around you — and let another reader find it. 🤍</span>
     <span class="lang-fr" hidden>Vends, échange ou donne les livres que tu as aimés. Dépose ton annonce, partage-la autour de toi — et laisse une autre lectrice la trouver. 🤍</span>
   </p>
+  <p class="annonce-note-expire">
+    <span class="lang-en">Listings stay up for 30 days. After that, just post yours again. 🤍</span>
+    <span class="lang-fr" hidden>Les annonces restent affichées 30 jours. Après, il suffit de reposter la tienne. 🤍</span>
+  </p>
 
   <div style="text-align:center; margin-bottom:3rem;">
     <button class="btn-primary" id="openAnnonceBtn" onclick="toggleAnnonceForm()" data-fr="Déposer une annonce 🤍" data-en="Post a listing 🤍">Post a listing 🤍</button>
@@ -605,6 +619,13 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
         <label data-fr="Ta boutique / ton site (optionnel)" data-en="Your shop / site (optional)">Your shop / site (optional)</label>
         <input type="text" id="an_site" maxlength="300" placeholder="ex: maboutique.com">
       </div>
+      <label class="annonce-engage">
+        <input type="checkbox" id="an_engage" required>
+        <span>
+          <span class="lang-en">By publishing, I'll share Sophie Lumière around me so my listing gets seen 🤍</span>
+          <span class="lang-fr" hidden>En publiant, je partage Sophie Lumière autour de moi pour que mon annonce soit vue 🤍</span>
+        </span>
+      </label>
       <button type="submit" class="btn-primary" id="an_submit" data-fr="Publier mon annonce" data-en="Publish my listing">Publish my listing</button>
       <p class="annonce-reassure">
         <span class="lang-en">Free. Your listing appears below right away. You arrange everything directly with the buyer.</span>
@@ -612,8 +633,15 @@ footer { background:#F6E4DA; padding:3rem 6vw 2rem; text-align:center; border-to
       </p>
     </form>
     <div class="annonce-success" id="annonceSuccess" hidden>
-      <span class="lang-en">Your listing is live 🤍 Share it around you so a reader finds it.</span>
-      <span class="lang-fr" hidden>Ton annonce est en ligne 🤍 Partage-la autour de toi pour qu'une lectrice la trouve.</span>
+      <div class="annonce-success-msg">
+        <span class="lang-en">Your listing is live 🤍 Now, for a reader to find it — share the site around you. You're the one who brings your buyers.</span>
+        <span class="lang-fr" hidden>Ton annonce est en ligne 🤍 Maintenant, pour qu'une lectrice la trouve — partage le site autour de toi. C'est toi qui amènes tes acheteuses.</span>
+      </div>
+      <div class="annonce-share">
+        <button type="button" class="share-btn share-wa" onclick="shareAnnonce('whatsapp')">WhatsApp</button>
+        <button type="button" class="share-btn share-fb" onclick="shareAnnonce('facebook')">Facebook</button>
+        <button type="button" class="share-btn share-copy" id="shareCopyBtn" onclick="shareAnnonce('copy')" data-fr="Copier le lien" data-en="Copy link">Copy link</button>
+      </div>
     </div>
   </div>
 
@@ -1275,6 +1303,10 @@ function toggleAnnonceForm() {
   wrap.hidden = !willShow;
   if (btn) {
     if (willShow) {
+      const form = document.getElementById('annonceForm');
+      const succ = document.getElementById('annonceSuccess');
+      if (form) form.hidden = false;
+      if (succ) succ.hidden = true;
       btn.textContent = currentLang === 'fr' ? 'Fermer le formulaire' : 'Close the form';
       wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
@@ -1288,6 +1320,30 @@ function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function shareAnnonce(reseau) {
+  const url = window.location.origin + '/#echange';
+  const texte = currentLang === 'fr'
+    ? '📚 Viens voir les livres à vendre, échanger ou donner entre lectrices sur Sophie Lumière 🤍'
+    : '📚 Come see books to sell, swap or give between readers on Sophie Lumière 🤍';
+  if (reseau === 'whatsapp') {
+    window.open('https://wa.me/?text=' + encodeURIComponent(texte + ' ' + url), '_blank');
+  } else if (reseau === 'facebook') {
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank');
+  } else if (reseau === 'copy') {
+    const btn = document.getElementById('shareCopyBtn');
+    const done = () => {
+      if (!btn) return;
+      btn.textContent = currentLang === 'fr' ? 'Lien copié ✓' : 'Link copied ✓';
+      setTimeout(() => { btn.textContent = currentLang === 'fr' ? 'Copier le lien' : 'Copy link'; }, 2500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(() => prompt(currentLang === 'fr' ? 'Copie ce lien :' : 'Copy this link:', url));
+    } else {
+      prompt(currentLang === 'fr' ? 'Copie ce lien :' : 'Copy this link:', url);
+    }
+  }
 }
 
 async function submitAnnonce(e) {
@@ -1316,13 +1372,6 @@ async function submitAnnonce(e) {
       document.getElementById('annonceForm').hidden = true;
       document.getElementById('annonceSuccess').hidden = false;
       fetchAnnonces();
-      setTimeout(() => {
-        document.getElementById('annonceSuccess').hidden = true;
-        document.getElementById('annonceForm').hidden = false;
-        document.getElementById('annonceFormWrap').hidden = true;
-        const b = document.getElementById('openAnnonceBtn');
-        if (b) b.textContent = currentLang === 'fr' ? 'Déposer une annonce 🤍' : 'Post a listing 🤍';
-      }, 4000);
     } else {
       btn.disabled = false;
       btn.textContent = currentLang === 'fr' ? 'Réessaie' : 'Try again';
